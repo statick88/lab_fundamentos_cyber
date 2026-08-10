@@ -2,9 +2,9 @@ name: Lab CI
 
 on:
   push:
-    branches: [phase1/shared-library, main]
+    branches: [phase1/shared-library, main, fix/shared-lib-bugs]
   pull_request:
-    branches: [phase1/shared-library, main]
+    branches: [phase1/shared-library, main, fix/shared-lib-bugs]
 
 jobs:
   lint-and-test:
@@ -16,20 +16,26 @@ jobs:
       - name: Build Docker image
         run: docker build -t lab-linux .
 
-      - name: Run unit tests (Unit I)
+      - name: Run unit tests (Units I-XI)
         run: |
-          docker run --rm \
-            -v $(pwd)/units/i:/opt/lab-units/i:ro \
-            lab-linux \
-            bash -c "bash /opt/lab-units/i/test.sh"
+          for u in i ii iii iv v vi vii viii ix x xi; do
+            echo "=== Running tests for Unit $u ==="
+            docker run --rm \
+              -v $(pwd)/units/$u:/opt/lab-units/$u:ro \
+              lab-linux \
+              bash -c "bash /opt/lab-units/$u/test.sh" || exit 1
+          done
         env:
           FRASE_OCULTA: "Toda revolución comienza con un pass. Los administradores nunca duermen."
 
       - name: Run shared/ scripts lint
         run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq shellcheck
           for f in shared/*.sh; do
             echo "Checking $f..."
             bash -n "$f" || exit 1
+            shellcheck "$f" || exit 1
           done
 
       - name: Verify menu.sh integration
@@ -52,4 +58,4 @@ jobs:
           docker run --rm \
             -v $(pwd)/resultados:/home/estudiante/laboratorio/resultados \
             lab-linux \
-            bash -c "mkdir -p /home/estudiante/laboratorio/resultados && bash /generar-pdf.sh 1" || true
+            bash -c "mkdir -p /home/estudiante/laboratorio/resultados && bash /generar-pdf.sh 1"
