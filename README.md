@@ -2,9 +2,7 @@
 
 11 unidades progresivas · 110 retos prácticos · evaluación automática · frase secreta oculta. Todo corre en Docker.
 
----
-
-## Quick Start
+## Quick path
 
 ```bash
 git clone https://github.com/statick88/lab-linux.git
@@ -16,9 +14,62 @@ docker compose exec lab-linux bash
 
 Dentro del contenedor: `menu` · `jugar` · `retos` · `evaluar` · `progreso`
 
----
+## Comandos del contenedor
 
-## Instalación por Sistema Operativo
+| Comando | Acción | Alcance |
+|---------|--------|---------|
+| `menu` | Menú principal con progreso global | Alias |
+| `jugar` | Modo interactivo: instrucción → comando → verificar | Alias |
+| `unidad <n>` | Seleccionar unidad (ej: `unidad 3`) | Alias |
+| `retos` | Ver retos de la unidad actual | Alias |
+| `evaluar` | Ejecutar validación y mostrar puntaje | Alias |
+| `revelar-frase` | Revelar palabra al completar una unidad | Alias |
+| `progreso` | Ver barra de progreso global | Alias |
+| `ayuda` | Lista de comandos disponibles | Función |
+| `~/bin/lab` | Lanza el menú interactivo desde cualquier ruta | Script |
+
+## Flujo por unidad
+
+```
+Seleccionar → Instrucciones → Resolver → Validar → Revelar palabra
+    │              │              │           │            │
+    ▼              ▼              ▼           ▼            ▼
+unidad 2       retos        (terminal)    evaluar    revelar-frase
+```
+
+1. **Seleccionar** → `unidad 2` cambia la unidad activa
+2. **Instrucciones** → `retos` muestra pistas progresivas
+3. **Resolver** → ejecuta comandos en la terminal
+4. **Validar** → `evaluar` muestra ✓ PASS / ✗ FAIL por reto
+5. **Frase** → `revelar-frase` revela la palabra oculta
+
+## Frase secreta
+
+Cada unidad completada revela una palabra. Completa las 11 para descubrir la frase:
+
+```
+_ _ _ _ _ _ _ _ _ _ _
+```
+
+## Qué aprenderás
+
+| Unidad | Tema | Retos |
+|--------|------|:-----:|
+| I | Fundamentos de Linux y WSL2 | 10 |
+| II | Gestión de Paquetes y APT | 10 |
+| III | Scripting Bash | 10 |
+| IV | Gestión de Usuarios y SSH | 10 |
+| V | Gestión de Procesos y systemd | 10 |
+| VI | Almacenamiento y LVM | 10 |
+| VII | Hardening del Sistema | 10 |
+| VIII | Contenedores con Docker | 10 |
+| IX | Servidor Web con Nginx | 10 |
+| X | Certificados SSL y HTTPS | 10 |
+| XI | Docker Compose y Bases de Datos | 10 |
+
+**Total: 110 retos · 11/11 unidades implementadas.**
+
+## Instalación por sistema operativo
 
 <details>
 <summary>macOS</summary>
@@ -82,72 +133,7 @@ docker compose exec lab-linux bash
 ```
 </details>
 
----
-
-## Comandos del Contenedor
-
-| Comando | Qué hace | Cómo se accede |
-|---------|----------|----------------|
-| `menu` | Menú principal con progreso global | Alias en .bash_aliases |
-| `jugar` | Modo interactivo: instrucción → comando → verificar | Alias en .bash_aliases |
-| `unidad <n>` | Seleccionar unidad (ej: `unidad 3`) | Alias en .bash_aliases |
-| `retos` | Ver retos de la unidad actual | Alias en .bash_aliases |
-| `evaluar` | Ejecutar validación y mostrar puntaje | Alias en .bash_aliases |
-| `revelar-frase` | Revelar palabra al completar una unidad | Alias en .bash_aliases |
-| `progreso` | Ver barra de progreso global | Alias en .bash_aliases |
-| `ayuda` | Lista de comandos disponibles | Función en menu.sh |
-| `~/bin/lab` | Lanza el menú interactivo desde cualquier ruta | Script en ~/bin/ |
-
----
-
-## Flujo por Unidad
-
-```
-Seleccionar → Instrucciones → Resolver → Validar → Revelar palabra
-    │              │              │           │            │
-    ▼              ▼              ▼           ▼            ▼
-unidad 2       retos        (terminal)    evaluar    revelar-frase
-```
-
-1. **Seleccionar** → `unidad 2` cambia la unidad activa
-2. **Instrucciones** → `retos` muestra pistas progresivas
-3. **Resolver** → ejecuta comandos en la terminal
-4. **Validar** → `evaluar` muestra ✓ PASS / ✗ FAIL por reto
-5. **Frase** → `revelar-frase` revela la palabra oculta
-
----
-
-## Frase Secreta
-
-Cada unidad completada revela una palabra. Completa las 11 para descubrir la frase:
-
-```
-_ _ _ _ _ _ _ _ _ _ _
-```
-
----
-
-## Qué aprenderás
-
-| Unidad | Tema | Retos |
-|--------|------|:-----:|
-| I | Fundamentos de Linux y WSL2 | 10 |
-| II | Gestión de Paquetes y APT | 10 |
-| III | Scripting Bash | 10 |
-| IV | Gestión de Usuarios y SSH | 10 |
-| V | Gestión de Procesos y systemd | 10 |
-| VI | Almacenamiento y LVM | 10 |
-| VII | Hardening del Sistema | 10 |
-| VIII | Contenedores con Docker | 10 |
-| IX | Servidor Web con Nginx | 10 |
-| X | Certificados SSL y HTTPS | 10 |
-| XI | Docker Compose y Bases de Datos | 10 |
-
-**Total: 110 retos · 11/11 unidades implementadas.**
-
----
-
-## Solución de Problemas
+## Solución de problemas
 
 | Problema | Solución |
 |----------|----------|
@@ -155,8 +141,6 @@ _ _ _ _ _ _ _ _ _ _ _
 | Comandos no funcionan | Verificar que estás dentro: `docker compose exec lab-linux bash` |
 | Pruebas fallan | directorio debe ser `~/laboratorio`, nombres exactos |
 | Docker-in-Docker falla | Verificar `privileged: true` y `/var/run/docker.sock` montado |
-
----
 
 ## Arquitectura
 
@@ -189,7 +173,7 @@ lab-linux/
 └── README.md               # Este archivo
 ```
 
-### Cadena de Sourcing
+### Cadena de sourcing
 
 ```
 entrypoint.sh
@@ -203,8 +187,6 @@ Cada shell nueva:
   .bashrc → .bash_aliases → common.sh + interactive.sh → funciones disponibles
 ```
 
----
-
 ## Novedades v1.1.0
 
 - **Comandos interactivos funcionan en cualquier shell**: `menu`, `jugar`, `retos`, `evaluar`, `revelar-frase` ahora usan funciones cargadas desde `shared/interactive.sh` vía `.bash_aliases`
@@ -212,13 +194,9 @@ Cada shell nueva:
 - **Instrucciones paso a paso claras**: Unidad III (Scripting) muestra comandos en líneas separadas para evitar errores de copiado
 - **Validadores robustos**: reto 5 (Permisos 755) ahora verifica el archivo `archivo` del estudiante, no un archivo temporal interno
 
----
-
 ## Contribuir
 
 Ver [CONTRIBUTING.md](CONTRIBUTING.md) para la estrategia de ramas y flujo de trabajo.
-
----
 
 ## Autor
 

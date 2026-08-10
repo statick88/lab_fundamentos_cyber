@@ -20,27 +20,24 @@ jobs:
         run: |
           for u in i ii iii iv v vi vii viii ix x xi; do
             echo "=== Running tests for Unit $u ==="
-            docker run --rm \
+            docker run --rm --entrypoint bash \
               -v $(pwd)/units/$u:/opt/lab-units/$u:ro \
               lab-linux \
-              bash -c "bash /opt/lab-units/$u/test.sh" || exit 1
+              -c "bash /opt/lab-units/$u/test.sh" || exit 1
           done
         env:
           FRASE_OCULTA: "Toda revolución comienza con un pass. Los administradores nunca duermen."
 
-      - name: Run shared/ scripts lint
+      - name: Run shared/ scripts lint (in-container)
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq shellcheck
-          for f in shared/*.sh; do
-            echo "Checking $f..."
-            bash -n "$f" || exit 1
-            shellcheck "$f" || exit 1
-          done
+          docker run --rm --entrypoint bash \
+            -v $(pwd)/shared:/shared:ro \
+            lab-linux \
+            -c "for f in /shared/*.sh; do echo \"Checking \$f...\"; bash -n \"\$f\" || exit 1; shellcheck --severity error \"\$f\" || exit 1; done"
 
       - name: Verify menu.sh integration
         run: |
-          docker run --rm lab-linux bash -c "source /shared/menu.sh && echo 'Menu OK'"
+          docker run --rm --entrypoint bash lab-linux -c "source /shared/menu.sh && echo 'Menu OK'"
 
       - name: Verify entrypoint sources common (transitively menu)
         run: |
@@ -53,9 +50,16 @@ jobs:
             exit 1
           }
 
+      - name: Run metrics tests (unit + integration + e2e)
+        run: |
+          docker run --rm --entrypoint bash \
+            -v $(pwd)/tests:/opt/lab-tests:ro \
+            -v $(pwd)/shared:/shared:ro \
+            lab-linux \
+            -c "cd /opt/lab-tests && bash metrics_unit_test.sh && bash metrics_integration_test.sh && bash metrics_e2e_test.sh"
+
       - name: Build and verify PDF generation
         run: |
-          docker run --rm \
-            -v $(pwd)/resultados:/home/estudiante/laboratorio/resultados \
+          docker run --rm --entrypoint bash \
             lab-linux \
-            bash -c "mkdir -p /home/estudiante/laboratorio/resultados && bash /generar-pdf.sh 1"
+            -c "bash /generar-pdf.sh 1"

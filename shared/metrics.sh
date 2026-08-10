@@ -231,7 +231,7 @@ metrics_summary() {
     END {
         if (length(total) == 0) {
             print "  No hay retos registrados."
-            next
+            exit
         }
         printf "  %-12s %8s %8s %8s %10s\n", "UNIDAD", "PASSED", "TOTAL", "TASA", "PROM(ms)"
         printf "  %-12s %8s %8s %8s %10s\n", "--------", "------", "-----", "----", "-------"

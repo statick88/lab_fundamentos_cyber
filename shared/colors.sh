@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034
 # Colores ANSI y funciones de formato
 ROJO='\033[0;31m'; VERDE='\033[0;32m'; AMARILLO='\033[0;33m'
 AZUL='\033[0;34m'; MAGENTA='\033[0;35m'; CYAN='\033[0;36m'; BLANCO='\033[0;37m'

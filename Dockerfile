@@ -39,6 +39,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     docker.io \
     pandoc \
+    texlive-latex-base \
+    texlive-latex-extra \
+    texlive-fonts-recommended \
+    lmodern \
+    shellcheck \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -53,9 +58,19 @@ COPY entrypoint.sh /entrypoint.sh
 
 # Copiar biblioteca compartida
 COPY shared/ /shared/
+COPY shared/ /opt/shared/
 
 # Copiar unidades del curso a /opt (fuera del volume mount)
 COPY units/ /opt/lab-units/
+
+# Copiar tests de métricas
+COPY tests/ /opt/lab-tests/
+
+# Copiar script de métricas principal
+COPY metrics_test.sh /opt/metrics_test.sh
+
+# Copiar script de generación de PDF
+COPY generar-pdf.sh /generar-pdf.sh
 
 # Copiar plantilla de respuestas
 COPY plantilla.md /home/estudiante/laboratorio/plantilla.md
@@ -66,7 +81,10 @@ COPY bashrc /home/estudiante/.bashrc
 # Establecer permisos de ejecución y dueño
 RUN chmod +x /entrypoint.sh && \
     chmod +x /shared/*.sh && \
+    chmod +x /generar-pdf.sh && \
+    chmod +x /opt/metrics_test.sh && \
     find /opt/lab-units -name "*.sh" -exec chmod +x {} \; && \
+    find /opt/lab-tests -name "*.sh" -exec chmod +x {} \; && \
     chown -R estudiante:estudiante /home/estudiante/laboratorio
 
 # Cambiar al usuario 'estudiante'
