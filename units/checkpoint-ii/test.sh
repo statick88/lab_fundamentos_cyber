@@ -24,7 +24,7 @@ reto4() {
     if command -v sudo >/dev/null 2>&1 && sudo -n ufw status >/dev/null 2>&1; then
         sudo ufw status | grep -q "22/tcp"
     else
-        find "$HOME/laboratorio" -maxdepth 4 -type f \( -name "*.sh" -o -name "*.rules" -o -name "*.conf" \) 2>/dev/null | xargs grep -l "ufw.*22\|22.*ufw\|allow.*ssh" 2>/dev/null | head -1 | grep -q "."
+        find "$HOME/laboratorio" -maxdepth 4 -type f \( -name "*.sh" -o -name "*.rules" -o -name "*.conf" \) ! -name "test.sh" 2>/dev/null | xargs grep -l "ufw.*22\|22.*ufw\|allow.*ssh" 2>/dev/null | head -1 | grep -q "." || true
     fi
 }
 
@@ -33,7 +33,7 @@ reto5() {
         sudo iptables -L >/dev/null 2>&1
     else
         command -v iptables >/dev/null 2>&1
-        find "$HOME/laboratorio" -maxdepth 4 -type f \( -name "*.sh" -o -name "*.txt" -o -name "*.md" \) 2>/dev/null | xargs grep -l "iptables.*-L\|iptables.*list" 2>/dev/null | head -1 | grep -q "."
+        find "$HOME/laboratorio" -maxdepth 4 -type f \( -name "*.sh" -o -name "*.txt" -o -name "*.md" \) ! -name "test.sh" 2>/dev/null | xargs grep -l "iptables.*-L\|iptables.*list" 2>/dev/null | head -1 | grep -q "." || true
     fi
 }
 

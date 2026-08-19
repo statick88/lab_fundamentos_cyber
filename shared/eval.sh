@@ -97,24 +97,56 @@ eval_cvss() {
     local expected_score="$1"
     local student_script="$2"
     local tolerance="${3:-0.5}"
+    local vector="${4:-}"
 
     if [ -z "$student_script" ]; then
         student_script="$HOME/laboratorio/cvss_calculator.py"
+    fi
+
+    if [ -z "$vector" ]; then
+        return 1
     fi
 
     if [ ! -f "$student_script" ]; then
         return 1
     fi
 
+    # Anti-bypass: verify script has substantive content
+    local line_count
+    line_count=$(wc -l < "$student_script" 2>/dev/null || echo 0)
+    if [ "$line_count" -lt 10 ]; then
+        return 1
+    fi
+
+    # Verify script references CVSS metrics
+    local metric_count=0
+    for metric in AV AC PR UI S C I A; do
+        if grep -q "$metric" "$student_script" 2>/dev/null; then
+            metric_count=$((metric_count + 1))
+        fi
+    done
+    if [ "$metric_count" -lt 3 ]; then
+        return 1
+    fi
+
+    # Verify script contains math operations
+    if ! grep -qE '[\*\/\+\-\^]' "$student_script" 2>/dev/null; then
+        return 1
+    fi
+
     local actual_score
-    actual_score=$(python3 "$student_script" 2>/dev/null || echo "")
+    actual_score=$(python3 "$student_script" "$vector" 2>/dev/null || echo "")
     if [ -z "$actual_score" ]; then
         return 1
     fi
 
+    if ! echo "$actual_score" | grep -qE '^[0-9]+(\.[0-9]+)?$'; then
+        return 1
+    fi
+
     local diff
-    diff=$(echo "$expected_score $actual_score" | awk '{print ($1-$2)>0?($1-$2):($2-$1)}')
-    [ "$(echo "$diff <= $tolerance" | bc -l)" -eq 1 ]
+    diff=$(echo "$expected_score $actual_score" | awk '{if ($1 > $2) print $1-$2; else print $2-$1}')
+    echo "$diff $tolerance" | awk '{exit ($1 <= $2) ? 0 : 1}'
 }
 
 eval_log_analysis() {

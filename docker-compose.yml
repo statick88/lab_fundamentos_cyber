@@ -32,12 +32,14 @@ services:
         ipv4_address: 172.20.0.10
     restart: unless-stopped
     security_opt:
-      - no-new-privileges:true
+      - no-new-privileges:false
     cap_drop:
       - ALL
     cap_add:
       - NET_ADMIN
       - NET_RAW
+      - SETUID
+      - SETGID
 
 volumes:
   lab-data:

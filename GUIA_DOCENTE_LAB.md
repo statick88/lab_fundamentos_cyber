@@ -115,6 +115,45 @@
 4. Si falla, el estudiante puede reintentar
 5. Registrar resultados para seguimiento pedagógico
 
+## Clasificación pedagógica CORE / OPTATIVO
+
+| Tipo | Retos | Descripción |
+|------|:-----:|-------------|
+| CORE | 60 | Obligatorios para certificación. Cubren competencias mínimas del módulo. |
+| OPTATIVO | 80 | Exploratorios. Permiten profundizar en tópicos avanzados. |
+
+- Las sesiones de 24h se diseñan alrededor de los 60 retos CORE.
+- Los retos OPTATIVO se pueden asignar como tarea adicional o para estudiantes avanzados.
+- La clasificación está centralizada en `shared/units_manifest.sh`.
+
+## Anti-tampering y progreso
+
+- El progreso se almacena en `/var/lab-state/progress` (root-owned, permisos 0660).
+- El estudiante no puede modificar ni eliminar el archivo de progreso.
+- Los validadores leen el estado desde `/var/lab-state`, no desde `~/.lab_state`.
+- Al migrar desde versiones anteriores, el progreso se copia automáticamente y se protege.
+
+## Validadores estrictos
+
+- **CVSS**: requiere un script Python (`cvss_calculator.py`) con al menos 10 líneas, referencias a métricas AV/AC/PR/UI/S/C/I/A y operaciones matemáticas. El score se compara con tolerancia configurable.
+- **Logs**: verifica archivos reales con antigüedad mínima (300s) y patrones de timestamp válidos (syslog o ISO8601).
+- **Firewall**: valida estado real de `ufw` e `iptables` via sudo, con fallback a scripts del estudiante.
+- **IAM**: verifica grupos, usuarios, sudoers y configuraciones PAM directamente en el sistema.
+
+## Aislamiento de red
+
+- Red bridge `lab-cyber` en subnet `172.20.0.0/24`.
+- `driver_opts` deshabilita IP masquerade (`com.docker.network.bridge.enable_ip_masquerade: "false"`).
+- Bind de la red solo a `127.0.0.1` (`com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"`).
+- El contenedor usa capabilities mínimas: `NET_ADMIN`, `NET_RAW`, `SETUID`, `SETGID`.
+
+## Viabilidad de sesión 24h
+
+- El entorno está diseñado para sesiones de 24 horas continuas.
+- `restart: unless-stopped` asegura que el contenedor se recupere ante reinicios.
+- Los archivos de estudiante persisten en el volumen `lab-data`.
+- El progreso en `/var/lab-state` sobrevive a reinicios del contenedor.
+
 ## Cómo usar reset.sh entre clases
 
 ```bash

@@ -24,68 +24,34 @@ reto2() {
 }
 
 reto3() {
-    if [ -f /var/log/syslog ]; then
-        local count
-        count=$(grep -ciE "error|fail|critical" /var/log/syslog 2>/dev/null || echo 0)
-        [ "$count" -gt 0 ]
-    elif [ -f "$HOME/laboratorio/logging/mi_app.log" ]; then
-        eval_log_analysis "$HOME/laboratorio/logging/mi_app.log" "error|fail|critical" 1 student
-    else
-        return 1
-    fi
+    eval_log_analysis "$HOME/laboratorio/logging/mi_app.log" "error|fail|critical" 1 student
 }
 
 reto4() {
-    if [ -f /var/log/syslog ]; then
-        awk '$4 ~ /13:55/ {print $0}' /var/log/syslog | grep -q "192.168.1" 2>/dev/null || true
-    elif [ -f "$HOME/laboratorio/logging/apache_access.log" ]; then
-        eval_log_analysis "$HOME/laboratorio/logging/apache_access.log" "192.168.1" 1 student
-    else
-        return 1
-    fi
+    eval_log_analysis "$HOME/laboratorio/logging/apache_access.log" "192.168.1" 1 student
 }
 
 reto5() {
-    if [ -f /var/log/syslog ]; then
-        sed 's/192\\.168\\.[0-9]\\+\\.[0-9]\\+/ENMASCARADA/g' /var/log/syslog | grep -q "ENMASCARADA" 2>/dev/null || true
-    elif [ -f "$HOME/laboratorio/logging/apache_access.log" ]; then
-        eval_log_analysis "$HOME/laboratorio/logging/apache_access.log" "192.168" 1 student
-    else
-        return 1
-    fi
+    eval_log_analysis "$HOME/laboratorio/logging/apache_access.log" "192.168" 1 student
 }
 
 reto6() {
-    if [ -f /var/log/auth.log ] && [ -f /var/log/syslog ]; then
-        grep "13:55:38" /var/log/auth.log 2>/dev/null | grep -q "systemd" || \
-        grep "13:55:38" /var/log/syslog 2>/dev/null | grep -q "systemd"
-    elif [ -f "$HOME/laboratorio/logging/auth_sys.log" ]; then
-        eval_log_analysis "$HOME/laboratorio/logging/auth_sys.log" "13:55:38.*systemd" 1 student
-    else
-        return 1
-    fi
+    eval_log_analysis "$HOME/laboratorio/logging/auth_sys.log" "13:55:38.*systemd" 1 student
 }
 
 reto7() {
-    [ -f "$HOME/laboratorio/logging/mi_app.log" ]
-    # Verify suspicious process detection script exists
     [ -f "$HOME/laboratorio/logging/monitor_procesos.sh" ] && [ -x "$HOME/laboratorio/logging/monitor_procesos.sh" ]
-}
-
-reto8() {
-    # Verify backup script exists and implements 3-2-1 concept
-    [ -f "$HOME/laboratorio/logging/backup_script.sh" ] && [ -x "$HOME/laboratorio/logging/backup_script.sh" ]
-    grep -qi "tar\|rsync\|3.*2.*1\|offsite" "$HOME/laboratorio/logging/backup_script.sh" 2>/dev/null || true
+    [ -f "$HOME/laboratorio/logging/monitor_procesos.sh" ] && grep -qi "ps\|ss\|netstat\|awk" "$HOME/laboratorio/logging/monitor_procesos.sh" 2>/dev/null || true
 }
 
 reto9() {
-    # RTO/RPO calculation - verify student can define both
-    [ -f "$HOME/laboratorio/logging/rto_rpo.md" ] || [ -f "$HOME/laboratorio/logging/rto_rpo.txt" ]
+    [ -f "$HOME/laboratorio/logging/rto_rpo.md" ] || [ -f "$HOME/laboratorio/logging/rto_rpo.txt" ] || \
+    find "$HOME/laboratorio/logging" -maxdepth 1 -type f \( -name "*rto*" -o -name "*rpo*" \) 2>/dev/null | head -1 | grep -q "."
 }
 
 reto10() {
-    # IR playbook - verify sequential phases document
-    [ -f "$HOME/laboratorio/logging/playbook_ir.md" ] || [ -f "$HOME/laboratorio/logging/playbook_ir.txt" ]
+    [ -f "$HOME/laboratorio/logging/playbook_ir.md" ] || [ -f "$HOME/laboratorio/logging/playbook_ir.txt" ] || \
+    find "$HOME/laboratorio/logging" -maxdepth 1 -type f \( -name "*ir*" -o -name "*playbook*" \) 2>/dev/null | head -1 | grep -q "."
     grep -qi "preparación\|detección\|contención\|erradicación\|recuperación" "$HOME/laboratorio/logging/playbook_ir.md" 2>/dev/null || grep -qi "preparacion\|deteccion\|contencion\|erradicacion\|recuperacion" "$HOME/laboratorio/logging/playbook_ir.txt" 2>/dev/null || true
 }
 

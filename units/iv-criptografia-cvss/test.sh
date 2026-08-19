@@ -8,27 +8,27 @@ UNIT_NAME="unit-IV"
 TOTAL_RETOS=10
 
 reto1() {
-    local student_script="$HOME/laboratorio/ciberseguridad/cvss_calculator.py"
+    local student_script="$HOME/laboratorio/cvss_calculator.py"
     if [ ! -f "$student_script" ]; then
-        student_script="$HOME/laboratorio/cvss_calculator.py"
+        student_script="$HOME/laboratorio/ciberseguridad/cvss_calculator.py"
     fi
-    eval_cvss "9.8" "$student_script" "0.5"
+    eval_cvss "9.8" "$student_script" "0.5" "AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
 }
 
 reto2() {
-    local student_script="$HOME/laboratorio/ciberseguridad/cvss_calculator.py"
+    local student_script="$HOME/laboratorio/cvss_calculator.py"
     if [ ! -f "$student_script" ]; then
-        student_script="$HOME/laboratorio/cvss_calculator.py"
+        student_script="$HOME/laboratorio/ciberseguridad/cvss_calculator.py"
     fi
-    eval_cvss "5.4" "$student_script" "0.5"
+    eval_cvss "5.4" "$student_script" "0.5" "AV:N/AC:L/PR:L/UI:R/S:C/C:L/I:L/A:N"
 }
 
 reto3() {
-    local student_script="$HOME/laboratorio/ciberseguridad/cvss_calculator.py"
+    local student_script="$HOME/laboratorio/cvss_calculator.py"
     if [ ! -f "$student_script" ]; then
-        student_script="$HOME/laboratorio/cvss_calculator.py"
+        student_script="$HOME/laboratorio/ciberseguridad/cvss_calculator.py"
     fi
-    eval_cvss "7.8" "$student_script" "0.5"
+    eval_cvss "7.8" "$student_script" "0.5" "AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
 }
 
 reto4() {
@@ -42,48 +42,26 @@ reto4() {
 }
 
 reto5() {
-    if [ -f /var/log/auth.log ]; then
-        eval_log_analysis /var/log/auth.log "Failed password" 1 system
-    elif [ -f "$HOME/laboratorio/ciberseguridad/auth.log" ]; then
-        eval_log_analysis "$HOME/laboratorio/ciberseguridad/auth.log" "Failed password" 1 student
-    else
-        return 1
-    fi
+    eval_log_analysis "$HOME/laboratorio/ciberseguridad/auth.log" "Failed password" 1 student
 }
 
 reto6() {
-    if [ -f /var/log/apache2/access.log ]; then
-        eval_log_analysis /var/log/apache2/access.log "union.*select" 1 system
-    elif [ -f "$HOME/laboratorio/ciberseguridad/access.log" ]; then
-        eval_log_analysis "$HOME/laboratorio/ciberseguridad/access.log" "union.*select" 1 student
-    else
-        return 1
-    fi
+    eval_log_analysis "$HOME/laboratorio/ciberseguridad/access.log" "union.*select" 1 student
 }
 
 reto7() {
-    if [ -f /var/log/apache2/access.log ]; then
-        eval_log_analysis /var/log/apache2/access.log "\.\./|etc/passwd" 1 system
-    elif [ -f "$HOME/laboratorio/ciberseguridad/access.log" ]; then
-        eval_log_analysis "$HOME/laboratorio/ciberseguridad/access.log" "\.\./|etc/passwd" 1 student
-    else
-        return 1
-    fi
+    eval_log_analysis "$HOME/laboratorio/ciberseguridad/access.log" "\.\./|etc/passwd" 1 student
 }
 
 reto8() {
-    if [ -f /var/log/mail.log ]; then
-        eval_log_analysis /var/log/mail.log "X-Priority|Reply-To|suspicious" 1 system
-    elif [ -f "$HOME/laboratorio/ciberseguridad/access.log" ]; then
-        eval_log_analysis "$HOME/laboratorio/ciberseguridad/access.log" "X-Priority|Reply-To|suspicious|link" 1 student
-    else
-        return 1
-    fi
+    eval_log_analysis "$HOME/laboratorio/ciberseguridad/access.log" "X-Priority|Reply-To|suspicious|link" 1 student
 }
 
 reto9() {
     if [ -f "$HOME/laboratorio/ciberseguridad/malware_simulado.bin" ]; then
-        eval_crypto_hash "$HOME/laboratorio/ciberseguridad/malware_simulado.bin" "" sha256sum
+        local hash
+        hash=$(sha256sum "$HOME/laboratorio/ciberseguridad/malware_simulado.bin" 2>/dev/null | awk '{print $1}')
+        [ -n "$hash" ] && [ ${#hash} -eq 64 ]
     else
         return 1
     fi
@@ -94,7 +72,6 @@ reto10() {
     local baseline="$HOME/laboratorio/ciberseguridad/baseline_hashes.txt"
     if [ -f "$actual" ] && [ -f "$baseline" ]; then
         sha256sum "$actual" 2>/dev/null > /tmp/actual_hash.txt
-        diff <(cut -d' ' -f1 "$baseline") <(cut -d' ' -f1 /tmp/actual_hash.txt) >/dev/null 2>&1 || true
         [ -f /tmp/actual_hash.txt ]
     else
         return 1

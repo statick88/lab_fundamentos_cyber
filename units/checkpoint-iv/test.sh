@@ -12,7 +12,7 @@ reto1() {
     if [ ! -f "$student_script" ]; then
         student_script="$HOME/laboratorio/cvss_calculator.py"
     fi
-    eval_cvss "7.5" "$student_script" "0.5"
+    eval_cvss "7.5" "$student_script" "0.5" "AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
 }
 
 reto2() {

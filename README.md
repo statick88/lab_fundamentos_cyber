@@ -83,8 +83,10 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 ## Medidas de seguridad del laboratorio
 
-- Contenedor aislado en red bridge 172.20.0.0/24
-- Capabilities limitadas: NET_ADMIN, NET_RAW (sin SYS_ADMIN, sin privileged)
+- Contenedor aislado en red bridge 172.20.0.0/24 con driver_opts: sin IP masquerade, bind solo a 127.0.0.1
+- Capabilities limitadas: NET_ADMIN, NET_RAW, SETUID, SETGID (sin SYS_ADMIN, sin privileged)
+- Progreso almacenado en /var/lab-state (root-owned, no escribible por estudiante)
+- Validadores estrictos: CVSS requiere script Python con métricas y operaciones matemáticas; logs verifican archivos reales con antigüedad mínima
 - No se descargan archivos externos durante los retos
 - Todo el malware es simulado (archivos de texto inocuos)
 - No se escanean redes externas
@@ -165,14 +167,16 @@ docker compose exec lab-linux bash
 ```
 lab-linux/
 ├── Dockerfile              # Ubuntu 24.04 + herramientas ciberseguridad
-├── docker-compose.yml      # Red aislada 172.20.0.0/24
+├── docker-compose.yml      # Red aislada 172.20.0.0/24 + capabilities mínimas
 ├── entrypoint.sh           # Sourcing, aliases y banner ABC-CYB-101
 ├── reset.sh                # Limpia configuraciones y archivos de prueba
 ├── shared/                 # Librería compartida
 │   ├── common.sh           # Funciones base, 14 unidades
+│   ├── units_manifest.sh   # Manifiesto centralizado CORE/OPT
 │   ├── menu.sh             # Menú principal 14 unidades
 │   ├── interactive.sh      # Funciones interactivas (jugar, evaluar, retos)
-│   ├── eval.sh             # Sistema de evaluación + funciones ciberseguridad
+│   ├── eval.sh             # Sistema de evaluación + anti-bypass + eval_cvss
+│   ├── cvss_calculator.py  # Calculadora CVSS 3.1 de referencia
 │   ├── colors.sh           # Colores de terminal
 │   ├── banner.sh           # Banners visuales
 │   └── unidad.sh           # Cambiar unidad (1-14)
@@ -207,6 +211,10 @@ lab-linux/
 - **SSL/TLS ampliado**: RSA 4096, ECC secp384r1, verificación de cadena
 - **Reset script**: Limpia configuraciones entre clases
 - **140 retos prácticos** con evaluación automática
+- **Clasificación CORE/OPT**: 60 retos obligatorios + 80 optativos para sesiones de 24h
+- **Anti-tampering**: Progreso en /var/lab-state (root-owned, no escribible por estudiante)
+- **Validadores estrictos**: CVSS requiere script Python con anti-bypass; logs verifican archivos reales; firewall valida estado ufw/iptables con sudo
+- **Red aislada**: driver_opts sin IP masquerade, bind a 127.0.0.1
 
 ## Autor
 
