@@ -1,7 +1,6 @@
 #!/bin/bash
 # Unit III-iam-mfa: IAM, MFA y Control de Acceso — test.sh
 
-set -e
 source /shared/common.sh
 
 UNIT_NAME="unit-III"
@@ -12,13 +11,17 @@ reto1() {
     if getent group sysadmins >/dev/null 2>&1; then
         has_group=1
     fi
-    if id ops_admin >/dev/null 2>&1; then
+    if id -u ops_admin >/dev/null 2>&1; then
         has_user=1
     fi
-    if [ "$has_group" -eq 0 ] && [ "$has_user" -eq 0 ]; then
-        [ -f "$HOME/laboratorio/iam/crear_grupo_usuario.sh" ] || [ -f "$HOME/laboratorio/iam/grupo_sysadmins.txt" ]
-    else
+    if [ "$has_group" -eq 1 ] && [ "$has_user" -eq 1 ]; then
         return 0
+    fi
+    local script="$HOME/laboratorio/iam/crear_grupo_usuario.sh"
+    if [ -f "$script" ]; then
+        grep -q "groupadd.*sysadmins" "$script" 2>/dev/null && grep -q "useradd.*ops_admin" "$script" 2>/dev/null
+    else
+        return 1
     fi
 }
 

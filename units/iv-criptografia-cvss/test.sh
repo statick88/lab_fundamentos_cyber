@@ -1,7 +1,6 @@
 #!/bin/bash
 # Unit IV: Criptografía y CVSS — test.sh
 
-set -e
 source /shared/common.sh
 
 UNIT_NAME="unit-IV"

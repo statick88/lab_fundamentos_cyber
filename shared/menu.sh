@@ -1,5 +1,6 @@
 #!/bin/bash
 # Sistema de menus y navegacion para 14 unidades ABC-CYB-101
+# 144 retos totales: 60 CORE + 84 OPT
 
 mostrar_menu_principal() {
     clear; echo ""
@@ -105,7 +106,7 @@ jugar_unidad() {
             echo -e "  ${VERDE}[$i]${RESET} $titulo (${completados}/${total})"
         done
         echo ""
-        echo -n "  Elige unidad (1-14, Enter para actual): "
+        echo -n "  Elige unidad (1-$UNIT_COUNT, Enter para actual): "
         read -r choice
         if [ -z "$choice" ]; then
             unit="${CURRENT_UNIT:-}"

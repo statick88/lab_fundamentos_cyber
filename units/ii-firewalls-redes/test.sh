@@ -1,7 +1,6 @@
 #!/bin/bash
 # Unit II: Filtrado de Red y Firewalls — test.sh
 
-set -e
 source /shared/common.sh
 
 UNIT_NAME="unit-II"
@@ -67,11 +66,16 @@ reto9() {
 }
 
 reto10() {
-    if command -v nmap >/dev/null 2>&1; then
-        nmap -sS -p- 127.0.0.1 >/dev/null 2>&1 || true
+    if [ -f "$HOME/laboratorio/redes/captura_scan.pcapng" ]; then
+        if command -v tcpdump >/dev/null 2>&1; then
+            tcpdump -nn -r "$HOME/laboratorio/redes/captura_scan.pcapng" 2>/dev/null | grep -c "SYN" >/dev/null 2>&1 && return 0
+        fi
+        local size
+        size=$(stat -c %s "$HOME/laboratorio/redes/captura_scan.pcapng" 2>/dev/null || stat -f %z "$HOME/laboratorio/redes/captura_scan.pcapng" 2>/dev/null || echo 0)
+        [ "$size" -gt 1024 ]
+    else
+        return 1
     fi
-    command -v nmap >/dev/null 2>&1 || command -v tcpdump >/dev/null 2>&1
-    [ -f "$HOME/laboratorio/redes/captura_scan.pcapng" ]
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10)

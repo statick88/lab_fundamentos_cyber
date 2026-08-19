@@ -2,7 +2,6 @@
 # Unit V: Processes & Services — test.sh
 # Automated validation of 10 challenges
 
-set -e
 source /shared/common.sh
 
 UNIT_NAME="unit-V"

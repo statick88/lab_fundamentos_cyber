@@ -1,7 +1,6 @@
 #!/bin/bash
 # Checkpoint II: Evaluación Módulo II — test.sh
 
-set -e
 source /shared/common.sh
 
 UNIT_NAME="checkpoint-II"
@@ -16,15 +15,17 @@ reto2() {
 }
 
 reto3() {
-    [ -f "$HOME/laboratorio/checkpoints/checkpoint-ii/captura_checkpoint.pcapng" ] && grep -qi "SSH" "$HOME/laboratorio/checkpoints/checkpoint-ii/captura_checkpoint.pcapng" 2>/dev/null || true
-    cat /etc/services 2>/dev/null | grep -q "^ssh"
+    grep -q "^ssh" /etc/services 2>/dev/null
+    if [ -f "$HOME/laboratorio/checkpoints/checkpoint-ii/captura_checkpoint.pcapng" ]; then
+        grep -qi "SSH" "$HOME/laboratorio/checkpoints/checkpoint-ii/captura_checkpoint.pcapng" 2>/dev/null
+    fi
 }
 
 reto4() {
     if command -v sudo >/dev/null 2>&1 && sudo -n ufw status >/dev/null 2>&1; then
         sudo ufw status | grep -q "22/tcp"
     else
-        find "$HOME/laboratorio" -maxdepth 4 -type f \( -name "*.sh" -o -name "*.rules" -o -name "*.conf" \) ! -name "test.sh" 2>/dev/null | xargs grep -l "ufw.*22\|22.*ufw\|allow.*ssh" 2>/dev/null | head -1 | grep -q "." || true
+        find "$HOME/laboratorio" -maxdepth 4 -type f \( -name "*.sh" -o -name "*.rules" -o -name "*.conf" \) ! -name "test.sh" 2>/dev/null | xargs grep -l "ufw.*22\|22.*ufw\|allow.*ssh" 2>/dev/null | head -1 | grep -q "."
     fi
 }
 
@@ -33,7 +34,7 @@ reto5() {
         sudo iptables -L >/dev/null 2>&1
     else
         command -v iptables >/dev/null 2>&1
-        find "$HOME/laboratorio" -maxdepth 4 -type f \( -name "*.sh" -o -name "*.txt" -o -name "*.md" \) ! -name "test.sh" 2>/dev/null | xargs grep -l "iptables.*-L\|iptables.*list" 2>/dev/null | head -1 | grep -q "." || true
+        find "$HOME/laboratorio" -maxdepth 4 -type f \( -name "*.sh" -o -name "*.txt" -o -name "*.md" \) ! -name "test.sh" 2>/dev/null | xargs grep -l "iptables.*-L\|iptables.*list" 2>/dev/null | head -1 | grep -q "."
     fi
 }
 

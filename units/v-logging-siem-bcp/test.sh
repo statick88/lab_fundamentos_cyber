@@ -1,7 +1,6 @@
 #!/bin/bash
 # Unit V: Logging, SIEM y BCP — test.sh
 
-set -e
 source /shared/common.sh
 
 UNIT_NAME="unit-V"
@@ -9,7 +8,7 @@ TOTAL_RETOS=10
 
 reto1() {
     logger -p local0.info "test-lab-log-v-ret1" 2>/dev/null || true
-    grep -q "test-lab-log-v-ret1" /var/log/syslog 2>/dev/null || grep -q "test-lab-log-v-ret1" /var/log/user.log 2>/dev/null || true
+    grep -q "test-lab-log-v-ret1" /var/log/syslog 2>/dev/null || grep -q "test-lab-log-v-ret1" /var/log/user.log 2>/dev/null
 }
 
 reto2() {
@@ -41,7 +40,12 @@ reto6() {
 
 reto7() {
     [ -f "$HOME/laboratorio/logging/monitor_procesos.sh" ] && [ -x "$HOME/laboratorio/logging/monitor_procesos.sh" ]
-    [ -f "$HOME/laboratorio/logging/monitor_procesos.sh" ] && grep -qi "ps\|ss\|netstat\|awk" "$HOME/laboratorio/logging/monitor_procesos.sh" 2>/dev/null || true
+    [ -f "$HOME/laboratorio/logging/monitor_procesos.sh" ] && grep -qi "ps\|ss\|netstat\|awk" "$HOME/laboratorio/logging/monitor_procesos.sh" 2>/dev/null
+}
+
+reto8() {
+    [ -f "$HOME/laboratorio/logging/backup_script.sh" ] && [ -x "$HOME/laboratorio/logging/backup_script.sh" ]
+    [ -f "$HOME/laboratorio/logging/backup_script.sh" ] && grep -qi "tar\|rsync\|3.*2.*1\|offsite" "$HOME/laboratorio/logging/backup_script.sh" 2>/dev/null
 }
 
 reto9() {
@@ -52,7 +56,7 @@ reto9() {
 reto10() {
     [ -f "$HOME/laboratorio/logging/playbook_ir.md" ] || [ -f "$HOME/laboratorio/logging/playbook_ir.txt" ] || \
     find "$HOME/laboratorio/logging" -maxdepth 1 -type f \( -name "*ir*" -o -name "*playbook*" \) 2>/dev/null | head -1 | grep -q "."
-    grep -qi "preparación\|detección\|contención\|erradicación\|recuperación" "$HOME/laboratorio/logging/playbook_ir.md" 2>/dev/null || grep -qi "preparacion\|deteccion\|contencion\|erradicacion\|recuperacion" "$HOME/laboratorio/logging/playbook_ir.txt" 2>/dev/null || true
+    grep -qi "preparación\|detección\|contención\|erradicación\|recuperación" "$HOME/laboratorio/logging/playbook_ir.md" 2>/dev/null || grep -qi "preparacion\|deteccion\|contencion\|erradicacion\|recuperacion" "$HOME/laboratorio/logging/playbook_ir.txt" 2>/dev/null
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10)

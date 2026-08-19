@@ -26,6 +26,7 @@ if [ ! -f "$MARKER" ]; then
 fi
 
 # ─── Crear .bash_aliases para que cada nuevo shell tenga los comandos ────────
+cp ~/.bash_aliases ~/.bash_aliases.bak 2>/dev/null || true
 cat > ~/.bash_aliases <<'ALIASES'
 # Cargar funciones del laboratorio
 source /shared/common.sh
@@ -84,7 +85,7 @@ echo "    ${VERDE}evaluar${RESET}       - Evaluar progreso"
 echo "    ${VERDE}revelar-frase${RESET} - Ver frase secreta"
 echo "    ${VERDE}progreso${RESET}      - Ver progreso global"
 echo "    ${VERDE}reset.sh${RESET}      - Limpiar laboratorio"
-echo "    ${VERDE}unidad <n>${RESET}    - Seleccionar unidad (1-14)"
+echo "    ${VERDE}unidad <n>${RESET}    - Seleccionar unidad (1-$UNIT_COUNT)"
 echo ""
 echo -e "  👉 Escribe ${CYAN}menu${RESET} para comenzar"
 echo ""

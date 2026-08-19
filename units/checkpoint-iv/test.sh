@@ -1,7 +1,6 @@
 #!/bin/bash
 # Checkpoint IV: Evaluación Módulo IV — test.sh
 
-set -e
 source /shared/common.sh
 
 UNIT_NAME="checkpoint-IV"

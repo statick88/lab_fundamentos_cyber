@@ -2,7 +2,6 @@
 # Unit I: Fundamentos de Linux y WSL2 — test.sh
 # Standard pattern: defines retoN() validators + retoN_info() for menu-driven execution
 
-set -e
 source /shared/common.sh
 
 UNIT_NAME="unit-I"

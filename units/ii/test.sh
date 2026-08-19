@@ -2,7 +2,6 @@
 # Unit II: Package Management — test.sh
 # Automated validation of 10 challenges
 
-set -e
 source /shared/common.sh
 
 UNIT_NAME="unit-II"

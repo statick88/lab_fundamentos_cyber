@@ -144,9 +144,8 @@ eval_cvss() {
         return 1
     fi
 
-    local diff
-    diff=$(echo "$expected_score $actual_score" | awk '{if ($1 > $2) print $1-$2; else print $2-$1}')
-    echo "$diff $tolerance" | awk '{exit ($1 <= $2) ? 0 : 1}'
+    python3 -c "import sys; exit(0 if abs($expected_score - $actual_score) <= $tolerance else 1)" 2>/dev/null || \
+python3 -c "exit(0 if abs(float('''$expected_score''') - float('''$actual_score''')) <= float('''$tolerance''') else 1)"
 }
 
 eval_log_analysis() {
@@ -174,16 +173,18 @@ eval_log_analysis() {
         fi
 
         if [ "$source_type" = "student" ]; then
-            local file_mtime
+            local file_mtime file_ctime
             file_mtime=$(stat -c %Y "$log_file" 2>/dev/null || stat -f %m "$log_file" 2>/dev/null || echo 0)
+            file_ctime=$(stat -c %W "$log_file" 2>/dev/null || stat -f %B "$log_file" 2>/dev/null || echo 0)
             local now
             now=$(date +%s)
             local age=$((now - file_mtime))
-
-            if [ "$age" -lt 300 ]; then
+            local ctime_age=$((now - file_ctime))
+            
+            if [ "$age" -lt 300 ] || [ "$ctime_age" -lt 300 ]; then
                 return 1
             fi
-
+            
             local has_real_pattern=0
             if grep -qE "^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)" "$log_file" 2>/dev/null; then
                 has_real_pattern=1

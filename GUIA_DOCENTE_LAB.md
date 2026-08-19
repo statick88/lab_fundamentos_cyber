@@ -83,29 +83,34 @@
 
 ## Recomendaciones pedagógicas por módulo
 
-### Módulo I (Unidad 1)
-- Enfocarse en FHS y navegación básica
-- Usar `ls -la` frecuentemente para mostrar estructura
+### Módulo I (Unidad I + ii + VI)
+- Enfocarse en FHS, navegación básica, redes y protocolos
+- Usar `ls -la` frecuentemente para mostrar estructura de archivos
+- Unidad VI (LVM) es exploratoria: permitir que estudiantes avanzados profundicen
 
-### Módulo II (Unidad 2 + Checkpoint II)
+### Módulo II (Unidad II + III-iam + iii + Checkpoint II)
 - Empezar con identificación de protocolos antes de configurar firewalls
 - Usar capturas simuladas para análisis sin riesgo
-- Checkpoint después de dominar UFW básico
+- Checkpoint después de dominar UFW básico e iptables
+- Scripting Bash (15 retos) complementa IAM/MFA con automatización
 
-### Módulo III (Unidad 3 + 7)
-- Scripting primero, luego IAM/MFA
-- La retos 11-15 requieren configuración del sistema
-- Demostrar sudoers antes de que el estudiante lo configure
-
-### Módulo IV (Unidad 4 + Checkpoint IV)
+### Módulo III (Unidad IV + iv + VII + VIII)
 - CVSS es teórico, usar calculadora online como referencia
 - Hashing es práctico, verificar archivos reales del sistema
-- Checkpoint valida comprensión de certificados X.509
+- Criptografía aplicada (10 retos) complementa la unidad base de CVSS
+- Hardening (15 retos) requiere configuración del sistema
+- Docker (10 retos) es exploratorio: containers como complemento de hardening
 
-### Módulo V (Unidad 5 + Checkpoint V)
-- Logging es extremadamente práctico, generar logs en tiempo real
-- BCP/IR es conceptual, enfocarse en el playbook secuencial
-- Checkpoint evalúa síntesis de análisis de logs
+### Módulo IV (Unidad V + V-processes + IX + X + Checkpoint IV)
+- Logging/SIEM/BCP (10 retos) es extremadamente práctico: generar logs en tiempo real
+- Procesos y Servicios (10 retos, legacy) es exploratorio
+- Nginx (10 retos) es exploratorio: complementa logging con análisis de access logs
+- SSL/TLS (15 retos): RSA 4096, ECC secp384r1, verificación de cadena
+- Checkpoint valida comprensión de análisis de logs y configuración TLS
+
+### Módulo V (Unidad XI + Checkpoint V)
+- Docker Compose + DB (10 retos) integración de servicios con orquestación
+- Checkpoint evalúa síntesis de configuración TLS y despliegue de servicios
 
 ## Cómo evaluar con los checkpoints
 
@@ -120,11 +125,12 @@
 | Tipo | Retos | Descripción |
 |------|:-----:|-------------|
 | CORE | 60 | Obligatorios para certificación. Cubren competencias mínimas del módulo. |
-| OPTATIVO | 80 | Exploratorios. Permiten profundizar en tópicos avanzados. |
+| OPTATIVO | 115 | Exploratorios. Permiten profundizar en tópicos avanzados. |
 
 - Las sesiones de 24h se diseñan alrededor de los 60 retos CORE.
 - Los retos OPTATIVO se pueden asignar como tarea adicional o para estudiantes avanzados.
 - La clasificación está centralizada en `shared/units_manifest.sh`.
+- **Distribución CORE por unidad**: I(10)+II-firewalls(10)+III-iam(5)+IV(10)+V-logging(10)+checkpoint-II(5)+checkpoint-IV(5)+checkpoint-V(5) = 60 retos.
 
 ## Anti-tampering y progreso
 

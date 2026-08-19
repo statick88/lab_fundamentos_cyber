@@ -9,9 +9,9 @@ echo -e "${CYAN}🔄 Reseteando laboratorio...${RESET}"
 
 # Detener servicios si están corriendo
 echo -e "${AMARILLO}Deteniendo servicios...${RESET}"
-sudo ufw disable 2>/dev/null || true
-sudo systemctl stop fail2ban 2>/dev/null || true
-sudo systemctl stop ufw 2>/dev/null || true
+sudo ufw disable 2>/dev/null
+sudo systemctl stop fail2ban 2>/dev/null
+sudo systemctl stop ufw 2>/dev/null
 
 # Limpiar reglas iptables
 echo -e "${AMARILLO}Limpiando reglas iptables...${RESET}"
@@ -64,7 +64,7 @@ sudo journalctl --vacuum-time=1s 2>/dev/null || true
 if [ "${1:-}" = "--progreso" ] || [ "${1:-}" = "-p" ]; then
     echo -e "${AMARILLO}Reiniciando progreso...${RESET}"
     rm -f "$HOME/.lab_state/progress" 2>/dev/null || true
-    rm -f "/var/lab-state/progress" 2>/dev/null || true
+    sudo rm -f "/var/lab-state/progress" 2>/dev/null
     rm -f "$HOME/.current_unit" 2>/dev/null || true
     rm -f "$HOME/.unit_"*"_initialized" 2>/dev/null || true
     rm -f "$HOME/.units_copied" 2>/dev/null || true

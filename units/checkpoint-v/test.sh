@@ -1,7 +1,6 @@
 #!/bin/bash
 # Checkpoint V: Evaluación Módulo V — test.sh
 
-set -e
 source /shared/common.sh
 
 UNIT_NAME="checkpoint-V"
@@ -20,7 +19,7 @@ reto1() {
 reto2() {
     if [ -f /var/log/syslog ]; then
         output=$(awk '{print $1, $2, $3, $4, $5}' /var/log/syslog)
-        echo "$output" | grep -q "lab" || true
+        echo "$output" | grep -q "lab"
     elif [ -f "$HOME/laboratorio/checkpoints/checkpoint-v/syslog_sample.log" ]; then
         output=$(awk '{print $1, $2, $3, $4, $5}' "$HOME/laboratorio/checkpoints/checkpoint-v/syslog_sample.log")
         echo "$output" | grep -q "lab"
@@ -31,7 +30,7 @@ reto2() {
 
 reto3() {
     logger -p local0.info "checkpoint-v-ret3-test" 2>/dev/null || true
-    grep -q "checkpoint-v-ret3-test" /var/log/syslog 2>/dev/null || grep -q "checkpoint-v-ret3-test" /var/log/user.log 2>/dev/null || true
+    grep -q "checkpoint-v-ret3-test" /var/log/syslog 2>/dev/null || grep -q "checkpoint-v-ret3-test" /var/log/user.log 2>/dev/null
 }
 
 reto4() {
@@ -42,7 +41,7 @@ reto4() {
 reto5() {
     [ -f "$HOME/laboratorio/checkpoints/checkpoint-v/playbook_ir.txt" ] || [ -f "$HOME/laboratorio/checkpoints/checkpoint-v/playbook_ir.md" ] || \
     find "$HOME/laboratorio/checkpoints/checkpoint-v" -maxdepth 1 -type f \( -name "*ir*" -o -name "*playbook*" \) 2>/dev/null | head -1 | grep -q "."
-    grep -qi "preparación\|detección\|contención\|erradicación\|recuperación" "$HOME/laboratorio/checkpoints/checkpoint-v/playbook_ir.txt" 2>/dev/null || grep -qi "preparacion\|deteccion\|contencion\|erradicacion\|recuperacion" "$HOME/laboratorio/checkpoints/checkpoint-v/playbook_ir.md" 2>/dev/null || true
+    grep -qi "preparación\|detección\|contención\|erradicación\|recuperación" "$HOME/laboratorio/checkpoints/checkpoint-v/playbook_ir.txt" 2>/dev/null || grep -qi "preparacion\|deteccion\|contencion\|erradicacion\|recuperacion" "$HOME/laboratorio/checkpoints/checkpoint-v/playbook_ir.md" 2>/dev/null
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5)

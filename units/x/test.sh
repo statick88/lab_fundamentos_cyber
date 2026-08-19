@@ -2,7 +2,6 @@
 # Unit X: SSL/TLS Certificates — test.sh
 # Automated validation of 10 challenges
 
-set -e
 source /shared/common.sh
 
 UNIT_NAME="unit-X"
@@ -13,27 +12,27 @@ reto1() {
 }
 
 reto2() {
-    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
+    mkdir -p "$HOME/laboratorio/ssl" && cd "$HOME/laboratorio/ssl"
     openssl genrsa -out clave_privada.pem 2048 2>/dev/null
     [ -f clave_privada.pem ]
 }
 
 reto3() {
-    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
+    mkdir -p "$HOME/laboratorio/ssl" && cd "$HOME/laboratorio/ssl"
     openssl genrsa -out clave_privada.pem 2048 2>/dev/null
     output=$(openssl rsa -in clave_privada.pem -check -noout 2>&1)
     echo "$output" | grep -qi "ok\|valid"
 }
 
 reto4() {
-    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
+    mkdir -p "$HOME/laboratorio/ssl" && cd "$HOME/laboratorio/ssl"
     openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes \
         -subj "/C=EC/ST=Quito/O=Test/CN=localhost" 2>/dev/null
     [ -f cert.pem ] && [ -f key.pem ]
 }
 
 reto5() {
-    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
+    mkdir -p "$HOME/laboratorio/ssl" && cd "$HOME/laboratorio/ssl"
     openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes \
         -subj "/C=EC/ST=Quito/O=Test/CN=localhost" 2>/dev/null
     output=$(openssl x509 -in cert.pem -text -noout 2>/dev/null | head -5)
@@ -41,7 +40,7 @@ reto5() {
 }
 
 reto6() {
-    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
+    mkdir -p "$HOME/laboratorio/ssl" && cd "$HOME/laboratorio/ssl"
     openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes \
         -subj "/C=EC/ST=Quito/O=Test/CN=localhost" 2>/dev/null
     output=$(openssl x509 -in cert.pem -checkend 0 -noout 2>&1)
@@ -49,14 +48,14 @@ reto6() {
 }
 
 reto7() {
-    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
+    mkdir -p "$HOME/laboratorio/ssl" && cd "$HOME/laboratorio/ssl"
     openssl req -new -newkey rsa:2048 -nodes -out request.csr -keyout key_csr.pem \
         -subj "/C=EC/ST=Quito/O=Test/CN=test.com" 2>/dev/null
     [ -f request.csr ] && [ -f key_csr.pem ]
 }
 
 reto8() {
-    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
+    mkdir -p "$HOME/laboratorio/ssl" && cd "$HOME/laboratorio/ssl"
     openssl req -new -newkey rsa:2048 -nodes -out request.csr -keyout key_csr.pem \
         -subj "/C=EC/ST=Quito/O=Test/CN=test.com" 2>/dev/null
     output=$(openssl req -in request.csr -text -noout 2>/dev/null | head -5)
@@ -64,7 +63,7 @@ reto8() {
 }
 
 reto9() {
-    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
+    mkdir -p "$HOME/laboratorio/ssl" && cd "$HOME/laboratorio/ssl"
     mkdir -p ca
     openssl genrsa -out ca/ca.key 2048 2>/dev/null
     openssl req -x509 -new -nodes -key ca/ca.key -sha256 -days 365 \
@@ -73,7 +72,7 @@ reto9() {
 }
 
 reto10() {
-    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
+    mkdir -p "$HOME/laboratorio/ssl" && cd "$HOME/laboratorio/ssl"
     mkdir -p ca
     openssl genrsa -out ca/ca.key 2048 2>/dev/null
     openssl req -x509 -new -nodes -key ca/ca.key -sha256 -days 365 \
@@ -204,26 +203,26 @@ reto10_info() {
 
 
 reto11() {
-    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
+    mkdir -p "$HOME/laboratorio/ssl" && cd "$HOME/laboratorio/ssl"
     openssl genrsa -out rsa4096.pem 4096 2>/dev/null
     [ -f rsa4096.pem ]
 }
 
 reto12() {
-    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
+    mkdir -p "$HOME/laboratorio/ssl" && cd "$HOME/laboratorio/ssl"
     openssl ecparam -genkey -name secp384r1 -out ecc.key 2>/dev/null
     [ -f ecc.key ]
 }
 
 reto13() {
-    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
+    mkdir -p "$HOME/laboratorio/ssl" && cd "$HOME/laboratorio/ssl"
     openssl req -new -key clave_privada.pem -out request.csr \
         -subj "/C=EC/ST=Quito/O=Test/CN=test.com" 2>/dev/null || true
     [ -f request.csr ]
 }
 
 reto14() {
-    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
+    mkdir -p "$HOME/laboratorio/ssl" && cd "$HOME/laboratorio/ssl"
     mkdir -p ca 2>/dev/null || true
     openssl genrsa -out ca/ca.key 2048 2>/dev/null || true
     openssl req -x509 -new -nodes -key ca/ca.key -sha256 -days 365 \
@@ -236,7 +235,7 @@ reto14() {
 }
 
 reto15() {
-    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
+    mkdir -p "$HOME/laboratorio/ssl" && cd "$HOME/laboratorio/ssl"
     mkdir -p ca 2>/dev/null || true
     [ -f ca/ca.crt ] && [ -f servidor.crt ] && [ -f servidor.key ]
     # Verify chain by checking subject/issuer relationship

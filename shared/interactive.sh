@@ -16,7 +16,7 @@ menu_interactivo() {
     while true; do
         clear
         mostrar_menu_principal
-        echo -n "  Selecciona una opción (1-14, s=frase, q=salir): "
+        echo -n "  Selecciona una opción (1-$UNIT_COUNT, s=frase, q=salir): "
         read -r choice
         case "$choice" in
             q|Q|quit|exit)
@@ -59,7 +59,7 @@ ver_retos_unidad() {
             echo "  [$i] $(get_unit_title $i)"
         done
         echo ""
-        echo -n "  Elige (1-14): "
+        echo -n "  Elige (1-$UNIT_COUNT): "
         read -r choice
         if [ "$choice" -ge 1 ] && [ "$choice" -le "$UNIT_COUNT" ]; then
             export CURRENT_UNIT="$(get_unit_name $choice)"
@@ -93,7 +93,7 @@ jugar_interactivo() {
             echo -e "  ${VERDE}[$i]${RESET} $titulo (${completados}/${total})"
         done
         echo ""
-        echo -n "  Elige unidad (1-14): "
+        echo -n "  Elige unidad (1-$UNIT_COUNT): "
         read -r choice
         if [ -z "$choice" ]; then
             return 0
@@ -179,7 +179,7 @@ evaluar_interactivo() {
             echo "  [$i] $(get_unit_title $i) (${completados}/$(get_unit_total_retos $i))"
         done
         echo ""
-        echo -n "  Elige (1-14, Enter para todas): "
+            echo -n "  Elige (1-$UNIT_COUNT, Enter para todas): "
         read -r choice
         if [ -z "$choice" ]; then
             mostrar_progreso_global
