@@ -8,7 +8,7 @@ get_unit_num_romano() {
     case $1 in
         1) echo "I" ;;2) echo "II" ;;3) echo "III" ;;4) echo "IV" ;;5) echo "V" ;;
         6) echo "VI" ;;7) echo "VII" ;;8) echo "VIII" ;;9) echo "IX" ;;10) echo "X" ;;
-        11) echo "XI" ;;12) echo "XII" ;;13) echo "XIII" ;;14) echo "XIV" ;;
+        11) echo "XI" ;;12) echo "XII" ;;13) echo "XIII" ;;14) echo "XIV" ;;15) echo "XV" ;;16) echo "XVI" ;;17) echo "XVII" ;;18) echo "XVIII" ;;
     esac
 }
 
@@ -26,7 +26,7 @@ menu_interactivo() {
             s|S)
                 ver_frase
                 ;;
-            [1-9]|1[0-4])
+            [1-9]|1[0-8])
                 if [ "$choice" -ge 1 ] && [ "$choice" -le "$UNIT_COUNT" ]; then
                     local romano=$(get_unit_num_romano $choice)
                     export CURRENT_UNIT="$(get_unit_name $choice)"

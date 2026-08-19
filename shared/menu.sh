@@ -1,6 +1,6 @@
 #!/bin/bash
-# Sistema de menus y navegacion para 14 unidades ABC-CYB-101
-# 144 retos totales: 60 CORE + 84 OPT
+# Sistema de menus y navegacion para 18 unidades ABC-CYB-101
+# 175 retos totales: 60 CORE + 115 OPT
 
 mostrar_menu_principal() {
     clear; echo ""
@@ -98,7 +98,7 @@ jugar_unidad() {
     if [ -z "$unit" ]; then
         echo -e "${CYAN}🎮 MODO JUGAR - Selecciona una unidad:${RESET}"
         echo ""
-        for i in {1..14}; do
+        for i in {1..18}; do
             local titulo=$(get_unit_title $i)
             local u=$(get_unit_name $i)
             local completados=$(contar_completados "$u" "$(get_unit_total_retos $i)" 2>/dev/null || echo 0)
