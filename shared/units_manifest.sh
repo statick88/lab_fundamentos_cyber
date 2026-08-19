@@ -71,13 +71,12 @@ UNIT_CORE=(
 # M2: unit-II(2), unit-III(4), unit-iii(5), checkpoint-II(16)
 # M3: unit-IV(6), unit-iv(7), unit-VII(10), unit-VIII(11)
 # M4: unit-V(8), unit-IX(12), unit-X(13), checkpoint-IV(17)
-# M5: unit-XI(14), unit-V-processes(18), checkpoint-V(18)
-# OPT sin módulo específico: unit-ii(3→M1), unit-iii(5→M2), unit-iv(7→M3), unit-IX(12→M4)
+# M5: unit-XI(14), unit-V-processes(9), checkpoint-V(17)
 UNIT_MODULE=(
   1   2   1    2    2
-  3   3    4    0    3
-  0    4    5    4    2
-  4    5    5
+  3   3    4    5    1
+  3    3    4    4    5
+  2    4    5
 )
 
 UNIT_COUNT=18
