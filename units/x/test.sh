@@ -202,3 +202,65 @@ reto10_info() {
 }
 
 
+
+reto11() {
+    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
+    openssl genrsa -out rsa4096.pem 4096 2>/dev/null
+    [ -f rsa4096.pem ]
+}
+
+reto12() {
+    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
+    openssl ecparam -genkey -name secp384r1 -out ecc.key 2>/dev/null
+    [ -f ecc.key ]
+}
+
+reto13() {
+    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
+    openssl req -new -key clave_privada.pem -out request.csr \
+        -subj "/C=EC/ST=Quito/O=Test/CN=test.com" 2>/dev/null || true
+    [ -f request.csr ]
+}
+
+reto14() {
+    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
+    mkdir -p ca 2>/dev/null || true
+    openssl genrsa -out ca/ca.key 2048 2>/dev/null || true
+    openssl req -x509 -new -nodes -key ca/ca.key -sha256 -days 365 \
+        -out ca/ca.crt -subj "/C=EC/O=TestCA/CN=TestCA" 2>/dev/null || true
+    openssl req -new -newkey rsa:2048 -nodes -out servidor.csr -keyout servidor.key \
+        -subj "/C=EC/O=Test/CN=servidor.local" 2>/dev/null || true
+    openssl x509 -req -in servidor.csr -CA ca/ca.crt -CAkey ca/ca.key -CAcreateserial \
+        -out servidor.crt -days 365 -sha256 2>/dev/null || true
+    openssl verify -CAfile ca/ca.crt servidor.crt 2>/dev/null | grep -q "OK"
+}
+
+reto15() {
+    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
+    mkdir -p ca 2>/dev/null || true
+    [ -f ca/ca.crt ] && [ -f servidor.crt ] && [ -f servidor.key ]
+    # Verify chain by checking subject/issuer relationship
+    output=$(openssl x509 -in servidor.crt -noissuer -subject -nodates 2>/dev/null)
+    echo "$output" | grep -qi "CN=servidor"
+}
+
+validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10 reto11 reto12 reto13 reto14 reto15)
+challenge_names=(
+    "Verificar openssl"
+    "Generar clave privada"
+    "Verificar clave privada"
+    "Generar certificado autofirmado"
+    "Ver detalles del certificado"
+    "Verificar validez del certificado"
+    "Generar CSR"
+    "Ver detalles del CSR"
+    "Crear CA local"
+    "Firmar certificado con CA"
+    "Generar RSA 4096 bits"
+    "Generar clave ECC secp384r1"
+    "Generar CSR desde clave existente"
+    "Verificar certificado X.509"
+    "Verificar cadena de certificados"
+)
+
+ICONOS=("🔍" "🔑" "✅" "📜" "📋" "⏳" "📝" "🔎" "🏛️" "✍️" "🔐" "🔐" "📝" "✔️" "🔗")

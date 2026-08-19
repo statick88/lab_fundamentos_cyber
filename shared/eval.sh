@@ -1,6 +1,5 @@
 #!/bin/bash
 # Funciones de evaluacion y progreso
-# Usa directorio en home del usuario para evitar problemas de permisos
 STATE_DIR="${HOME}/.lab_state"
 PROGRESS_FILE="${STATE_DIR}/progress"
 
@@ -46,9 +45,7 @@ ejecutar_evaluacion() {
     local _m_start="" _m_output="" _m_status=""
     echo ""; titulo "Evaluacion - ${unit}"
     for ((i=0; i<total; i++)); do
-        # Metrics: capture start time before validator
         [ "${METRICS_INITIALIZED:-0}" -eq 1 ] && _m_start=$(_metrics_time_ms)
-
         if [ -n "${v[$i]}" ] && "${v[$i]}" >/dev/null 2>&1; then
             marcar_completado "$unit" "$((i+1))"; exito "Reto $((i+1)) completado"; pass=$((pass+1))
             _m_status="PASS"
@@ -56,8 +53,6 @@ ejecutar_evaluacion() {
             error "Reto $((i+1)) fallido"; fail=$((fail+1))
             _m_status="FAIL"
         fi
-
-        # Metrics: record after validator (silent, guard-checked)
         if [ "${METRICS_INITIALIZED:-0}" -eq 1 ] && [ -n "$_m_start" ]; then
             local _m_now=$(_metrics_time_ms)
             metrics_record "$unit" "$((i+1))" "$_m_status" "$((_m_now - _m_start))" "" 2>/dev/null
@@ -68,6 +63,56 @@ ejecutar_evaluacion() {
     separador
     [ "$fail" -eq 0 ] && celebrar "Todos los retos completados"
     return $fail
+}
+
+# =============================================================================
+# Funciones de evaluacion especializadas para ciberseguridad
+# =============================================================================
+
+eval_multiple_choice() {
+    local expected="$1"
+    local answer="$2"
+    [ "${expected^^}" = "${answer^^}" ]
+}
+
+eval_cvss() {
+    local expected_score="$1"
+    local actual_score="$2"
+    local tolerance="${3:-0.5}"
+    local diff
+    diff=$(echo "$expected_score $actual_score" | awk '{print ($1-$2)>0?($1-$2):($2-$1)}')
+    [ "$(echo "$diff <= $tolerance" | bc -l)" -eq 1 ]
+}
+
+eval_log_analysis() {
+    local log_file="$1"
+    local pattern="$2"
+    local expected_count="$3"
+    local actual_count
+    actual_count=$(grep -cE "$pattern" "$log_file" 2>/dev/null || echo 0)
+    [ "$actual_count" -ge "$expected_count" ]
+}
+
+eval_crypto_hash() {
+    local file="$1"
+    local expected_hash="$2"
+    local algorithm="${3:-sha256sum}"
+    local actual_hash
+    actual_hash=$($algorithm "$file" 2>/dev/null | awk '{print $1}')
+    [ "$actual_hash" = "$expected_hash" ]
+}
+
+eval_crypto_verify() {
+    local signature_file="$1"
+    local data_file="$2"
+    local pubkey_file="$3"
+    openssl dgst -verify "$pubkey_file" -signature "$signature_file" "$data_file" >/dev/null 2>&1
+}
+
+eval_config_file() {
+    local config_file="$1"
+    local pattern="$2"
+    [ -f "$config_file" ] && grep -qE "$pattern" "$config_file" 2>/dev/null
 }
 
 celebrar() {

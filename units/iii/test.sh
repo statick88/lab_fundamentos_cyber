@@ -325,3 +325,117 @@ reto10_info() {
     echo "  chmod +x verificar_archivo.sh"
     separador
 }
+
+reto11() {
+    [ -f "$HOME/laboratorio/shell/hash_archivo.sh" ] && [ -x "$HOME/laboratorio/shell/hash_archivo.sh" ]
+    output=$(cd "$HOME/laboratorio/shell" && ./hash_archivo.sh 2>&1)
+    echo "$output" | grep -qi "sha256"
+}
+
+reto12() {
+    [ -f "$HOME/laboratorio/shell/hash_sha3.sh" ] && [ -x "$HOME/laboratorio/shell/hash_sha3.sh" ]
+    output=$(cd "$HOME/laboratorio/shell" && ./hash_sha3.sh 2>&1)
+    echo "$output" | grep -qi "sha3\|sha-3"
+}
+
+reto13() {
+    [ -f "$HOME/laboratorio/shell/comparar_hashes.sh" ] && [ -x "$HOME/laboratorio/shell/comparar_hashes.sh" ]
+    output=$(cd "$HOME/laboratorio/shell" && ./comparar_hashes.sh 2>&1)
+    echo "$output" | grep -qi "igual\|diferente\|match"
+}
+
+reto14() {
+    [ -f "$HOME/laboratorio/shell/firmar_verificar.sh" ] && [ -x "$HOME/laboratorio/shell/firmar_verificar.sh" ]
+    output=$(cd "$HOME/laboratorio/shell" && ./firmar_verificar.sh 2>&1)
+    echo "$output" | grep -qi "firma\|verif"
+}
+
+reto15() {
+    [ -f "$HOME/laboratorio/shell/verificar_integridad.sh" ] && [ -x "$HOME/laboratorio/shell/verificar_integridad.sh" ]
+    output=$(cd "$HOME/laboratorio/shell" && ./verificar_integridad.sh 2>&1)
+    echo "$output" | grep -qi "integridad\|ok\|válido\|valido"
+}
+
+validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10 reto11 reto12 reto13 reto14 reto15)
+challenge_names=(
+    "Crear primer script"
+    "Variables y entrada"
+    "Condicionales if/else"
+    "Bucle for"
+    "Bucle while"
+    "Funciones"
+    "Arrays"
+    "Argumentos de linea"
+    "Redireccion de salida"
+    "Manejo de errores"
+    "Hash SHA-256 de archivo"
+    "Hash SHA-3 con openssl"
+    "Comparar hashes"
+    "Firmar y verificar archivo"
+    "Script verificación integridad"
+)
+
+ICONOS=("🐚" "📝" "🔀" "🔁" "🔂" "⚙️" "📋" "📥" "💾" "⚠️" "🔒" "🔐" "🔗" "✍️" "✅")
+
+reto11_info() {
+    separador
+    echo -e "${CYAN}Reto 11: Generar hash SHA-256 de un archivo${NC}"
+    echo ""
+    echo "Crea un script hash_archivo.sh que use sha256sum para generar"
+    echo "el hash SHA-256 de un archivo pasado como argumento."
+    echo ""
+    echo "Comandos útiles:"
+    echo "  sha256sum archivo.txt"
+    echo "  sha256sum archivo.txt > archivo.sha256"
+    separador
+}
+
+reto12_info() {
+    separador
+    echo -e "${CYAN}Reto 12: Generar hash SHA-3 con openssl${NC}"
+    echo ""
+    echo "Crea un script hash_sha3.sh que use openssl dgst para generar"
+    echo "un hash SHA-3-256 de un archivo."
+    echo ""
+    echo "Comandos útiles:"
+    echo "  openssl dgst -sha3-256 archivo.txt"
+    separador
+}
+
+reto13_info() {
+    separador
+    echo -e "${CYAN}Reto 13: Comparar hashes para verificar integridad${NC}"
+    echo ""
+    echo "Crea un script comparar_hashes.sh que tome dos hashes y compare"
+    echo "si corresponden al mismo archivo."
+    echo ""
+    echo "Comandos útiles:"
+    echo "  echo \"hash1 hash2\" | sha256sum -c -"
+    separador
+}
+
+reto14_info() {
+    separador
+    echo -e "${CYAN}Reto 14: Firmar archivo con SHA-256 y verificar${NC}"
+    echo ""
+    echo "Crea un script firmar_verificar.sh que firme un archivo con"
+    echo "una clave privada y luego verifique la firma."
+    echo ""
+    echo "Comandos útiles:"
+    echo "  openssl dgst -sha256 -sign clave.pem -out firma.sig archivo"
+    echo "  openssl dgst -verify clave.pem -signature firma.sig archivo"
+    separador
+}
+
+reto15_info() {
+    separador
+    echo -e "${CYAN}Reto 15: Script de verificación de integridad${NC}"
+    echo ""
+    echo "Crea un script verificar_integridad.sh que tome un archivo y un"
+    echo "hash esperado, y verifique si la integridad está intacta."
+    echo ""
+    echo "Comandos útiles:"
+    echo "  sha256sum archivo.txt"
+    echo "  echo \"hash_esperado archivo.txt\" | sha256sum -c -"
+    separador
+}

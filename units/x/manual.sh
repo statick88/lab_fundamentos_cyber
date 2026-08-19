@@ -76,3 +76,16 @@ cat << 'EOF'
 EOF
 
 echo -e "\n${AMARILLO}Escribe ${CYAN}'evaluar'${AMARILLO} para verificar tu progreso o ${CYAN}'retos'${AMARILLO} para ver los retos.${RESET}"
+
+  RSA Y ECC AVANZADO
+  ───────────────────
+  RSA 4096 bits: mayor seguridad que 2048, recomendado para CA
+  ECC secp384r1: curva elíptica, claves más cortas, misma seguridad
+  CSR: Certificate Signing Request, solicitud de firma a CA
+  Cadena de certificados: verificar servidor.crt → CA intermedia → CA raíz
+
+  Comandos RSA/ECC:
+  openssl genrsa -out rsa4096.pem 4096
+  openssl ecparam -genkey -name secp384r1 -out ecc.key
+  openssl req -new -key key.pem -out request.csr
+  openssl verify -CAfile ca.crt cert.pem

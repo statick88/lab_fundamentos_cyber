@@ -6,16 +6,17 @@ banner_bienvenida() {
     echo -e "${CYAN_B}"
     cat << 'EOF'
 ╔══════════════════════════════════════════════════════════════╗
-║          LABORATORIO DE LINUX SERVER ADMIN                  ║
-║            Administracion de Servidores Linux               ║
+║     FUNDAMENTOS DE CIBERSEGURIDAD - ABC-CYB-101            ║
+║     Laboratorio Interactivo de Ciberseguridad              ║
 ╚══════════════════════════════════════════════════════════════╝
 EOF
     echo -e "${RESET}"
 }
 
 banner_unidad() {
+    local num=$1 titulo=$2
     echo -e "\n${CYAN_B}╔══════════════════════════════════════════════════╗"
-    echo "║  Unit $1: $2"
+    echo "║  Unidad $num: $titulo"
     echo -e "╚══════════════════════════════════════════════════╝${RESET}\n"
 }
 

@@ -1,17 +1,19 @@
 #!/bin/bash
-# Sistema de menus y navegacion para 11 unidades SDD
+# Sistema de menus y navegacion para 14 unidades ABC-CYB-101
 
-UNIDADES=("Unit I: Fundamentos" "Unit II: Gestión de Paquetes" "Unit III: Scripting Shell"
-          "Unit IV: Usuarios y SSH" "Unit V: Procesos y systemd" "Unit VI: Almacenamiento y LVM"
-          "Unit VII: Hardening" "Unit VIII: Docker" "Unit IX: Nginx" "Unit X: SSL/HTTPS"
-          "Unit XI: Docker Compose + DB")
-ICONOS=("🖥️" "📦" "🐚" "👥" "⚙️" "💾" "🛡️" "🐳" "🌐" "🔒" "🐘")
-RETOS_POR_UNIDAD=(10 10 10 10 10 10 10 10 10 10 10)
+UNIDADES=("Principios y Gestión de Riesgo" "Filtrado de Red y Firewalls"
+          "IAM, MFA y Control de Acceso" "Criptografía y CVSS"
+          "Logging, SIEM y BCP" "Almacenamiento y LVM"
+          "Hardening y CIS Benchmarks" "Docker" "Nginx"
+          "SSL/TLS y Criptografía Aplicada" "Docker Compose + DB"
+          "Checkpoint Módulo II" "Checkpoint Módulo IV" "Checkpoint Módulo V")
+ICONOS=("🛡️" "🔥" "👤" "🔐" "📊" "💾" "🛡️" "🐳" "🌐" "🔒" "🐘" "✅" "✅" "✅")
+RETOS_POR_UNIDAD=(10 10 15 10 10 10 15 10 10 15 10 5 5 5)
 
 mostrar_menu_principal() {
     clear; echo ""
     echo -e "${CYAN_B}╔══════════════════════════════════════════════════╗"
-    echo "║     LABORATORIO DE LINUX SERVER ADMIN            ║"
+    echo "║  FUNDAMENTOS DE CIBERSEGURIDAD - ABC-CYB-101    ║"
     echo -e "╚══════════════════════════════════════════════════╝${RESET}"
     mostrar_progreso_global; echo ""
     separador
@@ -76,57 +78,38 @@ ejecutar_unidad() {
     mostrar_menu_retos challenge_names ICONOS "$unit"
 }
 
-# Punto de entrada principal para "jugar" - bucle interactivo por unidad
 jugar_unidad() {
     local unit="${1:-}"
-    
-    # Si no se pasa unidad, mostrar menú para elegir
     if [ -z "$unit" ]; then
         echo -e "${CYAN}🎮 MODO JUGAR - Selecciona una unidad:${RESET}"
         echo ""
-        for i in {1..11}; do
-            local u="unit-$(echo I II III IV V VI VII VIII IX X XI | cut -d' ' -f$i)"
-            local titulo=$(case $i in
-                1) echo "Fundamentos" ;;
-                2) echo "Gestión de Paquetes" ;;
-                3) echo "Scripting Bash" ;;
-                4) echo "Usuarios y SSH" ;;
-                5) echo "Procesos y systemd" ;;
-                6) echo "Almacenamiento y LVM" ;;
-                7) echo "Hardening" ;;
-                8) echo "Docker" ;;
-                9) echo "Nginx" ;;
-                10) echo "SSL/HTTPS" ;;
-                11) echo "Docker Compose + DB" ;;
-            esac)
-            local completados=$(contar_completados "$u" 10 2>/dev/null || echo 0)
-            echo -e "  ${VERDE}[$i]${RESET} $u - $titulo (${completados}/10)"
+        for i in {1..14}; do
+            local titulo=$(get_unit_title $i)
+            local u=$(get_unit_name $i)
+            local completados=$(contar_completados "$u" "$(get_unit_total_retos $i)" 2>/dev/null || echo 0)
+            local total=$(get_unit_total_retos $i)
+            echo -e "  ${VERDE}[$i]${RESET} $titulo (${completados}/${total})"
         done
         echo ""
-        echo -n "  Elige unidad (1-11, Enter para actual): "
+        echo -n "  Elige unidad (1-14, Enter para actual): "
         read -r choice
         if [ -z "$choice" ]; then
             unit="${CURRENT_UNIT:-}"
             [ -z "$unit" ] && { error "No hay unidad actual. Usa 'unidad <n>' primero."; return 1; }
         else
-            unit="unit-$(echo I II III IV V VI VII VIII IX X XI | cut -d' ' -f$choice)"
+            unit=$(get_unit_name $choice)
         fi
     fi
-    
     local unit_path; unit_path=$(resolve_unit_path "$unit")
     if [ ! -f "$unit_path/test.sh" ]; then error "Unidad no encontrada: $unit"; return 1; fi
     source "$unit_path/test.sh" 2>/dev/null || true
-    
-    # Jugar el primer reto no completado
     local total=${#challenge_names[@]}
     for ((i=1; i<=total; i++)); do
         if ! esta_completado "$unit" "$i" 2>/dev/null; then
             jugar_reto "$unit" "$i" || return $?
-            # jugar_reto ya maneja el avance al siguiente reto
             return $?
         fi
     done
-    
     exito "¡Todos los retos de $unit completados! 🏆"
     echo -e "${AMARILLO}Usa 'menu' para ver progreso global o 'unidad <n>' para otra.${RESET}"
 }
@@ -152,38 +135,27 @@ ejecutar_reto() {
     else error "Reto $reto_num no encontrado en $unit"; return 1; fi
 }
 
-# ═══════════════════════════════════════════════════════════════════════════
-# MODO INTERACTIVO POR RETO: instrucciones → comandos → verificar → avanzar
-# ═══════════════════════════════════════════════════════════════════════════
-
 jugar_reto() {
     local unit="$1" reto_num="$2"
     local unit_path; unit_path=$(resolve_unit_path "$unit")
     if [ ! -f "$unit_path/test.sh" ]; then error "Unidad no encontrada: $unit"; return 1; fi
     source "$unit_path/test.sh"
-    
     local info_func="reto${reto_num}_info"
     local validator_func="reto${reto_num}"
     local reto_name="${challenge_names[$((reto_num-1))]:-Reto $reto_num}"
-    
     if ! declare -f "$validator_func" >/dev/null 2>&1; then
         error "Reto $reto_num no existe en $unit"; return 1
     fi
-    
-    # Verificar si ya está completado
     if esta_completado "$unit" "$reto_num" 2>/dev/null; then
         exito "Este reto ya está completado ✔"
         echo -n "  ¿Quieres jugarlo de nuevo? (s/N): "; read -r replay
         [[ "$replay" =~ ^[sS]$ ]] || return 0
     fi
-    
     clear
     echo -e "${CYAN_B}╔═══════════════════════════════════════════════════════════════════╗"
     printf "║  🎮  %-58s  ║\n" "$unit — Reto $reto_num: $reto_name"
     echo -e "╚═══════════════════════════════════════════════════════════════════╝${RESET}"
     echo ""
-    
-    # Mostrar instrucciones
     if declare -f "$info_func" >/dev/null 2>&1; then
         "$info_func"
     else
@@ -191,19 +163,15 @@ jugar_reto() {
         echo "Intenta explorar y experimentar con comandos relacionados."
         separador
     fi
-    
     echo -e "${VERDE}💡 Ejecuta tus comandos en esta terminal.${RESET}"
     echo -e "${VERDE}   Cuando creas que lo resolviste, escribe: ${CYAN}verificar${RESET}"
     echo -e "${VERDE}   Para ver la pista: ${CYAN}pista${RESET}"
     echo -e "${VERDE}   Para salir sin completar: ${CYAN}salir${RESET}"
     separador
-    
-    # Loop interactivo
     local intentos=0
     while true; do
         echo -ne "${AZUL}[$unit|R$reto_num]${RESET} $ "
         read -r cmd
-        
         case "$cmd" in
             verificar|ver)
                 ((intentos++))
@@ -215,8 +183,6 @@ jugar_reto() {
                     mostrar_frase_unidad "$(get_unit_index "$unit")"
                     echo ""
                     progreso
-                    
-                    # Ofrecer siguiente reto
                     local total=${#challenge_names[@]}
                     if [ "$reto_num" -lt "$total" ]; then
                         local next=$((reto_num + 1))
@@ -233,7 +199,6 @@ jugar_reto() {
                     return 0
                 else
                     error "Aún no está resuelto. Intenta de nuevo."
-                    # Dar pista contextual según el reto
                     dar_pista "$unit" "$reto_num"
                 fi
                 ;;
@@ -245,17 +210,14 @@ jugar_reto() {
                 return 1
                 ;;
             "")
-                # Enter vacío, solo muestra prompt de nuevo
                 ;;
             *)
-                # Ejecutar comando del usuario
                 eval "$cmd"
                 ;;
         esac
     done
 }
 
-# Pistas contextuales por unidad y reto
 dar_pista() {
     local unit="$1" reto_num="$2"
     echo -e "\n  ${CYAN}💡 PISTA:${RESET}"

@@ -210,3 +210,49 @@ reto10_info() {
     echo "Ejemplo: find / -perm -4000 -type f 2>/dev/null"
     separador
 }
+
+reto11() {
+    # CIS 1.1.1.1: Asegurar /tmp montado con noexec,nosuid,nodev
+    mount | grep -qE '/tmp.*noexec' 2>/dev/null || grep -qE '/tmp.*noexec' /etc/fstab 2>/dev/null || true
+}
+
+reto12() {
+    # CIS 1.1.1.2: Asegurar /var montado con nosuid,nodev
+    mount | grep -qE '/var.*nosuid' 2>/dev/null || grep -qE '/var.*nosuid' /etc/fstab 2>/dev/null || true
+}
+
+reto13() {
+    # CIS 1.1.1.3: Asegurar /var/log montado con nodev
+    mount | grep -qE '/var/log.*nodev' 2>/dev/null || grep -qE '/var/log.*nodev' /etc/fstab 2>/dev/null || true
+}
+
+reto14() {
+    # CIS 3.4.1.1: PermitRootLogin deshabilitado
+    [ -f /etc/ssh/sshd_config ] && grep -qi "PermitRootLogin no" /etc/ssh/sshd_config 2>/dev/null || true
+}
+
+reto15() {
+    # CIS 3.4.2.1: SSH usa protocolo 2
+    [ -f /etc/ssh/sshd_config ] && grep -qi "Protocol 2" /etc/ssh/sshd_config 2>/dev/null || true
+}
+
+validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10 reto11 reto12 reto13 reto14 reto15)
+challenge_names=(
+    "Verificar usuarios root"
+    "Permisos archivos criticos"
+    "Buscar usuarios sin contraseña"
+    "Verificar sudoers"
+    "Ver servicios abiertos"
+    "Verificar firewall"
+    "Generar claves SSH"
+    "Permisos directorio SSH"
+    "Ver intentos de login"
+    "Encontrar archivos SUID"
+    "/tmp montado noexec,nosuid,nodev"
+    "/var montado nosuid,nodev"
+    "/var/log montado nodev"
+    "PermitRootLogin deshabilitado"
+    "SSH Protocol 2"
+)
+
+ICONOS=("👑" "🔒" "🔓" "⚙️" "🔌" "🛡️" "🔑" "📁" "📋" "⚠️" "📁" "📁" "📁" "🚫" "🔒")

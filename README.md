@@ -1,6 +1,6 @@
-# Laboratorio Interactivo: Administración de Servidores Linux
+# Laboratorio Interactivo: Fundamentos de Ciberseguridad (ABC-CYB-101)
 
-11 unidades progresivas · 110 retos prácticos · evaluación automática · frase secreta oculta. Todo corre en Docker.
+14 unidades progresivas · 140 retos prácticos · evaluación automática · frase secreta oculta. Todo corre en Docker.
 
 ## Quick path
 
@@ -13,6 +13,28 @@ docker compose exec lab-linux bash
 ```
 
 Dentro del contenedor: `menu` · `jugar` · `retos` · `evaluar` · `progreso`
+
+## Alineación Curricular ABC-CYB-101
+
+| Módulo | Tema | Unidad | Retos |
+|--------|------|--------|:-----:|
+| I | Principios y Gestión de Riesgo | 1 | 10 |
+| II | Redes y Controles Perimetrales | 2 | 10 |
+| II | Checkpoint Módulo II | 12 | 5 |
+| III | Hardening e Identidades | 3 | 15 |
+| III | Hardening y CIS Benchmarks | 7 | 15 |
+| IV | Amenazas, Criptografía y Vulnerabilidades | 4 | 10 |
+| IV | Checkpoint Módulo IV | 13 | 5 |
+| IV | Scripting Criptografía (ampliación III) | 3 | 15 |
+| V | Logging, SIEM, IR y Continuidad | 5 | 10 |
+| V | Checkpoint Módulo V | 14 | 5 |
+| - | Almacenamiento y LVM | 6 | 10 |
+| - | Docker | 8 | 10 |
+| - | Nginx | 9 | 10 |
+| - | SSL/TLS y Criptografía Aplicada | 10 | 15 |
+| - | Docker Compose + DB | 11 | 10 |
+
+**Total: 14 unidades · 140 retos.**
 
 ## Comandos del contenedor
 
@@ -45,29 +67,28 @@ unidad 2       retos        (terminal)    evaluar    revelar-frase
 
 ## Frase secreta
 
-Cada unidad completada revela una palabra. Completa las 11 para descubrir la frase:
+Cada unidad completada revela una palabra. Completa las 14 para descubrir la frase:
 
 ```
-_ _ _ _ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ```
 
-## Qué aprenderás
+## Instrucciones para el docente
 
-| Unidad | Tema | Retos |
-|--------|------|:-----:|
-| I | Fundamentos de Linux y WSL2 | 10 |
-| II | Gestión de Paquetes y APT | 10 |
-| III | Scripting Bash | 10 |
-| IV | Gestión de Usuarios y SSH | 10 |
-| V | Gestión de Procesos y systemd | 10 |
-| VI | Almacenamiento y LVM | 10 |
-| VII | Hardening del Sistema | 10 |
-| VIII | Contenedores con Docker | 10 |
-| IX | Servidor Web con Nginx | 10 |
-| X | Certificados SSL y HTTPS | 10 |
-| XI | Docker Compose y Bases de Datos | 10 |
+1. Usar `reset.sh --progreso` entre clases para limpiar el estado
+2. Los checkpoints (12, 13, 14) son evaluaciones formativas automáticas
+3. Cada reto tiene pistas integradas activadas con `pista` durante el juego
+4. El sistema no modifica archivos del sistema permanentemente
+5. Usar `docker compose logs lab-linux` para depurar problemas
 
-**Total: 110 retos · 11/11 unidades implementadas.**
+## Medidas de seguridad del laboratorio
+
+- Contenedor aislado en red bridge 172.20.0.0/24
+- Capabilities limitadas: NET_ADMIN, NET_RAW, SYS_ADMIN
+- No se descargan archivos externos durante los retos
+- Todo el malware es simulado (archivos de texto inocuos)
+- No se escanean redes externas
+- Las reglas iptables se limpian al resetear
 
 ## Instalación por sistema operativo
 
@@ -89,7 +110,6 @@ docker compose exec lab-linux bash
 ```bash
 sudo apt update && sudo apt install -y docker.io docker-compose-v2
 sudo usermod -aG docker $USER
-# Cerrar y abrir sesión para aplicar el grupo
 git clone https://github.com/statick88/lab-linux.git
 cd lab-linux
 docker compose build && docker compose up -d
@@ -105,7 +125,6 @@ sudo dnf -y install dnf-plugins-core
 sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
 sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 sudo systemctl start docker && sudo usermod -aG docker $USER
-# Cerrar y abrir sesión para aplicar el grupo
 git clone https://github.com/statick88/lab-linux.git
 cd lab-linux
 docker compose build && docker compose up -d
@@ -124,8 +143,6 @@ wsl --install
 # Dentro de WSL:
 sudo apt update && sudo apt install -y docker.io docker-compose-v2
 sudo usermod -aG docker $USER
-# Cerrar y abrir sesión de WSL
-
 git clone https://github.com/statick88/lab-linux.git
 cd lab-linux
 docker compose build && docker compose up -d
@@ -141,62 +158,55 @@ docker compose exec lab-linux bash
 | Comandos no funcionan | Verificar que estás dentro: `docker compose exec lab-linux bash` |
 | Pruebas fallan | directorio debe ser `~/laboratorio`, nombres exactos |
 | Docker-in-Docker falla | Verificar `privileged: true` y `/var/run/docker.sock` montado |
+| Reglas UFW persisten | Ejecuta `bash reset.sh` para limpiar |
 
 ## Arquitectura
 
 ```
 lab-linux/
-├── Dockerfile              # Ubuntu 24.04 + usuario estudiante
-├── docker-compose.yml      # Volumen persistente lab-data
-├── entrypoint.sh           # Sourcing, aliases y banner
+├── Dockerfile              # Ubuntu 24.04 + herramientas ciberseguridad
+├── docker-compose.yml      # Red aislada 172.20.0.0/24
+├── entrypoint.sh           # Sourcing, aliases y banner ABC-CYB-101
+├── reset.sh                # Limpia configuraciones y archivos de prueba
 ├── shared/                 # Librería compartida
-│   ├── common.sh           # Funciones base, FRASES_OCULTAS, carga todos los módulos
-│   ├── menu.sh             # Menú principal y navegación
+│   ├── common.sh           # Funciones base, 14 unidades
+│   ├── menu.sh             # Menú principal 14 unidades
 │   ├── interactive.sh      # Funciones interactivas (jugar, evaluar, retos)
-│   ├── eval.sh             # Sistema de evaluación
+│   ├── eval.sh             # Sistema de evaluación + funciones ciberseguridad
 │   ├── colors.sh           # Colores de terminal
 │   ├── banner.sh           # Banners visuales
-│   └── metrics.sh          # Métricas de progreso
-├── units/                  # 11 unidades (I–XI)
-│   ├── i/                  # Fundamentos Linux/WSL2
-│   ├── ii/                 # Paquetes
-│   ├── iii/                # Scripting
-│   ├── iv/                 # Usuarios
-│   ├── v/                  # Procesos
-│   ├── vi/                 # Almacenamiento
-│   ├── vii/                # Hardening
+│   └── unidad.sh           # Cambiar unidad (1-14)
+├── units/                  # 14 unidades (I-XIV + checkpoints)
+│   ├── i/                  # Principios y Gestión de Riesgo
+│   ├── ii-firewalls-redes/ # Filtrado de Red y Firewalls
+│   ├── iii-iam-mfa/        # IAM, MFA y Control de Acceso
+│   ├── iii/                # Scripting Bash (ampliado criptografía)
+│   ├── iv-criptografia-cvss/ # Criptografía y CVSS
+│   ├── v-logging-siem-bcp/ # Logging, SIEM y BCP
+│   ├── vi/                 # Almacenamiento y LVM
+│   ├── vii/                # Hardening y CIS Benchmarks
 │   ├── viii/               # Docker
 │   ├── ix/                 # Nginx
-│   ├── x/                  # SSL
-│   └── xi/                 # Docker Compose
-├── propuesta-pedagogica.md # Documento del curso
+│   ├── x/                  # SSL/TLS ampliado
+│   ├── xi/                 # Docker Compose + DB
+│   ├── checkpoint-ii/      # Checkpoint Módulo II
+│   ├── checkpoint-iv/      # Checkpoint Módulo IV
+│   └── checkpoint-v/       # Checkpoint Módulo V
+├── GUIA_DOCENTE_LAB.md     # Guía para el docente
+├── ESPECIFICACION_CIBERSEGURIDAD.md # Especificación detallada
 └── README.md               # Este archivo
 ```
 
-### Cadena de sourcing
+## Novedades v2.0
 
-```
-entrypoint.sh
-  └→ common.sh → colors.sh, eval.sh, metrics.sh, menu.sh, banner.sh
-  └→ interactive.sh
-  └→ crea .bash_aliases + ~/bin/lab
-  └→ banner_bienvenida
-  └→ exec bash -i
-
-Cada shell nueva:
-  .bashrc → .bash_aliases → common.sh + interactive.sh → funciones disponibles
-```
-
-## Novedades v1.1.0
-
-- **Comandos interactivos funcionan en cualquier shell**: `menu`, `jugar`, `retos`, `evaluar`, `revelar-frase` ahora usan funciones cargadas desde `shared/interactive.sh` vía `.bash_aliases`
-- **Autocompletado Tab habilitado**: instalado `bash-completion` en la imagen base
-- **Instrucciones paso a paso claras**: Unidad III (Scripting) muestra comandos en líneas separadas para evitar errores de copiado
-- **Validadores robustos**: reto 5 (Permisos 755) ahora verifica el archivo `archivo` del estudiante, no un archivo temporal interno
-
-## Contribuir
-
-Ver [CONTRIBUTING.md](CONTRIBUTING.md) para la estrategia de ramas y flujo de trabajo.
+- **Alineación curricular ABC-CYB-101**: 14 unidades organizadas en 5 módulos
+- **Nuevas unidades**: Firewalls, IAM/MFA, Criptografía/CVSS, Logging/SIEM/BCP
+- **Checkpoints**: Evaluaciones formativas automáticas por módulo
+- **Hardening CIS**: Referencias a CIS Benchmarks en unidad VII
+- **Scripting criptográfico**: Hashes SHA-256, SHA-3, firmas digitales
+- **SSL/TLS ampliado**: RSA 4096, ECC secp384r1, verificación de cadena
+- **Reset script**: Limpia configuraciones entre clases
+- **140 retos prácticos** con evaluación automática
 
 ## Autor
 
@@ -206,4 +216,4 @@ Ver [CONTRIBUTING.md](CONTRIBUTING.md) para la estrategia de ramas y flujo de tr
 
 ---
 
-*Curso "Fundamentos de Sistemas Operativos y Administración de Servidores en Red"*
+*Curso "Fundamentos de Ciberseguridad" - Abacom ABC-CYB-101*
