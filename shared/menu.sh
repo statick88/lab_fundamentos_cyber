@@ -1,15 +1,6 @@
 #!/bin/bash
 # Sistema de menus y navegacion para 14 unidades ABC-CYB-101
 
-UNIDADES=("Principios y Gestión de Riesgo" "Filtrado de Red y Firewalls"
-          "IAM, MFA y Control de Acceso" "Criptografía y CVSS"
-          "Logging, SIEM y BCP" "Almacenamiento y LVM"
-          "Hardening y CIS Benchmarks" "Docker" "Nginx"
-          "SSL/TLS y Criptografía Aplicada" "Docker Compose + DB"
-          "Checkpoint Módulo II" "Checkpoint Módulo IV" "Checkpoint Módulo V")
-ICONOS=("🛡️" "🔥" "👤" "🔐" "📊" "💾" "🛡️" "🐳" "🌐" "🔒" "🐘" "✅" "✅" "✅")
-RETOS_POR_UNIDAD=(10 10 15 10 10 10 15 10 10 15 10 5 5 5)
-
 mostrar_menu_principal() {
     clear; echo ""
     echo -e "${CYAN_B}╔══════════════════════════════════════════════════╗"
@@ -17,8 +8,12 @@ mostrar_menu_principal() {
     echo -e "╚══════════════════════════════════════════════════╝${RESET}"
     mostrar_progreso_global; echo ""
     separador
-    for ((i=0; i<${#UNIDADES[@]}; i++)); do
-        printf "  ${VERDE}[%2d]${RESET} %s %s\n" "$((i+1))" "${ICONOS[$i]}" "${UNIDADES[$i]}"
+    for ((i=0; i<UNIT_COUNT; i++)); do
+        local idx=$((i+1))
+        local core_count
+        core_count=$(count_core_retos "$idx")
+        local total_count=${UNIT_RETOS[$i]}
+        printf "  ${VERDE}[%2d]${RESET} %s %s [%d retos]\n" "$idx" "${UNIT_ICONOS[$i]}" "${UNIT_TITLES[$i]}" "$total_count"
     done
     separador
     echo -e "  ${AMARILLO}[s]${RESET} 🔑 Revelar frase  ${AMARILLO}[q]${RESET} 🚪 Salir\n"
@@ -27,19 +22,27 @@ mostrar_menu_principal() {
 mostrar_menu_retos() {
     local -n _names=$1 _icons=$2
     local unit="$3" total=${#_names[@]}
+    local unit_idx; unit_idx=$(get_unit_index "$unit")
     while true; do
         clear; echo ""
-        echo -e "${CYAN_B}╔══════════════════════════════════════════════════╗"
-        printf "║  %-46s  ║" "${unit}"
-        echo -e "╚══════════════════════════════════════════════════╝${RESET}"
+        echo -e "${CYAN_B}╔═══════════════════════════════════════════════════════════════════╗"
+        printf "║  %-58s  ║\n" "${unit}"
+        echo -e "╚═══════════════════════════════════════════════════════════════════╝${RESET}"
         local completados=$(contar_completados "$unit" "$total")
         echo -ne "  Progreso: "; mostrar_barra_progreso "$completados" "$total"
         separador
         for ((i=0; i<total; i++)); do
-            if esta_completado "$unit" "$((i+1))" 2>/dev/null; then
-                echo -e "  ${VERDE}[✔]${RESET} ${_icons[$i]} Reto $((i+1)): ${_names[$i]}"
+            local reto_num=$((i+1))
+            local label="Reto"
+            if is_reto_core "$unit_idx" "$reto_num"; then
+                label="[CORE] Reto"
             else
-                echo -e "  ${ROJO}[✘]${RESET} ${_icons[$i]} Reto $((i+1)): ${_names[$i]}"
+                label="[OPT] Reto"
+            fi
+            if esta_completado "$unit" "$reto_num" 2>/dev/null; then
+                echo -e "  ${VERDE}[✔]${RESET} ${_icons[$i]} ${label} ${reto_num}: ${_names[$i]}${RESET}"
+            else
+                echo -e "  ${ROJO}[✘]${RESET} ${_icons[$i]} ${label} ${reto_num}: ${_names[$i]}${RESET}"
             fi
         done
         separador; echo -e "  ${AMARILLO}[0]${RESET} 🏠 Volver\n"
@@ -57,25 +60,36 @@ mostrar_menu_retos() {
 }
 
 mostrar_progreso_global() {
-    local total=0 completados=0 unit_name i r
-    for ((i=0; i<${#UNIDADES[@]}; i++)); do
-        unit_name=$(get_unit_name "$((i+1))")
-        for ((r=1; r<=${RETOS_POR_UNIDAD[$i]}; r++)); do
+    local total=0 completados=0 core_total=0 core_completados=0 unit_name i r
+    for ((i=0; i<UNIT_COUNT; i++)); do
+        unit_name=${UNIT_NAMES[$i]}
+        local unit_retos=${UNIT_RETOS[$i]}
+        local unit_idx=$((i+1))
+        for ((r=1; r<=unit_retos; r++)); do
             total=$((total+1))
-            esta_completado "$unit_name" "$r" 2>/dev/null && completados=$((completados+1))
+            if esta_completado "$unit_name" "$r" 2>/dev/null; then
+                completados=$((completados+1))
+            fi
+            if is_reto_core "$unit_idx" "$r"; then
+                core_total=$((core_total+1))
+                if esta_completado "$unit_name" "$r" 2>/dev/null; then
+                    core_completados=$((core_completados+1))
+                fi
+            fi
         done
     done
+    echo -ne "  Progreso CORE: "; mostrar_barra_progreso "$core_completados" "$core_total"
     echo -ne "  Progreso total: "; mostrar_barra_progreso "$completados" "$total"
 }
 
-get_unit_total_retos() { echo "${RETOS_POR_UNIDAD[$(($1-1))]}"; }
+get_unit_total_retos() { echo "${UNIT_RETOS[$(($1-1))]}"; }
 
 ejecutar_unidad() {
     local unit="$1"
     local unit_path; unit_path=$(resolve_unit_path "$unit")
     if [ ! -f "$unit_path/test.sh" ]; then error "Unidad no encontrada: $unit"; return 1; fi
     source "$unit_path/test.sh" 2>/dev/null || true
-    mostrar_menu_retos challenge_names ICONOS "$unit"
+    mostrar_menu_retos challenge_names UNIT_ICONOS "$unit"
 }
 
 jugar_unidad() {

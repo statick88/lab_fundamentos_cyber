@@ -56,9 +56,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Crear usuario 'estudiante' con permisos sudo sin contraseña
+# Crear usuario 'estudiante' con permisos sudo limitados
 RUN useradd -m -s /bin/bash estudiante && \
-    echo "estudiante ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+    groupadd -f sudo && \
+    echo "estudiante ALL=(ALL) NOPASSWD: /usr/bin/ufw, /usr/sbin/iptables, /usr/sbin/ufw, /usr/bin/nmap, /usr/sbin/logrotate, /usr/bin/john, /usr/sbin/fail2ban-client, /usr/sbin/ufw-disable, /usr/sbin/ufw-enable" >> /etc/sudoers && \
+    usermod -aG sudo estudiante && \
     groupadd -f docker && \
     usermod -aG docker estudiante
 
@@ -66,6 +68,12 @@ RUN useradd -m -s /bin/bash estudiante && \
 RUN mkdir -p /etc/fail2ban /var/log/fail2ban && \
     mkdir -p /etc/logrotate.d && \
     touch /var/log/auth.log /var/log/ufw.log && \
+    mkdir -p /var/lab-state && \
+    chown root:sudo /var/lab-state && \
+    chmod 0770 /var/lab-state && \
+    touch /var/lab-state/progress && \
+    chown root:sudo /var/lab-state/progress && \
+    chmod 0660 /var/lab-state/progress && \
     chown -R estudiante:estudiante /home/estudiante
 
 # Copiar entrypoint
@@ -77,15 +85,6 @@ COPY shared/ /opt/shared/
 
 # Copiar unidades del curso a /opt (fuera del volume mount)
 COPY units/ /opt/lab-units/
-
-# Copiar tests de métricas
-COPY tests/ /opt/lab-tests/
-
-# Copiar script de métricas principal
-COPY metrics_test.sh /opt/metrics_test.sh
-
-# Copiar script de generación de PDF
-COPY generar-pdf.sh /generar-pdf.sh
 
 # Copiar script de reset
 COPY reset.sh /reset.sh
@@ -99,11 +98,8 @@ COPY bashrc /home/estudiante/.bashrc
 # Establecer permisos de ejecución y dueño
 RUN chmod +x /entrypoint.sh && \
     chmod +x /shared/*.sh && \
-    chmod +x /generar-pdf.sh && \
     chmod +x /reset.sh && \
-    chmod +x /opt/metrics_test.sh && \
     find /opt/lab-units -name "*.sh" -exec chmod +x {} \; && \
-    find /opt/lab-tests -name "*.sh" -exec chmod +x {} \; && \
     chown -R estudiante:estudiante /home/estudiante/laboratorio
 
 # Cambiar al usuario 'estudiante'

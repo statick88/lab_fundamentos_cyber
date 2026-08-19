@@ -132,8 +132,8 @@ cd ~/laboratorio/backup
 cat > backup_auto.sh << 'BACKUP'
 #!/bin/bash
 DATE=$(date +%Y%m%d_%H%M%S)
-tar -czf /root/laboratorio/backup/auto_backup_${DATE}.tar.gz /root/laboratorio/backup/datos/
-find /root/laboratorio/backup/auto_backup_*.tar.gz -mtime +7 -delete
+tar -czf "$HOME/laboratorio/backup/auto_backup_${DATE}.tar.gz" "$HOME/laboratorio/backup/datos/"
+find "$HOME/laboratorio/backup/auto_backup_"*.tar.gz -mtime +7 -delete
 BACKUP
 chmod +x backup_auto.sh
 echo "Script de backup automatico creado"

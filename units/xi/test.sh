@@ -13,20 +13,20 @@ reto1() {
 }
 
 reto2() {
-    cd /root/laboratorio/backup 2>/dev/null || cd ~
+    cd "$HOME/laboratorio/backup" 2>/dev/null || cd ~
     tar -czf backup_test.tar.gz datos/ 2>/dev/null
     [ -f backup_test.tar.gz ]
 }
 
 reto3() {
-    cd /root/laboratorio/backup 2>/dev/null || cd ~
+    cd "$HOME/laboratorio/backup" 2>/dev/null || cd ~
     tar -czf backup_test.tar.gz datos/ 2>/dev/null
     output=$(tar -tzf backup_test.tar.gz 2>/dev/null)
     echo "$output" | grep -q "datos/"
 }
 
 reto4() {
-    cd /root/laboratorio/backup 2>/dev/null || cd ~
+    cd "$HOME/laboratorio/backup" 2>/dev/null || cd ~
     tar -czf backup_test.tar.gz datos/ 2>/dev/null
     mkdir -p restaurado
     tar -xzf backup_test.tar.gz -C restaurado/ 2>/dev/null
@@ -34,27 +34,27 @@ reto4() {
 }
 
 reto5() {
-    cd /root/laboratorio/backup 2>/dev/null || cd ~
+    cd "$HOME/laboratorio/backup" 2>/dev/null || cd ~
     tar -czf backup_full.tar.gz datos/ 2>/dev/null
     touch backup_inc.tar.gz  # Simular incremental
     [ -f backup_full.tar.gz ]
 }
 
 reto6() {
-    cd /root/laboratorio/backup 2>/dev/null || cd ~
+    cd "$HOME/laboratorio/backup" 2>/dev/null || cd ~
     mkdir -p destino
     rsync -av datos/ destino/ 2>/dev/null | grep -q "sent\|transferred\|file"
 }
 
 reto7() {
-    cd /root/laboratorio/backup 2>/dev/null || cd ~
+    cd "$HOME/laboratorio/backup" 2>/dev/null || cd ~
     tar -czf backup_test.tar.gz datos/ 2>/dev/null
     sha256sum backup_test.tar.gz > backup_test.tar.gz.sha256 2>/dev/null
     [ -f backup_test.tar.gz.sha256 ]
 }
 
 reto8() {
-    cd /root/laboratorio/backup 2>/dev/null || cd ~
+    cd "$HOME/laboratorio/backup" 2>/dev/null || cd ~
     mkdir -p backup_config
     cp /etc/hosts backup_config/ 2>/dev/null
     tar -czf backup_config_test.tar.gz backup_config/ 2>/dev/null
@@ -62,7 +62,7 @@ reto8() {
 }
 
 reto9() {
-    cd /root/laboratorio/backup 2>/dev/null || cd ~
+    cd "$HOME/laboratorio/backup" 2>/dev/null || cd ~
     cat > backup_auto_test.sh << 'BACKUP'
 #!/bin/bash
 DATE=$(date +%Y%m%d_%H%M%S)
@@ -73,7 +73,7 @@ BACKUP
 }
 
 reto10() {
-    cd /root/laboratorio/backup 2>/dev/null || cd ~
+    cd "$HOME/laboratorio/backup" 2>/dev/null || cd ~
     tar -czf backup_test.tar.gz datos/ 2>/dev/null
     sha256sum backup_test.tar.gz > backup_test.tar.gz.sha256 2>/dev/null
     sha256sum -c backup_test.tar.gz.sha256 2>/dev/null | grep -q "OK"

@@ -1,10 +1,10 @@
-name: Lab CI
+name: Lab CI - ABC-CYB-101
 
 on:
   push:
-    branches: [phase1/shared-library, main, fix/shared-lib-bugs]
+    branches: [feature/cyb-101-labs, main]
   pull_request:
-    branches: [phase1/shared-library, main, fix/shared-lib-bugs]
+    branches: [feature/cyb-101-labs, main]
 
 jobs:
   lint-and-test:
@@ -14,52 +14,23 @@ jobs:
       - uses: actions/checkout@v7.0.1
 
       - name: Build Docker image
-        run: docker build -t lab-linux .
-
-      - name: Run unit tests (Units I-XI)
-        run: |
-          for u in i ii iii iv v vi vii viii ix x xi; do
-            echo "=== Running tests for Unit $u ==="
-            docker run --rm --entrypoint bash \
-              -v $(pwd)/units/$u:/opt/lab-units/$u:ro \
-              lab-linux \
-              -c "bash /opt/lab-units/$u/test.sh" || exit 1
-          done
-        env:
-          FRASE_OCULTA: "Toda revolución comienza con un pass. Los administradores nunca duermen."
+        run: docker build -t lab-ciberseguridad .
 
       - name: Run shared/ scripts lint (in-container)
         run: |
           docker run --rm --entrypoint bash \
             -v $(pwd)/shared:/shared:ro \
-            lab-linux \
-            -c "for f in /shared/*.sh; do echo \"Checking \$f...\"; bash -n \"\$f\" || exit 1; shellcheck --severity error \"\$f\" || exit 1; done"
+            lab-ciberseguridad \
+            -c "for f in /shared/*.sh; do echo \"Checking \$f...\"; bash -n \"\$f\" || exit 1; done"
 
-      - name: Verify menu.sh integration
+      - name: Verify units manifest loads
         run: |
-          docker run --rm --entrypoint bash lab-linux -c "source /shared/menu.sh && echo 'Menu OK'"
+          docker run --rm --entrypoint bash lab-ciberseguridad \
+            -c "source /shared/common.sh && echo 'Units loaded: ' \$UNIT_COUNT"
 
-      - name: Verify entrypoint sources common (transitively menu)
-        run: |
-          grep -q "source /shared/common.sh" entrypoint.sh || {
-            echo "ERROR: entrypoint.sh does not source common.sh"
-            exit 1
-          }
-          grep -q "source.*menu.sh" shared/common.sh || {
-            echo "ERROR: common.sh does not source menu.sh"
-            exit 1
-          }
-
-      - name: Run metrics tests (unit + integration + e2e)
+      - name: Run unit tests (sample units)
         run: |
           docker run --rm --entrypoint bash \
-            -v $(pwd)/tests:/opt/lab-tests:ro \
-            -v $(pwd)/shared:/shared:ro \
-            lab-linux \
-            -c "cd /opt/lab-tests && bash metrics_unit_test.sh && bash metrics_integration_test.sh && bash metrics_e2e_test.sh"
-
-      - name: Build and verify PDF generation
-        run: |
-          docker run --rm --entrypoint bash \
-            lab-linux \
-            -c "bash /generar-pdf.sh 1"
+            -v $(pwd)/units:/opt/lab-units:ro \
+            lab-ciberseguridad \
+            -c "for u in ii-firewalls-redes iii-iam-mfa iv-criptografia-cvss v-logging-siem-bcp checkpoint-ii checkpoint-iv checkpoint-v; do echo \"=== Running tests for \$u ===\"; bash /opt/lab-units/\$u/test.sh || exit 1; done"

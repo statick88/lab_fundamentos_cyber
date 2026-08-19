@@ -1,6 +1,6 @@
 # Laboratorio Interactivo: Fundamentos de Ciberseguridad (ABC-CYB-101)
 
-14 unidades progresivas · 140 retos prácticos · evaluación automática · frase secreta oculta. Todo corre en Docker.
+14 unidades progresivas · 60 retos CORE + 80 optativos · evaluación automática · frase secreta oculta. Todo corre en Docker.
 
 ## Quick path
 
@@ -34,7 +34,7 @@ Dentro del contenedor: `menu` · `jugar` · `retos` · `evaluar` · `progreso`
 | - | SSL/TLS y Criptografía Aplicada | 10 | 15 |
 | - | Docker Compose + DB | 11 | 10 |
 
-**Total: 14 unidades · 140 retos.**
+**Total: 14 unidades · 140 retos (60 CORE + 80 optativos).**
 
 ## Comandos del contenedor
 
@@ -84,7 +84,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ## Medidas de seguridad del laboratorio
 
 - Contenedor aislado en red bridge 172.20.0.0/24
-- Capabilities limitadas: NET_ADMIN, NET_RAW, SYS_ADMIN
+- Capabilities limitadas: NET_ADMIN, NET_RAW (sin SYS_ADMIN, sin privileged)
 - No se descargan archivos externos durante los retos
 - Todo el malware es simulado (archivos de texto inocuos)
 - No se escanean redes externas

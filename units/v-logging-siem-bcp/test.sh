@@ -24,25 +24,46 @@ reto2() {
 }
 
 reto3() {
-    [ -f "$HOME/laboratorio/logging/mi_app.log" ]
-    grep -ciE "error|fail|critical" "$HOME/laboratorio/logging/mi_app.log" 2>/dev/null
+    if [ -f /var/log/syslog ]; then
+        local count
+        count=$(grep -ciE "error|fail|critical" /var/log/syslog 2>/dev/null || echo 0)
+        [ "$count" -gt 0 ]
+    elif [ -f "$HOME/laboratorio/logging/mi_app.log" ]; then
+        eval_log_analysis "$HOME/laboratorio/logging/mi_app.log" "error|fail|critical" 1 student
+    else
+        return 1
+    fi
 }
 
 reto4() {
-    [ -f "$HOME/laboratorio/logging/apache_access.log" ]
-    awk '$4 ~ /13:55/ {print $0}' "$HOME/laboratorio/logging/apache_access.log" | grep -q "192.168.1"
+    if [ -f /var/log/syslog ]; then
+        awk '$4 ~ /13:55/ {print $0}' /var/log/syslog | grep -q "192.168.1" 2>/dev/null || true
+    elif [ -f "$HOME/laboratorio/logging/apache_access.log" ]; then
+        eval_log_analysis "$HOME/laboratorio/logging/apache_access.log" "192.168.1" 1 student
+    else
+        return 1
+    fi
 }
 
 reto5() {
-    [ -f "$HOME/laboratorio/logging/apache_access.log" ]
-    sed 's/192\.168\.[0-9]\+\.[0-9]\+/ENMASCARADA/g' "$HOME/laboratorio/logging/apache_access.log" | grep -q "ENMASCARADA"
+    if [ -f /var/log/syslog ]; then
+        sed 's/192\\.168\\.[0-9]\\+\\.[0-9]\\+/ENMASCARADA/g' /var/log/syslog | grep -q "ENMASCARADA" 2>/dev/null || true
+    elif [ -f "$HOME/laboratorio/logging/apache_access.log" ]; then
+        eval_log_analysis "$HOME/laboratorio/logging/apache_access.log" "192.168" 1 student
+    else
+        return 1
+    fi
 }
 
 reto6() {
-    [ -f "$HOME/laboratorio/logging/auth_sys.log" ]
-    [ -f "$HOME/laboratorio/logging/mi_app.log" ]
-    # Correlate: find entries around same timestamp
-    grep "13:55:38" "$HOME/laboratorio/logging/auth_sys.log" 2>/dev/null | grep -q "systemd"
+    if [ -f /var/log/auth.log ] && [ -f /var/log/syslog ]; then
+        grep "13:55:38" /var/log/auth.log 2>/dev/null | grep -q "systemd" || \
+        grep "13:55:38" /var/log/syslog 2>/dev/null | grep -q "systemd"
+    elif [ -f "$HOME/laboratorio/logging/auth_sys.log" ]; then
+        eval_log_analysis "$HOME/laboratorio/logging/auth_sys.log" "13:55:38.*systemd" 1 student
+    else
+        return 1
+    fi
 }
 
 reto7() {

@@ -1,9 +1,27 @@
 #!/bin/bash
 # Funciones de evaluacion y progreso
-STATE_DIR="${HOME}/.lab_state"
+STATE_DIR="/var/lab-state"
 PROGRESS_FILE="${STATE_DIR}/progress"
+OLD_PROGRESS_FILE="${HOME}/.lab_state/progress"
 
-init_state() { mkdir -p "$STATE_DIR"; touch "$PROGRESS_FILE" 2>/dev/null; }
+init_state() {
+    if [ ! -d "$STATE_DIR" ]; then
+        mkdir -p "$STATE_DIR" 2>/dev/null || true
+        chown root:sudo "$STATE_DIR" 2>/dev/null || true
+        chmod 0770 "$STATE_DIR" 2>/dev/null || true
+    fi
+    if [ ! -f "$PROGRESS_FILE" ]; then
+        touch "$PROGRESS_FILE" 2>/dev/null || true
+        chown root:sudo "$PROGRESS_FILE" 2>/dev/null || true
+        chmod 0660 "$PROGRESS_FILE" 2>/dev/null || true
+    fi
+    if [ -f "$OLD_PROGRESS_FILE" ] && [ ! -s "$PROGRESS_FILE" ]; then
+        cp "$OLD_PROGRESS_FILE" "$PROGRESS_FILE" 2>/dev/null || true
+        chown root:sudo "$PROGRESS_FILE" 2>/dev/null || true
+        chmod 0660 "$PROGRESS_FILE" 2>/dev/null || true
+        rm -f "$OLD_PROGRESS_FILE" 2>/dev/null || true
+    fi
+}
 
 marcar_completado() {
     local key="${1}:reto:${2}"
@@ -77,8 +95,23 @@ eval_multiple_choice() {
 
 eval_cvss() {
     local expected_score="$1"
-    local actual_score="$2"
+    local student_script="$2"
     local tolerance="${3:-0.5}"
+
+    if [ -z "$student_script" ]; then
+        student_script="$HOME/laboratorio/cvss_calculator.py"
+    fi
+
+    if [ ! -f "$student_script" ]; then
+        return 1
+    fi
+
+    local actual_score
+    actual_score=$(python3 "$student_script" 2>/dev/null || echo "")
+    if [ -z "$actual_score" ]; then
+        return 1
+    fi
+
     local diff
     diff=$(echo "$expected_score $actual_score" | awk '{print ($1-$2)>0?($1-$2):($2-$1)}')
     [ "$(echo "$diff <= $tolerance" | bc -l)" -eq 1 ]
@@ -88,9 +121,61 @@ eval_log_analysis() {
     local log_file="$1"
     local pattern="$2"
     local expected_count="$3"
-    local actual_count
-    actual_count=$(grep -cE "$pattern" "$log_file" 2>/dev/null || echo 0)
-    [ "$actual_count" -ge "$expected_count" ]
+    local source_type="${4:-auto}"
+
+    if [ "$source_type" = "system" ]; then
+        local syslog_count=0
+        if command -v journalctl >/dev/null 2>&1; then
+            syslog_count=$(journalctl --since "1 hour ago" 2>/dev/null | grep -cE "$pattern" || echo 0)
+        elif [ -f /var/log/syslog ]; then
+            syslog_count=$(grep -cE "$pattern" /var/log/syslog 2>/dev/null || echo 0)
+        elif [ -f /var/log/auth.log ]; then
+            syslog_count=$(grep -cE "$pattern" /var/log/auth.log 2>/dev/null || echo 0)
+        fi
+        [ "$syslog_count" -ge "$expected_count" ]
+        return $?
+    fi
+
+    if [ "$source_type" = "student" ] || [ "$source_type" = "auto" ]; then
+        if [ ! -f "$log_file" ]; then
+            return 1
+        fi
+
+        if [ "$source_type" = "student" ]; then
+            local file_mtime
+            file_mtime=$(stat -c %Y "$log_file" 2>/dev/null || stat -f %m "$log_file" 2>/dev/null || echo 0)
+            local now
+            now=$(date +%s)
+            local age=$((now - file_mtime))
+
+            if [ "$age" -lt 300 ]; then
+                return 1
+            fi
+
+            local has_real_pattern=0
+            if grep -qE "^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)" "$log_file" 2>/dev/null; then
+                has_real_pattern=1
+            elif grep -qE "^[0-9]{4}-[0-9]{2}-[0-9]{2}T" "$log_file" 2>/dev/null; then
+                has_real_pattern=1
+            fi
+
+            if [ "$has_real_pattern" -eq 0 ]; then
+                return 1
+            fi
+
+            local real_log_lines
+            real_log_lines=$(grep -cE "$pattern" "$log_file" 2>/dev/null || echo 0)
+            [ "$real_log_lines" -ge "$expected_count" ]
+            return $?
+        fi
+
+        local actual_count
+        actual_count=$(grep -cE "$pattern" "$log_file" 2>/dev/null || echo 0)
+        [ "$actual_count" -ge "$expected_count" ]
+        return $?
+    fi
+
+    return 1
 }
 
 eval_crypto_hash() {
@@ -111,8 +196,47 @@ eval_crypto_verify() {
 
 eval_config_file() {
     local config_file="$1"
-    local pattern="$2"
-    [ -f "$config_file" ] && grep -qE "$pattern" "$config_file" 2>/dev/null
+    local mode="${2:-content}"
+    local pattern="${3:-}"
+
+    if [ ! -f "$config_file" ]; then
+        return 1
+    fi
+
+    case "$mode" in
+        exists)
+            [ -f "$config_file" ]
+            ;;
+        content)
+            [ -n "$pattern" ] && grep -qE "$pattern" "$config_file" 2>/dev/null
+            ;;
+        perms)
+            local expected_perms="$3"
+            local actual_perms
+            actual_perms=$(stat -c "%a" "$config_file" 2>/dev/null || stat -f "%Lp" "$config_file" 2>/dev/null || echo "")
+            [ "$actual_perms" = "$expected_perms" ]
+            ;;
+        syntax)
+            local config_type="${3:-generic}"
+            case "$config_type" in
+                sudoers)
+                    visudo -c -f "$config_file" >/dev/null 2>&1
+                    ;;
+                sshd_config)
+                    sshd -t -f "$config_file" >/dev/null 2>&1
+                    ;;
+                generic)
+                    [ -f "$config_file" ] && [ -s "$config_file" ]
+                    ;;
+                *)
+                    return 1
+                    ;;
+            esac
+            ;;
+        *)
+            return 1
+            ;;
+    esac
 }
 
 celebrar() {

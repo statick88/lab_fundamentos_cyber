@@ -21,14 +21,20 @@ reto3() {
 }
 
 reto4() {
-    # Verify student created UFW SSH configuration in their laboratorio
-    find "$HOME/laboratorio" -maxdepth 4 -type f \( -name "*.sh" -o -name "*.rules" -o -name "*.conf" \) 2>/dev/null | xargs grep -l "ufw.*22\|22.*ufw\|allow.*ssh" 2>/dev/null | head -1 | grep -q "."
+    if command -v sudo >/dev/null 2>&1 && sudo -n ufw status >/dev/null 2>&1; then
+        sudo ufw status | grep -q "22/tcp"
+    else
+        find "$HOME/laboratorio" -maxdepth 4 -type f \( -name "*.sh" -o -name "*.rules" -o -name "*.conf" \) 2>/dev/null | xargs grep -l "ufw.*22\|22.*ufw\|allow.*ssh" 2>/dev/null | head -1 | grep -q "."
+    fi
 }
 
 reto5() {
-    # Verify student can list/document iptables rules
-    command -v iptables >/dev/null 2>&1
-    find "$HOME/laboratorio" -maxdepth 4 -type f \( -name "*.sh" -o -name "*.txt" -o -name "*.md" \) 2>/dev/null | xargs grep -l "iptables.*-L\|iptables.*list" 2>/dev/null | head -1 | grep -q "."
+    if command -v sudo >/dev/null 2>&1 && sudo -n iptables -L >/dev/null 2>&1; then
+        sudo iptables -L >/dev/null 2>&1
+    else
+        command -v iptables >/dev/null 2>&1
+        find "$HOME/laboratorio" -maxdepth 4 -type f \( -name "*.sh" -o -name "*.txt" -o -name "*.md" \) 2>/dev/null | xargs grep -l "iptables.*-L\|iptables.*list" 2>/dev/null | head -1 | grep -q "."
+    fi
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5)

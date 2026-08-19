@@ -8,34 +8,58 @@ UNIT_NAME="unit-III"
 TOTAL_RETOS=5
 
 reto1() {
-    # Verify student created group and user scripts/configs
-    [ -f "$HOME/laboratorio/iam/crear_grupo_usuario.sh" ] || [ -f "$HOME/laboratorio/iam/grupo_sysadmins.txt" ]
-    getent group sysadmins >/dev/null 2>&1 || true
-    id ops_admin >/dev/null 2>&1 || true
+    local has_group=0 has_user=0
+    if getent group sysadmins >/dev/null 2>&1; then
+        has_group=1
+    fi
+    if id ops_admin >/dev/null 2>&1; then
+        has_user=1
+    fi
+    if [ "$has_group" -eq 0 ] && [ "$has_user" -eq 0 ]; then
+        [ -f "$HOME/laboratorio/iam/crear_grupo_usuario.sh" ] || [ -f "$HOME/laboratorio/iam/grupo_sysadmins.txt" ]
+    else
+        return 0
+    fi
 }
 
 reto2() {
-    # Verify student created sudoers configuration
-    [ -f "$HOME/laboratorio/iam/sudoers_config/lab-cyber" ]
-    grep -qi "NOPASSWD\|sudoers" "$HOME/laboratorio/iam/sudoers_config/lab-cyber" 2>/dev/null || true
+    local config_file="/etc/sudoers.d/lab-cyber"
+    if [ -f "$config_file" ]; then
+        local perms
+        perms=$(stat -c "%a" "$config_file" 2>/dev/null || stat -f "%Lp" "$config_file" 2>/dev/null || echo "")
+        if [ "$perms" = "440" ] || [ "$perms" = "0440" ]; then
+            visudo -c -f "$config_file" >/dev/null 2>&1
+        else
+            return 1
+        fi
+    else
+        return 1
+    fi
 }
 
 reto3() {
-    # Verify student configured password policy
-    [ -f "$HOME/laboratorio/iam/login_defs_example.txt" ] || [ -f "$HOME/laboratorio/iam/password_policy.sh" ]
-    grep -qi "PASS_MAX_DAYS\|PASS_MIN_DAYS" "$HOME/laboratorio/iam/login_defs_example.txt" 2>/dev/null || true
+    if [ -f /etc/login.defs ]; then
+        grep -qE "PASS_MAX_DAYS|PASS_MIN_DAYS" /etc/login.defs 2>/dev/null
+    else
+        return 1
+    fi
 }
 
 reto4() {
-    # Verify student configured Google Authenticator PAM
-    [ -f "$HOME/laboratorio/iam/pam_config/common-auth" ] || [ -f "$HOME/laboratorio/iam/google_auth_setup.sh" ]
-    grep -qi "google_authenticator\|pam_google" "$HOME/laboratorio/iam/pam_config/common-auth" 2>/dev/null || true
+    if [ -f /etc/pam.d/common-auth ]; then
+        grep -qi "google_authenticator\|pam_google" /etc/pam.d/common-auth 2>/dev/null
+    else
+        return 1
+    fi
 }
 
 reto5() {
-    # Verify student created audit script
-    [ -f "$HOME/laboratorio/iam/audit_privileged.sh" ] && [ -x "$HOME/laboratorio/iam/audit_privileged.sh" ]
-    grep -qi "awk\|grep\|passwd\|sudoers" "$HOME/laboratorio/iam/audit_privileged.sh" 2>/dev/null || true
+    local script="$HOME/laboratorio/iam/audit_privileged.sh"
+    if [ -f "$script" ] && [ -x "$script" ]; then
+        "$script" >/dev/null 2>&1
+    else
+        return 1
+    fi
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5)

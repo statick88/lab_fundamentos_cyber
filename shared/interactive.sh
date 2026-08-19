@@ -27,7 +27,7 @@ menu_interactivo() {
                 ver_frase
                 ;;
             [1-9]|1[0-4])
-                if [ "$choice" -ge 1 ] && [ "$choice" -le 14 ]; then
+                if [ "$choice" -ge 1 ] && [ "$choice" -le "$UNIT_COUNT" ]; then
                     local romano=$(get_unit_num_romano $choice)
                     export CURRENT_UNIT="$(get_unit_name $choice)"
                     echo "$CURRENT_UNIT" > ~/.current_unit
@@ -55,14 +55,13 @@ ver_retos_unidad() {
     if [ -z "$CURRENT_UNIT" ]; then
         echo "  ⚠️  Primero selecciona una unidad:"
         echo ""
-        for i in {1..14}; do
-            local romano=$(get_unit_num_romano $i)
-            echo "  [$i] Unidad $i"
+        for i in $(seq 1 $UNIT_COUNT); do
+            echo "  [$i] $(get_unit_title $i)"
         done
         echo ""
         echo -n "  Elige (1-14): "
         read -r choice
-        if [ "$choice" -ge 1 ] && [ "$choice" -le 14 ]; then
+        if [ "$choice" -ge 1 ] && [ "$choice" -le "$UNIT_COUNT" ]; then
             export CURRENT_UNIT="$(get_unit_name $choice)"
             echo "$CURRENT_UNIT" > ~/.current_unit
         else
@@ -85,7 +84,7 @@ jugar_interactivo() {
         echo ""
         echo -e "${CYAN}🎮 MODO JUGAR - Selecciona una unidad:${RESET}"
         echo ""
-        for i in {1..14}; do
+        for i in $(seq 1 $UNIT_COUNT); do
             local romano=$(get_unit_num_romano $i)
             local u="$(get_unit_name $i)"
             local titulo=$(get_unit_title $i)
@@ -99,7 +98,7 @@ jugar_interactivo() {
         if [ -z "$choice" ]; then
             return 0
         fi
-        if [ "$choice" -ge 1 ] && [ "$choice" -le 14 ]; then
+        if [ "$choice" -ge 1 ] && [ "$choice" -le "$UNIT_COUNT" ]; then
             unit="$(get_unit_name $choice)"
         else
             echo "  ❌ Opción inválida"
@@ -118,11 +117,26 @@ jugar_interactivo() {
     source "$unit_path/test.sh" 2>/dev/null || true
 
     local total=${#challenge_names[@]}
-    local reto=1
+    local unit_idx; unit_idx=$(get_unit_index "$unit")
 
-    while [ "$reto" -le "$total" ]; do
+    local core_retos=()
+    local opt_retos=()
+    for ((i=1; i<=total; i++)); do
+        if is_reto_core "$unit_idx" "$i"; then
+            core_retos+=("$i")
+        else
+            opt_retos+=("$i")
+        fi
+    done
+
+    local reto_list=("${core_retos[@]}" "${opt_retos[@]}")
+    local reto=1
+    local list_idx=0
+
+    while [ "$list_idx" -lt "${#reto_list[@]}" ]; do
+        reto=${reto_list[$list_idx]}
         if esta_completado "$unit" "$reto" 2>/dev/null; then
-            reto=$((reto + 1))
+            list_idx=$((list_idx + 1))
             continue
         fi
 
@@ -130,7 +144,7 @@ jugar_interactivo() {
         local result=$?
 
         if [ $result -eq 0 ]; then
-            reto=$((reto + 1))
+            list_idx=$((list_idx + 1))
         else
             echo ""
             echo -ne "${AMARILLO}¿Qué quieres hacer? [n] siguiente, [m] menú, [q] salir: ${RESET}"
@@ -138,7 +152,7 @@ jugar_interactivo() {
             case "$action" in
                 m|M) return 0 ;;
                 q|Q) return 1 ;;
-                *) reto=$((reto + 1)) ;;
+                *) list_idx=$((list_idx + 1)) ;;
             esac
         fi
     done
@@ -159,11 +173,10 @@ evaluar_interactivo() {
         echo ""
         echo "  📊 EVALUAR - Selecciona una unidad:"
         echo ""
-        for i in {1..14}; do
-            local romano=$(get_unit_num_romano $i)
+        for i in $(seq 1 $UNIT_COUNT); do
             local u="$(get_unit_name $i)"
             local completados=$(contar_completados "$u" "$(get_unit_total_retos $i)" 2>/dev/null || echo 0)
-            echo "  [$i] Unidad $i (${completados}/$(get_unit_total_retos $i))"
+            echo "  [$i] $(get_unit_title $i) (${completados}/$(get_unit_total_retos $i))"
         done
         echo ""
         echo -n "  Elige (1-14, Enter para todas): "
@@ -172,7 +185,7 @@ evaluar_interactivo() {
             mostrar_progreso_global
             return 0
         fi
-        if [ "$choice" -ge 1 ] && [ "$choice" -le 14 ]; then
+        if [ "$choice" -ge 1 ] && [ "$choice" -le "$UNIT_COUNT" ]; then
             export CURRENT_UNIT="$(get_unit_name $choice)"
         else
             echo "  ❌ Opción inválida"
@@ -229,7 +242,7 @@ ver_frase() {
     echo -e "${CYAN}🔑 FRASE SECRETA - Progreso por unidad:${RESET}"
     echo ""
 
-    for i in {1..14}; do
+    for i in $(seq 1 $UNIT_COUNT); do
         local u="$(get_unit_name $i)"
         local total_retos=$(get_unit_total_retos $i)
         local compl=$(contar_completados "$u" "$total_retos" 2>/dev/null || echo 0)

@@ -8,15 +8,25 @@ UNIT_NAME="checkpoint-V"
 TOTAL_RETOS=5
 
 reto1() {
-    [ -f "$HOME/laboratorio/checkpoints/checkpoint-v/syslog_sample.log" ]
-    grep -ciE "error|fail|critical|block" "$HOME/laboratorio/checkpoints/checkpoint-v/syslog_sample.log" 2>/dev/null
+    if [ -f /var/log/syslog ]; then
+        eval_log_analysis /var/log/syslog "error|fail|critical|block" 1 system
+    elif [ -f "$HOME/laboratorio/checkpoints/checkpoint-v/syslog_sample.log" ]; then
+        eval_log_analysis "$HOME/laboratorio/checkpoints/checkpoint-v/syslog_sample.log" "error|fail|critical|block" 1 student
+    else
+        return 1
+    fi
 }
 
 reto2() {
-    [ -f "$HOME/laboratorio/checkpoints/checkpoint-v/syslog_sample.log" ]
-    # Extract fields with awk - verify student can parse syslog
-    output=$(awk '{print $1, $2, $3, $4, $5}' "$HOME/laboratorio/checkpoints/checkpoint-v/syslog_sample.log")
-    echo "$output" | grep -q "lab"
+    if [ -f /var/log/syslog ]; then
+        output=$(awk '{print $1, $2, $3, $4, $5}' /var/log/syslog)
+        echo "$output" | grep -q "lab" || true
+    elif [ -f "$HOME/laboratorio/checkpoints/checkpoint-v/syslog_sample.log" ]; then
+        output=$(awk '{print $1, $2, $3, $4, $5}' "$HOME/laboratorio/checkpoints/checkpoint-v/syslog_sample.log")
+        echo "$output" | grep -q "lab"
+    else
+        return 1
+    fi
 }
 
 reto3() {

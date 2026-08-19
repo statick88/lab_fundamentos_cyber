@@ -40,5 +40,7 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /tmp/vacio.txt
 da39a3ee5e6b4b0d3255bfef95601890afd80709  /etc/hostname
 HASHES
 
+cp /shared/cvss_calculator.py "$HOME/laboratorio/cvss_calculator.py" 2>/dev/null || true
+
 exito "Entorno de Unit IV preparado con 10 retos"
 echo -e "${AMARILLO}Escribe ${CYAN}'manual'${AMARILLO} para ver la guía o ${CYAN}'evaluar'${AMARILLO} para evaluar.${RESET}"

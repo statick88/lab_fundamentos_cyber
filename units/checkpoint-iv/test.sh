@@ -8,9 +8,11 @@ UNIT_NAME="checkpoint-IV"
 TOTAL_RETOS=5
 
 reto1() {
-    # CVSS score validation
-    echo "7.5" | grep -qE '^[0-9]+(\.[0-9]+)?$'
-    command -v python3 >/dev/null 2>&1 || command -v awk >/dev/null 2>&1
+    local student_script="$HOME/laboratorio/checkpoints/checkpoint-iv/cvss_calculator.py"
+    if [ ! -f "$student_script" ]; then
+        student_script="$HOME/laboratorio/cvss_calculator.py"
+    fi
+    eval_cvss "7.5" "$student_script" "0.5"
 }
 
 reto2() {

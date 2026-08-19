@@ -60,7 +60,7 @@ Un servicio web interno dejó de responder porque su certificado SSL/TLS expiró
 **Criterios de Validación**:
 - El comando `openssl x509 -in cert.pem -checkend 0 -noout 2>&1` contiene la palabra `will not expire` o `ok`
 - El comando `openssl x509 -in cert.pem -enddate -noout` devuelve una fecha en formato `notAfter=MMM DD HH:MM:SS YYYY GMT`
-- El certificado `cert.pem` existe en `/root/laboratorio/ssl/`
+- El certificado `cert.pem` existe en `$HOME/laboratorio/ssl/`
 - El archivo `cert.pem` fue generado con el Subject `/C=EC/ST=Quito/O=Test/CN=localhost`
 
 **Pregunta de Selección Múltiple**:

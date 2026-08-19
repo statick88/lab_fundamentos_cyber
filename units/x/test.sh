@@ -13,27 +13,27 @@ reto1() {
 }
 
 reto2() {
-    cd /root/laboratorio/ssl 2>/dev/null || cd ~
+    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
     openssl genrsa -out clave_privada.pem 2048 2>/dev/null
     [ -f clave_privada.pem ]
 }
 
 reto3() {
-    cd /root/laboratorio/ssl 2>/dev/null || cd ~
+    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
     openssl genrsa -out clave_privada.pem 2048 2>/dev/null
     output=$(openssl rsa -in clave_privada.pem -check -noout 2>&1)
     echo "$output" | grep -qi "ok\|valid"
 }
 
 reto4() {
-    cd /root/laboratorio/ssl 2>/dev/null || cd ~
+    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
     openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes \
         -subj "/C=EC/ST=Quito/O=Test/CN=localhost" 2>/dev/null
     [ -f cert.pem ] && [ -f key.pem ]
 }
 
 reto5() {
-    cd /root/laboratorio/ssl 2>/dev/null || cd ~
+    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
     openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes \
         -subj "/C=EC/ST=Quito/O=Test/CN=localhost" 2>/dev/null
     output=$(openssl x509 -in cert.pem -text -noout 2>/dev/null | head -5)
@@ -41,7 +41,7 @@ reto5() {
 }
 
 reto6() {
-    cd /root/laboratorio/ssl 2>/dev/null || cd ~
+    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
     openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes \
         -subj "/C=EC/ST=Quito/O=Test/CN=localhost" 2>/dev/null
     output=$(openssl x509 -in cert.pem -checkend 0 -noout 2>&1)
@@ -49,14 +49,14 @@ reto6() {
 }
 
 reto7() {
-    cd /root/laboratorio/ssl 2>/dev/null || cd ~
+    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
     openssl req -new -newkey rsa:2048 -nodes -out request.csr -keyout key_csr.pem \
         -subj "/C=EC/ST=Quito/O=Test/CN=test.com" 2>/dev/null
     [ -f request.csr ] && [ -f key_csr.pem ]
 }
 
 reto8() {
-    cd /root/laboratorio/ssl 2>/dev/null || cd ~
+    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
     openssl req -new -newkey rsa:2048 -nodes -out request.csr -keyout key_csr.pem \
         -subj "/C=EC/ST=Quito/O=Test/CN=test.com" 2>/dev/null
     output=$(openssl req -in request.csr -text -noout 2>/dev/null | head -5)
@@ -64,7 +64,7 @@ reto8() {
 }
 
 reto9() {
-    cd /root/laboratorio/ssl 2>/dev/null || cd ~
+    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
     mkdir -p ca
     openssl genrsa -out ca/ca.key 2048 2>/dev/null
     openssl req -x509 -new -nodes -key ca/ca.key -sha256 -days 365 \
@@ -73,7 +73,7 @@ reto9() {
 }
 
 reto10() {
-    cd /root/laboratorio/ssl 2>/dev/null || cd ~
+    cd "$HOME/laboratorio/ssl" 2>/dev/null || cd ~
     mkdir -p ca
     openssl genrsa -out ca/ca.key 2048 2>/dev/null
     openssl req -x509 -new -nodes -key ca/ca.key -sha256 -days 365 \
@@ -113,7 +113,7 @@ reto2_info() {
     echo -e "${CYAN}Reto 2: Generar clave privada${NC}"
     echo ""
     echo "Genera una clave privada RSA de 2048 bits."
-    echo "Guarda el archivo como clave_privada.pem en /root/laboratorio/ssl/"
+    echo "Guarda el archivo como clave_privada.pem en \$HOME/laboratorio/ssl/"
     echo "Comando útil: openssl genrsa -out clave_privada.pem 2048"
     separador
 }
@@ -132,7 +132,7 @@ reto4_info() {
     echo -e "${CYAN}Reto 4: Generar certificado autofirmado${NC}"
     echo ""
     echo "Genera un certificado autofirmado válido por 365 días."
-    echo "Guarda los archivos como cert.pem y key.pem en /root/laboratorio/ssl/"
+    echo "Guarda los archivos como cert.pem y key.pem en \$HOME/laboratorio/ssl/"
     echo "Comando útil: openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes"
     separador
 }
@@ -161,7 +161,7 @@ reto7_info() {
     echo -e "${CYAN}Reto 7: Generar CSR${NC}"
     echo ""
     echo "Genera una solicitud de firma de certificado (CSR)."
-    echo "Guarda los archivos como request.csr y key_csr.pem en /root/laboratorio/ssl/"
+    echo "Guarda los archivos como request.csr y key_csr.pem en \$HOME/laboratorio/ssl/"
     echo "Comando útil: openssl req -new -newkey rsa:2048 -nodes -out request.csr -keyout key_csr.pem"
     separador
 }
@@ -181,7 +181,7 @@ reto9_info() {
     echo -e "${CYAN}Reto 9: Crear CA local${NC}"
     echo ""
     echo "Crea una Autoridad de Certificación (CA) local."
-    echo "Genera la clave privada (ca.key) y el certificado raíz (ca.crt) en /root/laboratorio/ssl/ca/"
+    echo "Genera la clave privada (ca.key) y el certificado raíz (ca.crt) en \$HOME/laboratorio/ssl/ca/"
     echo "Comandos útiles:"
     echo "  openssl genrsa -out ca/ca.key 2048"
     echo "  openssl req -x509 -new -nodes -key ca/ca.key -sha256 -days 365 -out ca/ca.crt"
@@ -194,7 +194,7 @@ reto10_info() {
     echo ""
     echo "Firma un certificado de servidor usando tu CA local."
     echo "Primero genera un CSR para el servidor, luego fírmalo con tu CA."
-    echo "Archivos esperados: servidor.crt y servidor.key en /root/laboratorio/ssl/"
+    echo "Archivos esperados: servidor.crt y servidor.key en \$HOME/laboratorio/ssl/"
     echo "Comandos útiles:"
     echo "  openssl req -new -newkey rsa:2048 -nodes -out servidor.csr -keyout servidor.key"
     echo "  openssl x509 -req -in servidor.csr -CA ca/ca.crt -CAkey ca/ca.key -CAcreateserial -out servidor.crt -days 365"

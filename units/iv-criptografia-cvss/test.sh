@@ -8,68 +8,97 @@ UNIT_NAME="unit-IV"
 TOTAL_RETOS=10
 
 reto1() {
-    # Calcular CVSS 3.1 base para RCE HTTP: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
-    # Score esperado ~9.8
-    echo "9.8" | grep -qE '^[0-9]+(\.[0-9]+)?$'
-    command -v python3 >/dev/null 2>&1 || command -v awk >/dev/null 2>&1
+    local student_script="$HOME/laboratorio/ciberseguridad/cvss_calculator.py"
+    if [ ! -f "$student_script" ]; then
+        student_script="$HOME/laboratorio/cvss_calculator.py"
+    fi
+    eval_cvss "9.8" "$student_script" "0.5"
 }
 
 reto2() {
-    # XSS reflejado: AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N
-    echo "6.1" | grep -qE '^[0-9]+(\.[0-9]+)?$'
-    command -v python3 >/dev/null 2>&1 || command -v awk >/dev/null 2>&1
+    local student_script="$HOME/laboratorio/ciberseguridad/cvss_calculator.py"
+    if [ ! -f "$student_script" ]; then
+        student_script="$HOME/laboratorio/cvss_calculator.py"
+    fi
+    eval_cvss "5.4" "$student_script" "0.5"
 }
 
 reto3() {
-    # Buffer overflow local: AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H
-    echo "7.8" | grep -qE '^[0-9]+(\.[0-9]+)?$'
+    local student_script="$HOME/laboratorio/ciberseguridad/cvss_calculator.py"
+    if [ ! -f "$student_script" ]; then
+        student_script="$HOME/laboratorio/cvss_calculator.py"
+    fi
+    eval_cvss "7.8" "$student_script" "0.5"
 }
 
 reto4() {
-    # Severity rating: dado un score, determinar nivel
-    local score="$1"
-    [ -n "$score" ] || score="7.5"
+    local score_file="$HOME/laboratorio/ciberseguridad/cvss_score.txt"
+    local score="7.5"
+    if [ -f "$score_file" ]; then
+        score=$(cat "$score_file" 2>/dev/null || echo "7.5")
+    fi
     python3 -c "exit(0 if 7.0 <= $score <= 8.9 else 1)" 2>/dev/null || \
     awk -v s="$score" 'BEGIN { exit (s >= 7.0 && s <= 8.9) ? 0 : 1 }'
 }
 
 reto5() {
-    # Identificar vector de ataque en auth.log
-    [ -f "$HOME/laboratorio/ciberseguridad/auth.log" ]
-    grep -c "Failed password" "$HOME/laboratorio/ciberseguridad/auth.log" 2>/dev/null | grep -qE '^[0-9]+$'
+    if [ -f /var/log/auth.log ]; then
+        eval_log_analysis /var/log/auth.log "Failed password" 1 system
+    elif [ -f "$HOME/laboratorio/ciberseguridad/auth.log" ]; then
+        eval_log_analysis "$HOME/laboratorio/ciberseguridad/auth.log" "Failed password" 1 student
+    else
+        return 1
+    fi
 }
 
 reto6() {
-    # Identificar SQL injection en access.log
-    [ -f "$HOME/laboratorio/ciberseguridad/access.log" ]
-    grep -qi "union.*select" "$HOME/laboratorio/ciberseguridad/access.log" 2>/dev/null
+    if [ -f /var/log/apache2/access.log ]; then
+        eval_log_analysis /var/log/apache2/access.log "union.*select" 1 system
+    elif [ -f "$HOME/laboratorio/ciberseguridad/access.log" ]; then
+        eval_log_analysis "$HOME/laboratorio/ciberseguridad/access.log" "union.*select" 1 student
+    else
+        return 1
+    fi
 }
 
 reto7() {
-    # Identificar path traversal en access.log
-    [ -f "$HOME/laboratorio/ciberseguridad/access.log" ]
-    grep -qi "\.\./" "$HOME/laboratorio/ciberseguridad/access.log" 2>/dev/null || grep -qi "etc/passwd" "$HOME/laboratorio/ciberseguridad/access.log" 2>/dev/null
+    if [ -f /var/log/apache2/access.log ]; then
+        eval_log_analysis /var/log/apache2/access.log "\.\./|etc/passwd" 1 system
+    elif [ -f "$HOME/laboratorio/ciberseguridad/access.log" ]; then
+        eval_log_analysis "$HOME/laboratorio/ciberseguridad/access.log" "\.\./|etc/passwd" 1 student
+    else
+        return 1
+    fi
 }
 
 reto8() {
-    # Analizar headers de phishing simulado
-    grep -qi "X-Priority\|Reply-To\|suspicious\|link" "$HOME/laboratorio/ciberseguridad/access.log" 2>/dev/null || true
-    # Simulated: verify mail analysis tools exist
-    command -v grep >/dev/null 2>&1 && command -v awk >/dev/null 2>&1
+    if [ -f /var/log/mail.log ]; then
+        eval_log_analysis /var/log/mail.log "X-Priority|Reply-To|suspicious" 1 system
+    elif [ -f "$HOME/laboratorio/ciberseguridad/access.log" ]; then
+        eval_log_analysis "$HOME/laboratorio/ciberseguridad/access.log" "X-Priority|Reply-To|suspicious|link" 1 student
+    else
+        return 1
+    fi
 }
 
 reto9() {
-    # Generar hashes SHA-256 de archivos "maliciosos"
-    [ -f "$HOME/laboratorio/ciberseguridad/malware_simulado.bin" ]
-    sha256sum "$HOME/laboratorio/ciberseguridad/malware_simulado.bin" 2>/dev/null | grep -qE '^[a-f0-9]{64}'
+    if [ -f "$HOME/laboratorio/ciberseguridad/malware_simulado.bin" ]; then
+        eval_crypto_hash "$HOME/laboratorio/ciberseguridad/malware_simulado.bin" "" sha256sum
+    else
+        return 1
+    fi
 }
 
 reto10() {
-    # Comparar hashes contra baseline
-    [ -f "$HOME/laboratorio/ciberseguridad/baseline_hashes.txt" ]
-    sha256sum "$HOME/laboratorio/ciberseguridad/malware_simulado.bin" 2>/dev/null > /tmp/actual_hash.txt
-    diff <(cut -d' ' -f1 "$HOME/laboratorio/ciberseguridad/baseline_hashes.txt") <(cut -d' ' -f1 /tmp/actual_hash.txt) >/dev/null 2>&1 || true
-    [ -f /tmp/actual_hash.txt ]
+    local actual="$HOME/laboratorio/ciberseguridad/malware_simulado.bin"
+    local baseline="$HOME/laboratorio/ciberseguridad/baseline_hashes.txt"
+    if [ -f "$actual" ] && [ -f "$baseline" ]; then
+        sha256sum "$actual" 2>/dev/null > /tmp/actual_hash.txt
+        diff <(cut -d' ' -f1 "$baseline") <(cut -d' ' -f1 /tmp/actual_hash.txt) >/dev/null 2>&1 || true
+        [ -f /tmp/actual_hash.txt ]
+    else
+        return 1
+    fi
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10)
@@ -97,8 +126,8 @@ reto1_info() {
     echo ""
     echo "Vector: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
     echo ""
-    echo "Usa: https://www.first.org/cvss/calculator/3.1"
-    echo "O calcula manualmente aplicando la fórmula CVSS 3.1."
+    echo "Crea un script Python que calcule el score y ejecútalo."
+    echo "Usa: python3 cvss_calculator.py 'AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H'"
     separador
 }
 
@@ -109,7 +138,7 @@ reto2_info() {
     echo "Calcula el score CVSS para un XSS (Cross-Site Scripting) reflejado."
     echo "Vector: AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N"
     echo ""
-    echo "Comandos útiles: python3 para calcular score"
+    echo "Crea un script Python que calcule el score y ejecútalo."
     separador
 }
 
@@ -120,7 +149,7 @@ reto3_info() {
     echo "Calcula el score CVSS para un buffer overflow local."
     echo "Vector: AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
     echo ""
-    echo "Comandos útiles: python3 para calcular score"
+    echo "Crea un script Python que calcule el score y ejecútalo."
     separador
 }
 
@@ -146,8 +175,8 @@ reto5_info() {
     echo "Busca 'Failed password' y determina si es fuerza bruta SSH."
     echo ""
     echo "Comandos útiles:"
-    echo "  grep 'Failed password' auth.log"
-    echo "  grep -c 'Failed password' auth.log"
+    echo "  grep 'Failed password' /var/log/auth.log"
+    echo "  grep -c 'Failed password' /var/log/auth.log"
     separador
 }
 
@@ -159,8 +188,8 @@ reto6_info() {
     echo "Busca patrones: union, select, insert, drop, --"
     echo ""
     echo "Comandos útiles:"
-    echo "  grep -i 'union.*select' access.log"
-    echo "  grep -iE 'union|select|insert|drop' access.log"
+    echo "  grep -i 'union.*select' /var/log/apache2/access.log"
+    echo "  grep -iE 'union|select|insert|drop' /var/log/apache2/access.log"
     separador
 }
 
@@ -172,8 +201,8 @@ reto7_info() {
     echo "Busca patrones: ../, /etc/passwd, /etc/shadow, cgi-bin"
     echo ""
     echo "Comandos útiles:"
-    echo "  grep -i '\.\./' access.log"
-    echo "  grep -i 'etc/passwd' access.log"
+    echo "  grep -i '\.\./' /var/log/apache2/access.log"
+    echo "  grep -i 'etc/passwd' /var/log/apache2/access.log"
     separador
 }
 

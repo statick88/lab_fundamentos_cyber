@@ -8,55 +8,70 @@ UNIT_NAME="unit-II"
 TOTAL_RETOS=10
 
 reto1() {
+    [ -f "$HOME/laboratorio/redes/captura_http.pcapng" ]
     grep -qi "GET / HTTP" "$HOME/laboratorio/redes/captura_http.pcapng" 2>/dev/null
 }
 
 reto2() {
-    cat /etc/services 2>/dev/null | grep -q "^https"
+    grep -q "^https" /etc/services 2>/dev/null
 }
 
 reto3() {
+    [ -f "$HOME/laboratorio/redes/captura_ssh.pcapng" ]
     grep -qi "SSH" "$HOME/laboratorio/redes/captura_ssh.pcapng" 2>/dev/null
 }
 
 reto4() {
-    [ -f "$HOME/laboratorio/redes/captura_dns.pcapng" ] && grep -qi "google" "$HOME/laboratorio/redes/captura_dns.pcapng" 2>/dev/null || true
-    cat /etc/services 2>/dev/null | grep -q "^domain"
+    grep -q "^domain" /etc/services 2>/dev/null
 }
 
 reto5() {
-    # Verify student created a UFW SSH allow rule configuration
-    # Check for any file in laboratorio that references ufw + ssh/22
-    find "$HOME/laboratorio" -maxdepth 3 -type f \( -name "*.sh" -o -name "*.rules" -o -name "*.conf" \) 2>/dev/null | xargs grep -l "ufw.*22\|22.*ufw\|allow.*ssh" 2>/dev/null | head -1 | grep -q "."
+    if command -v sudo >/dev/null 2>&1 && sudo -n ufw status >/dev/null 2>&1; then
+        sudo ufw status | grep -q "22/tcp"
+    else
+        [ -f "$HOME/laboratorio/redes/ufw_ssh.sh" ] && [ -x "$HOME/laboratorio/redes/ufw_ssh.sh" ]
+    fi
 }
 
 reto6() {
-    # Verify student created a UFW deny telnet rule
-    find "$HOME/laboratorio" -maxdepth 3 -type f \( -name "*.sh" -o -name "*.rules" -o -name "*.conf" \) 2>/dev/null | xargs grep -l "ufw.*23\|23.*ufw\|deny.*telnet" 2>/dev/null | head -1 | grep -q "."
+    if command -v sudo >/dev/null 2>&1 && sudo -n ufw status >/dev/null 2>&1; then
+        sudo ufw status | grep -q "23/tcp"
+    else
+        [ -f "$HOME/laboratorio/redes/ufw_telnet.sh" ] && [ -x "$HOME/laboratorio/redes/ufw_telnet.sh" ]
+    fi
 }
 
 reto7() {
-    # Verify student created UFW rules for HTTP/HTTPS
-    find "$HOME/laboratorio" -maxdepth 3 -type f \( -name "*.sh" -o -name "*.rules" -o -name "*.conf" \) 2>/dev/null | xargs grep -l "ufw.*80\|ufw.*443\|http.*https" 2>/dev/null | head -1 | grep -q "."
+    if command -v sudo >/dev/null 2>&1 && sudo -n ufw status >/dev/null 2>&1; then
+        sudo ufw status | grep -qE "80/tcp|443/tcp"
+    else
+        [ -f "$HOME/laboratorio/redes/ufw_web.sh" ] && [ -x "$HOME/laboratorio/redes/ufw_web.sh" ]
+    fi
 }
 
 reto8() {
-    # Verify iptables DROP concept - check if student created a script with iptables DROP
-    find "$HOME/laboratorio" -maxdepth 3 -type f -name "*.sh" 2>/dev/null | xargs grep -l "iptables.*DROP\|DROP.*iptables" 2>/dev/null | head -1 | grep -q "."
+    if command -v sudo >/dev/null 2>&1 && sudo -n iptables -L INPUT -n -v >/dev/null 2>&1; then
+        sudo iptables -L INPUT -n -v | grep -q "DROP"
+    else
+        [ -f "$HOME/laboratorio/redes/iptables_block.sh" ] && [ -x "$HOME/laboratorio/redes/iptables_block.sh" ]
+    fi
 }
 
 reto9() {
-    # Verify iptables list concept - check if student can list or has documented rules
-    command -v iptables >/dev/null 2>&1
-    # Check for any student-created iptables documentation or script
-    find "$HOME/laboratorio" -maxdepth 3 -type f \( -name "*.sh" -o -name "*.txt" -o -name "*.md" \) 2>/dev/null | xargs grep -l "iptables.*-L\|iptables.*list" 2>/dev/null | head -1 | grep -q "."
+    if command -v sudo >/dev/null 2>&1 && sudo -n iptables -L >/dev/null 2>&1; then
+        sudo iptables -L >/dev/null 2>&1
+    else
+        command -v iptables >/dev/null 2>&1
+        [ -f "$HOME/laboratorio/redes/iptables_list.sh" ] && [ -x "$HOME/laboratorio/redes/iptables_list.sh" ]
+    fi
 }
 
 reto10() {
-    # Identify port scan - check if student can detect scan patterns
-    [ -f "$HOME/laboratorio/redes/captura_scan.pcapng" ]
-    # Verify nmap or tcpdump is available for scan detection
+    if command -v nmap >/dev/null 2>&1; then
+        nmap -sS -p- 127.0.0.1 >/dev/null 2>&1 || true
+    fi
     command -v nmap >/dev/null 2>&1 || command -v tcpdump >/dev/null 2>&1
+    [ -f "$HOME/laboratorio/redes/captura_scan.pcapng" ]
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10)
@@ -197,7 +212,7 @@ reto10_info() {
     echo "Puedes usar nmap para simular y detectar escaneos."
     echo ""
     echo "Comandos útiles:"
-    echo "  nmap -sS -p- 172.20.0.10"
+    echo "  nmap -sS -p- 127.0.0.1"
     echo "  tcpdump -nn -r captura_scan.pcapng"
     separador
 }

@@ -74,7 +74,7 @@ export PATH="$HOME/bin:$PATH"
 banner_bienvenida
 echo ""
 echo -e "  ${CYAN}Curso: Fundamentos de Ciberseguridad ABC-CYB-101${RESET}"
-echo -e "  ${CYAN}14 unidades · 140 retos · 5 módulos${RESET}"
+echo -e "  ${CYAN}14 unidades · 60 CORE + 80 optativos · 5 módulos${RESET}"
 echo ""
 echo -e "  ${CYAN}Comandos disponibles:${RESET}"
 echo "    ${VERDE}menu${RESET}          - Menú interactivo principal"

@@ -28,4 +28,6 @@ openssl req -new -newkey rsa:2048 -nodes -out servidor.csr -keyout servidor.key 
 openssl x509 -req -in servidor.csr -CA ca/ca.crt -CAkey ca/ca.key -CAcreateserial \
     -out servidor.crt -days 365 -sha256 2>/dev/null || true
 
+cp /shared/cvss_calculator.py "$HOME/laboratorio/checkpoints/checkpoint-iv/cvss_calculator.py" 2>/dev/null || true
+
 exito "Checkpoint IV preparado"
