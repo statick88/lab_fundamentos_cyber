@@ -99,7 +99,7 @@ jobs:
       - name: Validate index TOC lists exactly 6 modules
         run: |
           cd content/ebook-guia
-          MODULE_COUNT=$(grep -cE '\[Módulo [0-9]' index.qmd)
+          MODULE_COUNT=$(grep -cE '^\| \*\*[1-6]' index.qmd)
           if [ "$MODULE_COUNT" -ne 6 ]; then
             echo "ERROR: index.qmd lists $MODULE_COUNT modules (expected 6)"
             exit 1
