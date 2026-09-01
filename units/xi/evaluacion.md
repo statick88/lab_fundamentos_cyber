@@ -11,7 +11,7 @@
 El equipo de Seguridad necesita un certificado SSL autofirmado para el dominio `localhost` con validez de 365 días, válido para Ecuador (Quito). Debes generar la clave privada y el certificado, y reportar el Subject DN exacto para incluirlo en el inventario de certificados. Como evidencia, el validador consultará los archivos generados y el Subject del certificado.
 
 **Requisitos:**
-- Generar `clave_privada.pem` RSA 2048 bits en `/root/laboratorio/ssl/`.
+- Generar `clave_privada.pem` RSA 2048 bits en `$HOME/laboratorio/ssl/`.
 - Generar `cert.pem` autofirmado con `/C=EC/ST=Quito/L=Quito/O=MiOrg/CN=localhost`.
 - Verificar que `cert.pem` y `key.pem` existan.
 
@@ -52,7 +52,7 @@ D) `servidor.local`
 La directiva de seguridad exige que los servidores internos usen certificados firmados por una Autoridad Certificadora (CA) local propia, no autofirmados. Debes crear la CA, generar un CSR para `servidor.local` y firmar el certificado. Como evidencia, el validador consultará la existencia de los archivos de la CA y el certificado firmado.
 
 **Requisitos:**
-- Crear el directorio `ca/` en `/root/laboratorio/ssl/`.
+- Crear el directorio `ca/` en `$HOME/laboratorio/ssl/`.
 - Generar `ca/ca.key` y `ca/ca.crt` con `openssl req -x509`.
 - Generar `servidor.csr` y `servidor.key` para `CN=servidor.local`.
 - Firmar `servidor.crt` usando `ca/ca.crt` y `ca/ca.key`.

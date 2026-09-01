@@ -1,5 +1,5 @@
 # =============================================================================
-# Docker Compose - Laboratorio Linux
+# Docker Compose - Laboratorio Ciberseguridad ABC-CYB-101
 # =============================================================================
 # Levanta el contenedor interactivo del laboratorio.
 #
@@ -14,24 +14,43 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: mi-lab-linux
+    container_name: lab-ciberseguridad
     stdin_open: true    # Mantener stdin abierto (-i)
     tty: true           # Asignar pseudo-TTY (-t)
-    privileged: true
     volumes:
       - lab-data:/home/estudiante/laboratorio
       - ./resultados:/home/estudiante/laboratorio/resultados
-      - /var/run/docker.sock:/var/run/docker.sock
-      # - lab-metrics:/home/estudiante/.lab_metrics  # Descomentar para persistir metricas entre sesiones
     environment:
-      - LAB_NAME=Fundamentos de Linux
+      - LAB_NAME=Fundamentos de Ciberseguridad ABC-CYB-101
+      - COURSE_VERSION=2.0
       - STUDENT_USER=estudiante
-      - STUDENT_PASS=lab123
+      - STUDENT_PASS=${STUDENT_PASS:-changeme}
       - FRASE_OCULTA=Toda revolution comienza con un pass Los administradores nunca duermen !
+    networks:
+      lab-cyber:
+        ipv4_address: 172.20.0.10
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:false
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SETUID
+      - SETGID
 
 volumes:
   lab-data:
     driver: local
-  # lab-metrics:
-  #   driver: local
+
+networks:
+  lab-cyber:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+          gateway: 172.20.0.1
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: "false"
+      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"

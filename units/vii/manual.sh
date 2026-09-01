@@ -99,3 +99,20 @@ cat << 'EOF'
 EOF
 
 echo -e "\n${AMARILLO}Escribe ${CYAN}'evaluar'${AMARILLO} para verificar tu progreso o ${CYAN}'retos'${AMARILLO} para ver los retos.${RESET}"
+
+  CIS BENCHMARKS - Center for Internet Security
+  ---------------------------------------------
+  Referencias CIS Ubuntu Lvl 1:
+  - /tmp montado con noexec,nosuid,nodev
+  - /var montado con nosuid,nodev
+  - /var/log montado con nodev
+  - PermitRootLogin no en sshd_config
+  - Protocol 2 en sshd_config
+  - iptables instalado
+  - ufw instalado y activo
+
+  Comandos CIS:
+  sudo apt install -y ufw iptables
+  sudo ufw enable
+  sudo ufw default deny incoming
+  sudo ufw allow ssh

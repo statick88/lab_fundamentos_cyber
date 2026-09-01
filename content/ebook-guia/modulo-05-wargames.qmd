@@ -1,0 +1,421 @@
+---
+title: "Módulo 5 — Wargames: minicurso Bandit (niveles 0-5)"
+author: "Diego Saavedra, Mg. Sc. | Abacom"
+format:
+  html:
+    toc: true
+    toc-location: left
+    code-fold: false
+    theme: cosmo
+---
+
+# Módulo 5 — Wargames: minicurso Bandit (niveles 0-5)
+
+---
+
+## Introducción: el gimnasio del hacker
+
+**Un wargame no es un videojuego — es un gimnasio donde cada repetición construye músculo mental.**
+
+Piensa en un simulador de vuelo. Nadie se convierte en piloto leyendo manuales de aerodinámica sin tocar los controles. Los wargames de ciberseguridad funcionan igual: son entornos controlados donde practicar técnicas reales — escalada de privilegios, búsqueda de archivos ocultos, extracción de contraseñas — sin dañar sistemas reales ni cruzar líneas legales.
+
+En este módulo exploramos **Bandit**, el wargame de OverTheWire diseñado para principiantes absolutos. Bandit no requiere herramientas especiales ni conocimientos previos: solo SSH y lo que ya aprendiste sobre permisos, `grep`, `find`, `chmod` y pipes. Cada nivel te enseña un concepto nuevo, y cada concepto te prepara para el siguiente — como los ejercicios progresivos de un plan de entrenamiento.
+
+::: {.note}
+**Nota del instructor:** Bandit está alojado en **OverTheWire** (overthewire.org) — un recurso externo gratuito. NO está instalado en el laboratorio. Usarás `ssh` (instalado vía `openssh-client`) para conectarte a sus servidores. Más adelante recrearemos niveles similares localmente, pero el wargame oficial es externo por diseño: así practicas con infraestructura real sin riesgo para tu máquina.
+:::
+
+---
+
+## ¿Qué es un wargame? Mecánica y filosofía
+
+### La arquitectura del aprendizaje progresivo
+
+Un wargame organiza retos en niveles secuenciales. Cada nivel es un objetivo independiente que requiere dominar uno o dos conceptos. La belleza del diseño está en la progresión: el nivel 5 asume que dominas lo aprendido en los niveles 0-4.
+
+```
+    ┌─────────────────────────────────────────────────────────────┐
+    │              ARQUITECTURA DE UN WARGAME                     │
+    │                                                             │
+    │   Tu máquina local                                          │
+    │   ┌──────────────┐                                          │
+    │   │  Terminal    │                                          │
+    │   │  (openssh-   │                                          │
+    │   │   client)    │                                          │
+    │   └──────┬───────┘                                          │
+    │          │ SSH (puerto 2220)                                │
+    │          │                                                  │
+    │          ▼                                                  │
+    │   ┌──────────────────────────────────────────┐             │
+    │   │   Servidor OverTheWire (bandit.labs.)    │             │
+    │   │                                          │             │
+    │   │   Nivel 0 ──► Nivel 1 ──► ... ──► 5     │             │
+    │   │     │           │                  │      │             │
+    │   │     ▼           ▼                  ▼      │             │
+    │   │   Contraseña  Contraseña       Contraseña  │             │
+    │   │   del N1      del N2           del N6      │             │
+    │   └──────────────────────────────────────────┘             │
+    │                                                             │
+    │   Cada nivel te da la contraseña del siguiente.             │
+    │   Sin atajos: debes resolver el nivel actual primero.       │
+    └─────────────────────────────────────────────────────────────┘
+```
+
+### Analogía del edificio en construcción
+
+| Concepto del wargame | Analogía de construcción |
+|----------------------|--------------------------|
+| Nivel actual | El piso que estás construyendo |
+| Contraseña del siguiente nivel | La llave del siguiente piso |
+| Comandos básicos (ls, cat, find) | Herramientas de albañilería |
+| Permisos y privilegios | Planos eléctricos y de plomería |
+| Escalada de privilegios | Instalar el ascensor entre pisos |
+| SSH al servidor remoto | La grúa que te materiales externos |
+
+::: {.note}
+**Nota del laboratorio:** En este curso cubrimos los niveles 0 a 5 de Bandit como introducción. Bandit tiene 34 niveles en total — los primeros 10 son fundamentos, y después introduce conceptos de redes, criptografía y explotación. Considera este módulo como la base que te permitirá continuar por tu cuenta.
+
+La referencia oficial es [OverTheWire: Bandit](https://overthewire.org/wargames/bandit/). No la clonamos ni la instalamos porque el aprendizaje ocurre al conectarte a un sistema remoto con restricciones reales — esa fricción es pedagógicamente intencional.
+:::
+
+---
+
+## Teoría profunda: permisos, claves SSH y cracking
+
+### Autenticación por clave vs. contraseña
+
+SSH soporta dos métodos principales de autenticación:
+
+| Método | Cómo funciona | Fortaleza |
+|--------|---------------|-----------|
+| Contraseña | El servidor verifica la contraseña que envías | Débil si la contraseña es predecible |
+| Clave pública/privada | Generas un par de claves; la pública va al servidor | Fuerte si la clave privada está protegida |
+
+En Bandit, el nivel 0 usa autenticación por contraseña simple. A partir del nivel 14, te encuentras con autenticación por claves SSH — y eso requiere que entiendas qué es una clave privada y cómo protegerla.
+
+### Claves SSH: tu identidad digital
+
+Una clave SSH privada es un archivo que **debes proteger como protegerías las llaves de tu casa**. Si alguien obtiene tu clave privada, puede suplantarte en cualquier servidor que la acepte.
+
+```bash
+# Generar un par de claves SSH (en tu máquina local)
+ssh-keygen -t rsa -b 2048 -f ~/.ssh/mi_clave
+
+# El resultado son dos archivos:
+# ~/.ssh/mi_clave      ← clave privada (NUNCA compartir)
+# ~/.ssh/mi_clave.pub  ← clave pública (se copia al servidor)
+```
+
+### Protección de claves privadas: passphrase
+
+Cuando generas una clave SSH, puedes (y debes) protegerla con una passphrase. Es como ponerle un candado a tu llavero: incluso si alguien roba el archivo, no puede usarlo sin la passphrase.
+
+::: {.warning}
+**Advertencia de seguridad:** Una clave privada SIN passphrase es como un llavero sin candado: si alguien lo encuentra, tiene acceso inmediato. SIEMPRE usa passphrase en claves de producción. En laboratorio, a veces omitimos la passphrase por conveniencia pedagógica — pero debes saber que en el mundo real, eso es inaceptable.
+:::
+
+### Privilege escalation: conceptos fundamentales
+
+La escalada de privilegios (privilege escalation) es el proceso de obtener permisos más altos de los que tienes actualmente. Es uno de los pilares de la ciberseguridad — tanto para atacantes como para defensores.
+
+Existen dos tipos principales:
+
+| Tipo | Objetivo | Ejemplo típico |
+|------|----------|----------------|
+| **Horizontal** | Acceder a la cuenta de otro usuario con mismos privilegios | Robar sesión de otro usuario |
+| **Vertical** | Obtener privilegios superiores (root, admin) | Explotar un binario SUID mal configurado |
+
+En Bandit, los niveles 0-5 se centran en escalada horizontal: encontrar archivos ocultos, entender permisos y usar comandos básicos para avanzar. La escalada vertical (SUID, exploits) aparece en niveles superiores.
+
+### John the Ripper: cracking de contraseñas
+
+**John** es una herramienta de auditoría de contraseñas que intenta recuperar plaintext a partir de hashes. En el laboratorio está instalado (línea 41 del Dockerfile) para que entiendas cómo los atacantes prueban la fortaleza de las contraseñas.
+
+```bash
+# Ejemplo básico: crackear un hash con wordlist
+echo "5f4dcc3b5aa765d61d8327deb882cf99" > hash.txt
+john --wordlist=/usr/share/wordlists/rockyou.txt hash.txt
+```
+
+::: {.warning}
+**Advertencia de seguridad:** John es una herramienta de AUDITORÍA, no de ataque. Úsala SOLO en sistemas propios o con autorización explícita. Usarla en sistemas ajenos sin autorización es un delito en la mayoría de jurisdicciones. La línea entre "investigar" y "atacar" es la autorización — sin ella, es delito.
+:::
+
+### Plantilla de reporte: estructura del checkpoint
+
+En el **checkpoint-v** (5 retos del módulo V) utilizamos una plantilla de reporte para documentar cada reto. Esta estructura te obliga a pensar como un profesional: no basta con "resolviste el reto", debes demostrar lo que hiciste.
+
+La plantilla `plantilla.md` contiene estas secciones por reto:
+
+| Sección | Qué incluye |
+|---------|-------------|
+| **Objetivo** | Descripción breve de qué busca el reto |
+| **Comandos utilizados** | Bloque de código con los comandos que ejecutaste |
+| **Salida obtenida** | Bloque de código con la salida real de los comandos |
+| **Respuesta** | La contraseña o solución encontrada |
+| **Frase revelada** | Tabla de seguimiento de la frase completa |
+
+Los comandos clave que registrarás según la plantilla: `pwd`, `ls -la`, `cat`, `grep`, `chmod`, `ps aux`, `find`, `head`/`tail`.
+
+---
+
+## Ejercicios prácticos progresivos
+
+### E1: Comprender la mecánica de Bandit (niveles 0→5)
+
+Antes de conectar, entiende la progresión. Cada nivel introduce UN concepto nuevo:
+
+```bash
+# Conectarse al nivel 0 de Bandit (servidor externo)
+ssh bandit0@bandit.labs.overthewire.org -p 2220
+# Contraseña: bandit0
+```
+
+**Progresión de conceptos nivel 0-5:**
+
+| Nivel | Concepto principal | Comando clave |
+|-------|-------------------|---------------|
+| 0 | Conexión SSH básica | `ssh` |
+| 1 | Archivos con nombre especial (`-`) | `cat ./-` |
+| 2 | Archivos con espacios en el nombre | `cat "archivo con espacios"` |
+| 3 | Archivos ocultos (`.` prefix) | `ls -la`, `cat .../.hidden` |
+| 4 | Distinguir archivo legible entre binarios | `head`, `find` |
+| 5 | Buscar archivo por características | `find -size`, `find -readable` |
+
+**Preguntas de reflexión:**
+
+1. ¿Por qué el nivel 1 usa `cat ./-` en lugar de `cat -`?
+2. ¿Qué hace `ls -la` que `ls` solo no muestra?
+3. ¿Por qué es importante `find` cuando tienes cientos de archivos?
+
+::: {.note}
+**Nota del instructor:** Las respuestas a estas preguntas parecen obvias cuando alguien te las explica — pero la comprensión REAL ocurre cuando te atascaste 20 minutos, lo resuelves, y entonces entiendes por qué importa. No busques las respuestas en internet. El valor está en el proceso, no en la contraseña final.
+:::
+
+---
+
+### E2: Recrear Bandit nivel 0-2 localmente con SSH
+
+Aunque Bandit es externo, puedes recrear su mecánica localmente usando `openssh-client` (línea 37 del Dockerfile) y un servidor SSH local.
+
+```bash
+# 1. Verificar que openssh-client está instalado
+which ssh
+```
+```
+/usr/bin/ssh
+```
+
+```bash
+# 2. Generar un par de claves local (sin passphrase, para laboratorio)
+ssh-keygen -t rsa -f ~/.ssh/bandit_local -N ""
+```
+```
+Generating public/private rsa key pair.
+Your identification has been saved in /home/estudiante/.ssh/bandit_local
+Your public key has been saved in /home/estudiante/.ssh/bandit_local.pub
+```
+
+```bash
+# 3. Copiar la clave pública al servidor local
+ssh-copy-id -i ~/.ssh/bandit_local.pub estudiante@localhost
+```
+
+```bash
+# 4. Conectarte con autenticación por clave (sin contraseña)
+ssh -i ~/.ssh/bandit_local estudiante@localhost
+```
+
+```bash
+# 5. Simular el "nivel 1": crear un archivo con nombre problemático
+echo "contrasena_nivel_2_simulado" > ./-
+
+# 6. Leerlo correctamente (como en Bandit nivel 1)
+cat ./-
+```
+```
+contrasena_nivel_2_simulado
+```
+
+```bash
+# 7. Simular el "nivel 2": archivo con espacios
+echo "contraseda_nivel_3_simulado" > "archivo con espacios"
+
+# 8. Leerlo correctamente (como en Bandit nivel 2)
+cat "archivo con espacios"
+```
+```
+contraseda_nivel_3_simulado
+```
+
+::: {.note}
+**Nota del laboratorio:** Esta recreación local tiene fines pedagógicos: entender la mecánica de nombres de archivo problemáticos. El servidor real de OverTheWire tiene 34 niveles con progresión mucho más rica. Una vez domines 0-5 localmente, conectarte al servidor real será mucho más productivo.
+:::
+
+---
+
+### E3: Cracking de passphrase con john
+
+En niveles superiores de Bandit encontrarás claves SSH protegidas con passphrase. En el laboratorio podemos simular el flujo de trabajo con `john` (instalado en Dockerfile línea 41).
+
+```bash
+# 1. Generar una clave SSH CON passphrase (débil, para el ejercicio)
+ssh-keygen -t rsa -f ~/.ssh/key_con_pass -N "abc123"
+```
+```
+Your identification has been saved in /home/estudiante/.ssh/key_con_pass
+```
+
+```bash
+# 2. Convertir la clave a formato que john pueda atacar
+# (ssh2john es parte de john y procesa claves SSH)
+ssh2john ~/.ssh/key_con_pass > ~/hash_key.txt
+```
+
+```bash
+# 3. Crear una wordlist mínima para el ejercicio
+echo "password" > ~/wordlist.txt
+echo "123456" >> ~/wordlist.txt
+echo "abc123" >> ~/wordlist.txt
+echo "bandit" >> ~/wordlist.txt
+```
+
+```bash
+# 4. Ejecutar john contra el hash
+john --wordlist=~/wordlist.txt ~/hash_key.txt
+```
+```
+Loaded 1 password hash (SSH [RSA/DSA/EC/OPENSSH (unprotected) 32/64])
+abc123            (key_con_pass)
+guesses: 1  time: 0:00:00:01 DONE
+```
+
+```bash
+# 5. Verificar que john encontró la passphrase
+john --show ~/hash_key.txt
+```
+```
+key_con_pass:abc123
+
+1 password hash cracked, 0 left
+```
+
+**¿Qué acaba de pasar?**:
+
+1. Convertiste una clave SSH protegida a un hash atacable
+2. John probó cada palabra de tu wordlist contra el hash
+3. Cuando encontró coincidencia, reveló la passphrase
+
+::: {.warning}
+**Advertencia de seguridad:** Este ejercicio demuestra POR QUÉ las passphrases débiles son peligrosas. En el mundo real, un atacante con acceso a tu clave privada puede crackearla en segundos si usaste una palabra de diccionario. Las contraseñas fuertes son tu primera línea de defensa — y a veces la única.
+
+NO uses passphrase débiles en producción. Y NUNCA intentes crackear contraseñas ajenas: esto es SOLO para auditoría de tus propios sistemas o con autorización explícita.
+:::
+
+---
+
+### E4: Redactar reporte usando la plantilla checkpoint-v
+
+El checkpoint-v requiere documentar 5 retos usando la estructura de `plantilla.md`. Aplica esta estructura al nivel 0 de Bandit:
+
+---
+
+**RETO 1 — Bandit Nivel 0**
+
+**Objetivo:** Conectarse al servidor de Bandit mediante SSH y verificar la conexión exitosa.
+
+**Comandos utilizados:**
+```bash
+ssh bandit0@bandit.labs.overthewire.org -p 2220
+# Contraseña: bandit0
+whoami
+pwd
+ls -la
+```
+
+**Salida obtenida:**
+```
+bandit0@bandit:~$ whoami
+bandit0
+bandit0@bandit:~$ pwd
+/home/bandit0
+bandit0@bandit:~$ ls -la
+total 4
+drwxr-xr-x  2 root root root 4096 Nov 14  08:47 .
+drwxr-xr-x 33 root root 4096 Nov 14  08:47 ..
+-rw-r--r--  1 root root   33 Nov 14  08:47 readme
+```
+
+**Respuesta:** La contraseña para el nivel 1 se encuentra en el archivo `readme` del directorio home.
+
+**Frase revelada:**
+
+| Reto | Palabra | Significado |
+|------|---------|-------------|
+| 1 | Conexión | SSH al servidor externo |
+| 2 | — | Pendiente |
+| 3 | — | Pendiente |
+| 4 | — | Pendiente |
+| 5 | — | Pendiente |
+
+---
+
+::: {.note}
+**Nota del instructor:** Este formato de reporte no es burocracia — es la diferencia entre "hice algo" y "puedo demostrar lo que hice". En auditorías reales, el informe es tan importante como la técnica. Practicarlo desde el checkpoint-v te acostumbra a documentar como profesional.
+:::
+
+---
+
+## Notas de seguridad: el marco ético del wargame
+
+### Dónde está la línea
+
+Los wargames existen en un espacio legal y éticamente claro: **sistemas diseñados específicamente para ser atacados, con autorización implícita del propietario.** OverTheWire te invita explícitamente a resolver Bandit. Eso es la diferencia entre "hacking ético" y "cibercrimen".
+
+### Principios para recordar
+
+| Principio | Qué significa en la práctica |
+|-----------|------------------------------|
+| **Autorización explícita** | Si el sistema no es tuyo ni tiene una invitación clara, NO lo ataques |
+| **Sistemas dedicados** | Usa wargames, CTFs y laboratorios — no sistemas productivos |
+| **Documentación** | Si no puedes explicar lo que hiciste, no deberías haberlo hecho |
+| **Límite legal** | En muchos países, acceder a un sistema sin autorización es delito incluso si no causas daño |
+
+::: {.warning}
+**Advertencia de seguridad:** La curiosidad es la virtud más valiosa en ciberseguridad — pero sin ética, se convierte en vulnerabilidad legal. Cada técnica que aprendas en este módulo (SSH, permisos, cracking) es una herramienta de doble filo. Úsalas SOLO en sistemas propios o con autorización. La cárcel no es metáfora: hay personas presas por "curiosidad" no autorizada.
+
+El hecho de que PUEDAS acceder a algo no significa que DEBAS. Esa distinción te define como profesional.
+:::
+
+---
+
+## Checklist de autoevaluación
+
+Antes de avanzar al Módulo 6, verifica que puedes:
+
+- [ ] Explicar qué es un wargame y por qué Bandit es externo al laboratorio
+- [ ] Conectarse por SSH a un servidor remoto (bandit.labs.overthewire.org)
+- [ ] Resolver archivos con nombres problemáticos (`-`, espacios, ocultos)
+- [ ] Explicar la diferencia entre autenticación por contraseña y por clave SSH
+- [ ] Generar un par de claves SSH con `ssh-keygen`
+- [ ] Entender qué es `find` y cuándo usarlo sobre `ls`
+- [ ] Explicar el concepto de escalada de privilegios (horizontal vs. vertical)
+- [ ] Usar `john` para auditar la fortaleza de una passphrase débil
+- [ ] Redactar un reporte técnico usando la estructura plantilla.md
+- [ ] Aplicar el marco ético: solo atacar sistemas autorizados
+- [ ] Describir la progresión de conceptos de Bandit niveles 0 a 5
+- [ ] Identificar que `openssh-client` es la herramienta que permite SSH en el laboratorio
+
+::: {.note}
+**Nota del instructor:** Si no puedes marcar al menos 9 de estos 12 ítems, repasa los ejercicios. Los wargames son el puente entre teoría y práctica: si no entiendes los permisos del Módulo 1, aquí te vas a atascar. No avances con dudas — la escalada de privilegios es el tema más importante de todo el curso, y empieza aquí.
+
+Has completado el módulo de introducción a wargames. Has entendido que la ciberseguridad se aprende haciendo — pero haciendo con responsabilidad. Eso te separa del script kiddy: tú entiendes el porqué.
+:::
+
+---
+
+## Próximo paso
+
+En el **[Módulo 6 — Logging, SIEM y BCP](modulo-06-logging-siem-bcp.qmd)** aprenderás a detectar y responder a los ataques que acabas de practicar. Lo que aquí es ofensiva ética, allí se convierte en defensión profesional. La ciberseguridad es un ciclo: atacar para defender, defender para comprender el ataque.
+
+> *"La segunda regla de la ciberseguridad es: no puedes defender lo que no puedes ver. El logging es tu visión. El SIEM, tu memoria. El BCP, tu plan cuando todo lo demás falla."*

@@ -1,9 +1,9 @@
 #!/bin/bash
 # =============================================================================
 # entrypoint.sh - Punto de entrada del contenedor del laboratorio
+# Curso: Fundamentos de Ciberseguridad ABC-CYB-101
 # =============================================================================
 
-# Cargar biblioteca compartida (common.sh ya carga colors, eval, metrics, menu, banner)
 source /shared/common.sh
 source /shared/interactive.sh
 
@@ -26,29 +26,44 @@ if [ ! -f "$MARKER" ]; then
 fi
 
 # ─── Crear .bash_aliases para que cada nuevo shell tenga los comandos ────────
+cp ~/.bash_aliases ~/.bash_aliases.bak 2>/dev/null || true
 cat > ~/.bash_aliases <<'ALIASES'
-# Cargar funciones del laboratorio (common.sh incluye todo el chain)
+# Cargar funciones del laboratorio
 source /shared/common.sh
 source /shared/interactive.sh
 
-# Comandos principales
-alias menu='menu_interactivo'
-alias jugar='jugar_interactivo'
-alias retos='ver_retos_unidad'
-alias evaluar='evaluar_interactivo'
-alias progreso='mostrar_progreso_global'
-alias pista='dar_pista'
+# Comandos principales (como funciones para compatibilidad con bash -c)
+menu() { menu_interactivo "$@"; }
+jugar() { jugar_interactivo "$@"; }
+retos() { ver_retos_unidad "$@"; }
+evaluar() { evaluar_interactivo "$@"; }
+progreso() { mostrar_progreso_global "$@"; }
+pista() { dar_pista "$@"; }
 
 # Frase secreta
-alias revelar-frase='ver_frase'
-alias s='ver_frase'
+revelar-frase() { ver_frase "$@"; }
+s() { ver_frase "$@"; }
+
+# Wrapper para unidad
+unidad() {
+    source /shared/common.sh
+    source /shared/unidad.sh
+    bash /shared/unidad.sh "$@"
+}
+
+# Aliases específicos ciberseguridad
+alias ciberseguridad='unidad 1'
+alias redes='unidad 2'
+alias hardening='unidad 7'
+alias criptografia='unidad 4'
+alias logging='unidad 5'
+alias amenazas='unidad 4'
 ALIASES
 
 # ─── Script ~/bin/lab ────────────────────────────────────────────────────────
 mkdir -p ~/bin
 cat > ~/bin/lab <<'SCRIPT'
 #!/bin/bash
-# ~/bin/lab - Acceso rápido al laboratorio
 source /shared/common.sh
 source /shared/interactive.sh
 menu_interactivo
@@ -59,6 +74,9 @@ export PATH="$HOME/bin:$PATH"
 # ─── Mostrar banner de bienvenida ────────────────────────────────────────────
 banner_bienvenida
 echo ""
+echo -e "  ${CYAN}Curso: Fundamentos de Ciberseguridad ABC-CYB-101${RESET}"
+echo -e "  ${CYAN}14 unidades · 60 CORE + 80 optativos · 5 módulos${RESET}"
+echo ""
 echo -e "  ${CYAN}Comandos disponibles:${RESET}"
 echo "    ${VERDE}menu${RESET}          - Menú interactivo principal"
 echo "    ${VERDE}jugar${RESET}         - Modo juego interactivo"
@@ -66,6 +84,8 @@ echo "    ${VERDE}retos${RESET}         - Ver retos de la unidad"
 echo "    ${VERDE}evaluar${RESET}       - Evaluar progreso"
 echo "    ${VERDE}revelar-frase${RESET} - Ver frase secreta"
 echo "    ${VERDE}progreso${RESET}      - Ver progreso global"
+echo "    ${VERDE}reset.sh${RESET}      - Limpiar laboratorio"
+echo "    ${VERDE}unidad <n>${RESET}    - Seleccionar unidad (1-$UNIT_COUNT)"
 echo ""
 echo -e "  👉 Escribe ${CYAN}menu${RESET} para comenzar"
 echo ""
