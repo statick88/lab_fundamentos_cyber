@@ -1,0 +1,134 @@
+---
+title: "Fundamentos de Ciberseguridad — Guía de Estudio"
+author: "Lic. Diego Medardo Saavedra García, Mg. Sc."
+institution: "Abacom — ABC-CYB-101"
+format:
+  html:
+    toc: true
+    toc-location: left
+    code-fold: false
+    theme: cosmo
+    css: styles.css
+    embed-resources: true
+    smooth-scroll: true
+    fontsize: 1.05rem
+---
+
+# Fundamentos de Ciberseguridad
+
+## Guía de Estudio del Curso ABC-CYB-101
+
+::: {.center}
+> **La primera regla de la ciberseguridad es reconocer que no sabes, y eso es exactamente donde debes empezar.**
+:::
+
+---
+
+## Bienvenida
+
+¡Bienvenido al curso **Fundamentos de Ciberseguridad** (_ABC-CYB-101_)!
+
+Soy el **Lic. Diego Medardo Saavedra García, Mg. Sc.**, y este material ha sido diseñado con una filosofía clara: **conceptos primero, práctica después**. No importa si nunca has tocado una terminal Linux, si no sabes qué es una IP o si los "comandos" te parecen un idioma extranjero. Este curso parte desde cero — pero sin condescendencia. Partimos desde cero **porque entender las bases te hará indetenible**.
+
+::: {.note}
+**Filosofía del curso:** La ciberseguridad no es una lista de comandos que memorizar. Es una forma de pensar: cuestionar, verificar, y entender el "por qué" detrás de cada acción. Cada error que cometas hoy es una lección que te hará mañana imbatible.
+:::
+
+---
+
+## Resultados del Examen de Diagnóstico
+
+Antes de comenzar, el grupo realizó un examen diagnóstico para identificar el punto de partida colectivo. Los resultados revelan algo importante:
+
+| Métrica | Valor |
+|---------|-------|
+| **Promedio inicial** | **51.4 puntos** (sobre 100 |
+| Nivel de dominio | Introducción |
+| Áreas críticas detectadas | Comandos Linux, Fundamentos de Redes, Modelo CIA |
+
+### Análisis constructivo
+
+El promedio de **51.4** no es un fracaso — es un **mapa**. Nos dice dónde colocar las primeras piedras de tu aprendizaje. Las áreas críticas detectadas son:
+
+1. **Comandos Linux** — Especialmente permisos (`chmod 755` sin entender qué significa cada dígito) y pipes (`|` como conexión entre comandos).
+2. **Fundamentos de redes** — Puertos y protocolos (¿TCP vs UDP? ¿Puerto 22 vs 443?).
+3. **Modelo CIA** — Confusión entre **Confidencialidad**, **Integridad** y **Disponibilidad** (muchos mezclan integridad con disponibilidad).
+
+> **Mensaje clave:** Un 51.4 % significa que ya sabes casi la mitad. El 48.6 % restante es el viaje que estás a punto de emprender. Cada concepto que domines cierra una brecha que hoy te frena.
+
+---
+
+## Cómo Utilizar Este Ebook
+
+Este recurso está estructurado en **6 módulos temáticos** más esta guía de inicio. La metodología es deliberadamente simple:
+
+### 1. Lee el concepto teórico primero
+
+No saltes a los ejercicios. Cada sección comienza con el **"por qué"**: la teoría detrás del comando, el principio de seguridad, la arquitectura del sistema. Si no entiendes el concepto, el comando te será inútil.
+
+### 2. Ejecuta los ejemplos tú mismo
+
+Al final de cada sección encontrarás ejercicios prácticos. **No los leas — ejecútalos.** La consola es tu laboratorio; cada comando que ejecutas es una conversación con el sistema.
+
+### 3. Usa la técnica Pomodoro
+
+El trabajo técnico requiere concentración intensa. Trabaja en bloques de:
+
+| Fase | Duración | Actividad |
+|------|----------|-----------|
+| **Foco absoluto** | 25 minutos | Lee, ejecuta, anota |
+| **Descanso** | 5 minutos | Levántate, camina, despeja la mente |
+| **Foco absoluto** | 25 minutos | Continúa |
+| **Descanso** | 5 minutos | Hidratación |
+| — | Después de 4 ciclos | **Descanso largo: 15-30 minutos** |
+
+**¿Por qué funciona?** La fatiga cognitiva es el enemigo número uno del aprendizaje técnico. Cuando buscas errores de sintaxis o tratas de entender un concepto abstracto, tu cerebro necesita pausas para consolidar. El Pomodoro mantiene tu atención en su punto máximo justo cuando la necesitas más.
+
+### 4. Usa el checklist de autoevaluación
+
+Al final de cada módulo encontrarás un **checklist de autoevaluación**. Si no puedes marcar todas las casillas, vuelve a ese módulo. No es un examen: es un espejo que te muestra qué dominas y qué no.
+
+::: {.tip}
+**Consejo de oro:** Si un comando produce un error, no lo ignores. Léelo. Un error bien leído es una lección completa. Los errores no son fallas — son el sistema diciéndote qué entendiste mal.
+:::
+
+---
+
+## Tabla de Contenidos
+
+| Módulo | Tema | Duración estimada |
+|--------|------|-------------------|
+| **0** | Esta guía — Diagnóstico y método de estudio | 30 min |
+| **1** | Terminal Linux: navegación, permisos y errores | 3-4 h |
+| **2** | Reconocimiento de Red con Ubuntu 24.04 | 4 h |
+| **3** | Git: control de versiones para ciberseguridad | 2-3 h |
+| **4** | Docker: contenedores y aislamiento | 2-3 h |
+| **5** | Wargames: minicurso Bandit (niveles 0-5) | 3-4 h |
+| **6** | Logging, SIEM y BCP | 3-4 h |
+
+---
+
+## Navegación del Ebook
+
+- **TOC (Tabla de Contenidos):** A la izquierda. Haz clic en cualquier sección para saltar.
+- **Bloques de código:** Ejecutables directamente en tu terminal.
+- **Recuadros de advertencia (`.warning`):** Riesgos de seguridad. Léelos siempre.
+- **Recuadros de nota (`.note`):** Contexto adicional, anécdotas, o consejos de expertos.
+- **Ejercicios prácticos:** Identificados con el icono 🎯. Ejecuta antes de continuar.
+- **Checklists:** Identificados con ✅. Usa para autoevaluarte al final de cada módulo.
+
+::: {.note}
+**Reality-check de Ubuntu:** Este curso usa **Ubuntu 24.04 LTS** como entorno de laboratorio, no Kali Linux. Las herramientas de reconocimiento (nmap, tcpdump) no vienen preinstaladas — debes instalarlas con `apt`. Esto es intencional: te fuerza a entender cada herramienta desde cero en lugar de confiar en un entorno "todo en uno". Kali es referencia profesional; Ubuntu es tu entorno de aprendizaje.
+:::
+
+---
+
+## Próximo paso
+
+Con los conceptos de este inicio claros, el siguiente módulo te introducirá al mundo de la terminal Linux. No te preocupes si todo parece abierto: cada comando, cada directorio y cada permiso tendrá sentido paso a paso.
+
+> **"El misterio no es tu enemigo. Ignorar el misterio sí lo es."**
+
+::: {.center}
+[Continuar → **Módulo 1: Terminal Linux**](./modulo-01-linux-consola.qmd)
+:::
