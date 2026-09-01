@@ -34,3 +34,74 @@ jobs:
             -v $(pwd)/units:/opt/lab-units:ro \
             lab-ciberseguridad \
             -c "for u in ii-firewalls-redes iii-iam-mfa iv-criptografia-cvss v-logging-siem-bcp checkpoint-ii checkpoint-iv checkpoint-v; do echo \"=== Running tests for \$u ===\"; bash /opt/lab-units/\$u/test.sh || exit 1; done"
+
+  lint-qmd:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: Install Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: '1.9.37'
+
+      - name: Validate .qmd YAML frontmatter
+        run: |
+          cd content/ebook-guia
+          for f in modulo-0*.qmd; do
+            echo "Checking $f..."
+            head -8 "$f" | grep -qE '^title:' || { echo "ERROR: $f missing 'title' in frontmatter"; exit 1; }
+            head -8 "$f" | grep -qE '^author:' || { echo "ERROR: $f missing 'author' in frontmatter"; exit 1; }
+            head -8 "$f" | grep -qE '^format:' || { echo "ERROR: $f missing 'format' in frontmatter"; exit 1; }
+          done
+          echo "✅ All .qmd files have valid YAML frontmatter"
+
+      - name: Check for forbidden tools
+        run: |
+          cd content/ebook-guia
+          FORBIDDEN=$(grep -rn -E '(burpsuite|sqlmap|metasploit|nikto|openvas)' modulo-0*.qmd)
+          if [ -n "$FORBIDDEN" ]; then
+            echo "ERROR: Herramientas prohibidas encontradas:"
+            echo "$FORBIDDEN"
+            exit 1
+          fi
+          echo "✅ No herramientas prohibidas encontradas"
+
+      - name: Validate callout formats
+        run: |
+          cd content/ebook-guia
+          for f in modulo-0*.qmd; do
+            NOTES=$(grep -c '{.note}' "$f")
+            WARNINGS=$(grep -c '{.warning}' "$f")
+            CHECKLIST=$(grep -c '^\- \[ \]' "$f")
+            if [ "$NOTES" -eq 0 ]; then echo "WARN: $f has no {.note} callouts"; fi
+            if [ "$WARNINGS" -eq 0 ]; then echo "WARN: $f has no {.warning} callouts"; fi
+            if [ "$CHECKLIST" -lt 8 ]; then echo "ERROR: $f has only $CHECKLIST checklist items (minimum 8)"; exit 1; fi
+          done
+          echo "✅ All .qmd files have callout formats and checklists"
+
+      - name: Check module footer links
+        run: |
+          cd content/ebook-guia
+          for f in modulo-01-linux-consola modulo-02-reconocimiento-redes modulo-03-git modulo-04-docker-contenedores; do
+            grep -q 'Próximo paso' "${f}.qmd" || { echo "ERROR: ${f}.qmd missing 'Próximo paso' footer"; exit 1; }
+          done
+          echo "✅ All modules have Próximo paso footers"
+
+      - name: Quarto render check
+        run: |
+          cd content/ebook-guia
+          quarto render index.qmd --to html 2>&1 | grep -iE '(error|warning)' && exit 1 || echo "✅ Quarto render passes without warnings"
+          rm -f index.html 2>/dev/null
+          find . -name "*_files" -type d -exec rm -rf {} + 2>/dev/null
+
+      - name: Validate index TOC lists exactly 6 modules
+        run: |
+          cd content/ebook-guia
+          MODULE_COUNT=$(grep -cE '\[Módulo [0-9]' index.qmd)
+          if [ "$MODULE_COUNT" -ne 6 ]; then
+            echo "ERROR: index.qmd lists $MODULE_COUNT modules (expected 6)"
+            exit 1
+          fi
+          echo "✅ index.qmd lists exactly 6 modules"
