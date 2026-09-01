@@ -1,0 +1,585 @@
+---
+title: "Módulo 1 — Terminal, Permisos y Errores"
+author: "Diego Saavedra, Mg. Sc. | Abacom"
+format:
+  html:
+    toc: true
+    toc-location: left
+    code-fold: false
+    theme: cosmo
+---
+
+# Módulo 1 — Terminal, Permisos y Errores
+
+---
+
+## Introducción: la terminal no es tu enemiga
+
+**La terminal no es tu enemiga — es tu micrófono contra el caos digital.**
+
+Piensa en la diferencia entre un dibujo y un idioma escrito. La interfaz gráfica (GUI) es como un dibujo: ves íconos, haces clic, arrastras. Es intuitivo, pero limitado. La terminal es como un idioma escrito: al principio cuesta, pero una vez que lo dominas, puedes expresar cualquier idea con precisión.
+
+En ciberseguridad, la terminal es tu herramienta principal. Las herramientas gráficas son útiles, pero cuando necesitas automatizar tareas, analizar logs de 10,000 líneas o conectarte a un servidor remoto, la terminal es la única opción.
+
+::: {.note}
+**Nota del instructor:** No te frustres si al principio la terminal parece hostil. Es como aprender un nuevo idioma: las primeras semanas son incómodas, pero un día te sorprendes pensando en ese idioma. Con la terminal pasa igual.
+:::
+
+---
+
+## La consola Linux: shell, prompt, PATH
+
+### ¿Qué es bash? ¿Qué es un shell?
+
+Un **shell** es un programa que toma tus comandos y se los da al sistema operativo. Es la "cáscara" (shell = cáscara en inglés) que separa al usuario del kernel.
+
+**Bash** (Bourne Again SHell) es el shell más común en Linux. Es el que vas a usar en este curso.
+
+```
+    ┌─────────────────────────────────────────────────────┐
+    │                  ARQUITECTURA                       │
+    │                                                     │
+    │   Tú (usuario)                                      │
+    │      │                                              │
+    │      ▼                                              │
+    │   ┌──────────┐                                      │
+    │   │  SHELL   │  ← bash interpreta tus comandos     │
+    │   │  (bash)  │                                      │
+    │   └────┬─────┘                                      │
+    │        │                                            │
+    │        ▼                                            │
+    │   ┌──────────┐                                      │
+    │   │  KERNEL  │  ← el núcleo del SO ejecuta todo    │
+    │   └──────────┘                                      │
+    │                                                     │
+    └─────────────────────────────────────────────────────┘
+```
+
+### El prompt: `estudiante@lab:~$`
+
+Cuando abres una terminal, ves algo como:
+
+```
+estudiante@lab:~$ 
+```
+
+Ese texto se llama **prompt** y te dice tres cosas:
+
+| Parte | Significado |
+|-------|-------------|
+| `estudiante` | Tu nombre de usuario actual |
+| `lab` | El nombre de la máquina (hostname) |
+| `~` | Tu ubicación actual (`~` = tu directorio home) |
+| `$` | Indica que eres usuario normal (si fuera `#`, serías root) |
+
+::: {.warning}
+**Advertencia de seguridad:** Si ves `#` al final del prompt, significa que estás como root (administrador). Con grandes poderes vienen grandes responsabilidades. Un comando mal escrito como root puede dañar todo el sistema.
+:::
+
+### Navegación básica
+
+```bash
+# ¿Dónde estoy?
+pwd
+```
+```
+/home/estudiante
+```
+
+```bash
+# ¿Qué hay aquí?
+ls
+```
+```
+Documentos  Descargas  Escritorio  notas.txt
+```
+
+```bash
+# Ir al directorio Documentos
+cd Documentos
+
+# Volver al directorio anterior
+cd ..
+```
+
+---
+
+## Estructura jerárquica de directorios
+
+Linux organiza todo en una estructura de árbol invertido. Todo empieza en la raíz `/` y se ramifica.
+
+### El árbol FHS (Filesystem Hierarchy Standard)
+
+```
+/
+├── bin/          ← Comandos esenciales (ls, cat, cp)
+├── sbin/         ← Comandos de administración (fdisk, iptables)
+├── etc/          ← Archivos de configuración del sistema
+├── home/         ← Directorios personales de usuarios
+│   └── estudiante/  ← Tu hogar digital
+│       ├── Documentos/
+│       ├── Descargas/
+│       └── Escritorio/
+├── tmp/          ← Archivos temporales (se borran al reiniciar)
+├── var/          ← Archivos que crecen: logs, bases de datos
+│   └── log/      ← Logs del sistema
+├── usr/          ← Programas instalados por el usuario
+│   ├── bin/      ← Programas adicionales
+│   └── local/    ← Software compilado localmente
+├── opt/          ← Software de terceros (empresas externas)
+├── dev/          ← Dispositivos (discos, USBs como archivos)
+├── proc/         ← Procesos del sistema (en memoria, no en disco)
+└── boot/         ← Archivos de arranque del sistema
+```
+
+### Analogía de la biblioteca
+
+Imagina que el sistema de archivos es una biblioteca:
+
+| Directorio | Analogía |
+|------------|----------|
+| `/` | El edificio completo |
+| `/bin` | La sección de referencia (diccionarios, enciclopedias) |
+| `/etc` | El mostrador de información (configuración del lugar) |
+| `/home` | Las salas privadas de cada persona |
+| `/tmp` | La mesa de trabajos temporales (se limpia cada noche) |
+| `/var` | El archivo histórico (crece constantemente con logs) |
+| `/usr` | La colección general de libros |
+
+::: {.note}
+**Nota:** En Linux, **todo es un archivo**. Tu disco duro es un archivo en `/dev/`. Tu terminal es un archivo en `/dev/`. Esta filosofía es fundamental para entender cómo funciona el sistema.
+:::
+
+---
+
+## Permisos: teoría y práctica
+
+### Usuario / Grupo / Otros
+
+En Linux, cada archivo tiene tres niveles de permisos:
+
+```
+    ┌──────────────────────────────────────────────────────┐
+    │            PERMISOS DE ARCHIVO                       │
+    │                                                      │
+    │   -rwxr-xr--  1 estudiante estudiante  120 Jan 1    │
+    │    ─┬───┬───                                        │
+    │     │   │                                            │
+    │     │   └── Otros (r--): solo lectura               │
+    │     └────── Grupo (r-x): lectura y ejecución        │
+    │            Dueño (rwx): lectura, escritura, ejecución│
+    └──────────────────────────────────────────────────────┘
+```
+
+### rwx = 4 + 2 + 1
+
+Cada permiso tiene un valor numérico:
+
+| Permiso | Letra | Valor | Significado |
+|---------|-------|-------|-------------|
+| Lectura | r | 4 | Ver el contenido |
+| Escritura | w | 2 | Modificar el contenido |
+| Ejecución | x | 1 | Ejecutar como programa |
+
+### Tabla comparativa de permisos octales
+
+| Octal | Binario | Permisos | Uso común |
+|-------|---------|----------|-----------|
+| 000 | 000 000 000 | `---------` | Sin permisos (archivo bloqueado) |
+| 600 | 110 000 000 | `rw-------` | Archivos privados (claves, contraseñas) |
+| 644 | 110 100 100 | `rw-r--r--` | Archivos normales (dueño edita, otros leen) |
+| 700 | 111 000 000 | `rwx-------` | Scripts privados |
+| 755 | 111 101 101 | `rwxr-xr-x` | Ejecutables y directorios |
+| 777 | 111 111 111 | `rwxrwxrwx` | ⚠️ Todos pueden todo (PELIGROSO) |
+
+::: {.warning}
+**Advertencia de seguridad:** `chmod 777` es uno de los errores más comunes y peligrosos. Significa que CUALQUIER usuario del sistema puede leer, escribir y ejecutar ese archivo. NUNCA uses 777 en producción. Si necesitas que un grupo acceda, usa 750 o 770.
+:::
+
+### chmod simbólico vs octal
+
+```bash
+# OCTAL: asigna permisos específicos
+chmod 755 mi_script.sh
+# Dueño: rwx (7), Grupo: r-x (5), Otros: r-x (5)
+
+# SIMBÓLICO: agrega o quita permisos específicos
+chmod u+x mi_script.sh    # Agrega ejecución al dueño
+chmod g-w notas.txt       # Quita escritura al grupo
+chmod o=r privado.txt     # Otros: solo lectura
+```
+
+### chown y chgrp
+
+```bash
+# Cambiar dueño de un archivo
+sudo chown profesor notas.txt
+
+# Cambiar grupo de un archivo
+sudo chgrp administradores notas.txt
+
+# Cambiar dueño y grupo a la vez
+sudo chown profesor:administradores notas.txt
+```
+
+---
+
+## Comandos esenciales con ejemplos
+
+### ls — listar contenido
+
+```bash
+# Listado simple
+ls
+```
+```
+Documentos  Descargas  notas.txt
+```
+
+```bash
+# Listado detallado (permisos, dueño, tamaño, fecha)
+ls -la
+```
+```
+drwxr-xr-x 2 estudiante estudiante 4096 Jan 1 10:00 Documentos
+drwxr-xr-x 3 estudiante estudiante 4096 Jan 1 09:00 Descargas
+-rw-r--r-- 1 estudiante estudiante  120 Jan 1 10:30 notas.txt
+```
+
+```bash
+# Tamaño legible (KB, MB, GB)
+ls -lh
+```
+```
+-rw-r--r-- 1 estudiante estudiante 1.2K Jan 1 10:30 notas.txt
+```
+
+### cat, less, head, tail — leer archivos
+
+```bash
+# cat: muestra todo el archivo (ideal para archivos pequeños)
+cat notas.txt
+```
+```
+Hola, este es mi primer archivo en Linux.
+```
+
+```bash
+# less: muestra archivo con scroll (ideal para archivos grandes)
+less /var/log/syslog
+# Usa flechas para navegar, 'q' para salir
+
+# head: primeras 10 líneas
+head /var/log/syslog
+
+# tail: últimas 10 líneas (útil para logs en tiempo real)
+tail -f /var/log/auth.log
+```
+
+### sudo — ejecutar como superusuario
+
+```bash
+# Instalar un programa (requiere privilegios)
+sudo apt update
+
+# Editar archivo de configuración del sistema
+sudo nano /etc/hosts
+```
+
+::: {.warning}
+**Advertencia de seguridad:** `sudo` te da poderes de administrador. Úsalo SOLO cuando sea necesario. Cada vez que uses `sudo`, pregúntate: "¿realmente necesito privilegios de root para esto?"
+:::
+
+### grep — buscar patrones
+
+```bash
+# Buscar la palabra "error" en un archivo
+grep "error" /var/log/syslog
+```
+```
+Jan 1 10:30:01 lab kernel: [error] device not found
+Jan 1 10:31:15 lab app: connection error timeout
+```
+
+```bash
+# Buscar sin distinguir mayúsculas/minúsculas
+grep -i "error" /var/log/syslog
+
+# Buscar en todos los archivos de un directorio
+grep -r "password" /etc/
+```
+
+### pipe (|) — encadenar comandos
+
+El pipe toma la salida de un comando y la pasa como entrada a otro.
+
+```bash
+# Ver procesos y filtrar solo los de nginx
+ps aux | grep nginx
+```
+```
+www-data  1234  0.0  1.2  nginx: worker process
+www-data  1235  0.0  1.2  nginx: worker process
+```
+
+```bash
+# Contar cuántos archivos hay en un directorio
+ls -1 | wc -l
+```
+```
+15
+```
+
+```bash
+# Buscar en logs, ordenar y mostrar los primeros 5
+grep "Failed" /var/log/auth.log | sort | head -5
+```
+
+### Redirección > y >>
+
+```bash
+# Guardar salida en un archivo (sobrescribe)
+ls -la > listado.txt
+
+# Agregar salida a un archivo existente (no sobrescribe)
+echo "Nueva línea" >> listado.txt
+```
+
+---
+
+## Solución guiada a errores comunes
+
+### "Permission denied"
+
+**Síntoma:**
+```bash
+bash: ./mi_script.sh: Permission denied
+```
+
+**Diagnóstico:**
+```bash
+# Verificar permisos actuales
+ls -la mi_script.sh
+```
+```
+-rw-r--r-- 1 estudiante estudiante 50 Jan 1 10:00 mi_script.sh
+```
+
+El archivo no tiene permiso de ejecución (`x`).
+
+**Solución:**
+```bash
+chmod +x mi_script.sh
+# o específicamente
+chmod 755 mi_script.sh
+```
+
+::: {.note}
+**Nota:** Si el problema es que no puedes acceder al archivo porque no eres el dueño, necesitas `sudo` o cambiar el dueño con `chown`.
+:::
+
+### "Command not found"
+
+**Síntoma:**
+```bash
+nano: command not found
+```
+
+**Diagnóstico:**
+```bash
+# Verificar si el programa está instalado
+which nano
+# (sin salida = no está en el PATH)
+
+# Verificar si existe en el sistema
+whereis nano
+```
+
+**Solución:**
+```bash
+# Instalar el programa
+sudo apt install nano
+
+# Si está instalado pero no en PATH
+export PATH=$PATH:/ruta/al/programa
+```
+
+### "No such file or directory"
+
+**Síntoma:**
+```bash
+cat: notas.txt: No such file or directory
+```
+
+**Diagnóstico:**
+```bash
+# Verificar dónde estás
+pwd
+# Verificar qué hay en el directorio actual
+ls
+```
+
+**Solución:**
+```bash
+# Usar ruta absoluta
+cat /home/estudiante/Documentos/notas.txt
+
+# O navegar al directorio correcto
+cd Documentos
+cat notas.txt
+```
+
+---
+
+## Ejercicios prácticos progresivos
+
+### E1: Navegar por directorios y crear una estructura personal
+
+```bash
+# 1. Ve a tu directorio home
+cd ~
+
+# 2. Crea la siguiente estructura:
+mkdir -p laboratorio/{scripts,evidencias,notas}
+
+# 3. Verifica la estructura
+tree laboratorio
+```
+
+Salida esperada:
+```
+laboratorio/
+├── evidencias
+├── notas
+└── scripts
+```
+
+```bash
+# 4. Crea un archivo de notas
+echo "Mi primer laboratorio de ciberseguridad" > laboratorio/notas/dia1.txt
+
+# 5. Verifica el contenido
+cat laboratorio/notas/dia1.txt
+```
+
+### E2: Crear archivos con permisos específicos
+
+```bash
+# 1. Crea un script ejecutable
+echo '#!/bin/bash' > laboratorio/scripts/saludo.sh
+echo 'echo "Hola desde el laboratorio"' >> laboratorio/scripts/saludo.sh
+
+# 2. Dale permisos de ejecución (755)
+chmod 755 laboratorio/scripts/saludo.sh
+
+# 3. Crea un archivo privado (solo tú puedes leer)
+echo "clave_super_secreta_123" > laboratorio/evidencias/secretos.txt
+chmod 600 laboratorio/evidencias/secretos.txt
+
+# 4. Crea un archivo de lectura pública
+echo "Este es un informe público" > laboratorio/evidencias/informe.txt
+chmod 644 laboratorio/evidencias/informe.txt
+
+# 5. Verifica los permisos
+ls -la laboratorio/scripts/ laboratorio/evidencias/
+```
+
+Salida esperada:
+```
+laboratorio/evidencias/:
+-rw-r--r-- 1 estudiante estudiante   28 Jan 1 10:00 informe.txt
+-rw------- 1 estudiante estudiante   24 Jan 1 10:00 secretos.txt
+
+laboratorio/scripts/:
+-rwxr-xr-x 1 estudiante estudiante   50 Jan 1 10:00 saludo.sh
+```
+
+### E3: Usar pipes para filtrar salida de comandos
+
+```bash
+# 1. Ver todos los procesos del sistema
+ps aux | head -5
+```
+
+Salida esperada:
+```
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.0  0.1 169316 11632 ?        Ss   09:00   0:01 /sbin/init
+root       234  0.0  0.2  72340  5632 ?        Ss   09:00   0:00 /usr/sbin/sshd
+estudiante  567  0.0  0.1  12340  2340 pts/0    Ss   10:00   0:00 -bash
+```
+
+```bash
+# 2. Filtrar solo procesos de ssh
+ps aux | grep ssh | grep -v grep
+```
+
+```bash
+# 3. Contar cuántos archivos .txt tienes en laboratorio
+find laboratorio -name "*.txt" | wc -l
+```
+
+```bash
+# 4. Buscar archivos modificados hoy
+find laboratorio -mtime -1 -ls
+```
+
+---
+
+## Notas de seguridad: principio de mínimo privilegio
+
+El **principio de mínimo privilegio** establece que un usuario o programa debe tener SOLO los permisos necesarios para realizar su tarea — ni uno más.
+
+### ¿Por qué importa?
+
+```
+    ┌──────────────────────────────────────────────────────┐
+    │  SIN MÍNIMO PRIVILEGIO          CON MÍNIMO PRIVILEGIO│
+    │                                                      │
+    │  chmod 777 script.sh         chmod 750 script.sh     │
+    │  ┌─────────────────┐        ┌─────────────────┐     │
+    │  │ Cualquiera puede│        │ Solo el dueño y │     │
+    │  │ leer, escribir, │        │ su grupo pueden │     │
+    │  │ ejecutar         │        │ ejecutar        │     │
+    │  └─────────────────┘        └─────────────────┘     │
+    │         │                          │                 │
+    │         ▼                          ▼                 │
+    │  Si un atacante               Si un atacante        │
+    │  encuentra el script,         encuentra el script,  │
+    │  puede modificarlo            no puede modificarlo   │
+    │  para ejecutar malware        (solo lectura)        │
+    └──────────────────────────────────────────────────────┘
+```
+
+### Aplicación práctica
+
+- Un servidor web debe correr como usuario `www-data`, no como `root`
+- Un script de backup necesita lectura, no escritura
+- Un archivo de contraseñas debe ser `600` (solo el dueño lee)
+
+::: {.warning}
+**Advertencia de seguridad:** Cada permiso que otorgas es una puerta que abres. Pregúntate siempre: "¿quién necesita acceder a esto y qué necesita hacer?"
+:::
+
+---
+
+## Checklist de autoevaluación
+
+Antes de avanzar al Módulo 2, verifica que puedes:
+
+- [ ] Explicar qué es un shell y cuál es su función
+- [ ] Interpretar el prompt `usuario@host:~$`
+- [ ] Navegar entre directorios con `cd`, `pwd`, `ls`
+- [ ] Describir la función de al menos 5 directorios del FHS
+- [ ] Calcular permisos octales (ej: qué significa 750)
+- [ ] Usar `chmod` tanto en modo simbólico como octal
+- [ ] Leer archivos con `cat`, `less`, `head`, `tail`
+- [ ] Buscar patrones con `grep`
+- [ ] Encadenar comandos con pipe `|`
+- [ ] Diagnosticar y resolver "Permission denied"
+- [ ] Diagnosticar y resolver "Command not found"
+- [ ] Aplicar el principio de mínimo privilegio al asignar permisos
+
+::: {.note}
+**Nota del instructor:** Si no puedes marcar al menos 9 de estos 12 ítems, repasa los ejercicios del módulo. La terminal es la base de todo lo que viene. No avances con dudas.
+---
