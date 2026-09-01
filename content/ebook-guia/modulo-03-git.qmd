@@ -1,0 +1,500 @@
+---
+title: "Módulo 3 — Git: Control de Versiones"
+author: "Diego Saavedra, Mg. Sc. | Abacom"
+format:
+  html:
+    toc: true
+    toc-location: left
+    code-fold: false
+    theme: cosmo
+---
+
+# Módulo 3 — Git: Control de Versiones
+
+---
+
+## ¿Por qué Git es vital en ciberseguridad?
+
+**Git es como un álbum de fotos con historial completo; cada commit es una foto.**
+
+En ciberseguridad, la trazabilidad es todo. Necesitas saber:
+
+- ¿Quién modificó este script de análisis?
+- ¿Cuándo se cambió la configuración del firewall?
+- ¿Qué evidencia se recolectó y en qué orden?
+- ¿Quién aprobó este cambio en el sistema?
+
+Git responde todas estas preguntas. No es solo para desarrolladores de software — es una herramienta fundamental para cualquier profesional de seguridad.
+
+### Casos de uso en ciberseguridad
+
+| Caso de uso | Ejemplo |
+|-------------|---------|
+| Documentar scripts | Mantener historial de scripts de análisis forense |
+| Trazabilidad de cambios | Saber quién modificó un archivo de configuración |
+| Trabajo colaborativo | Equipos de respuesta a incidentes compartiendo hallazgos |
+| Evidencia forense | Mantener cadena de custodia digital con timestamps |
+| Automatización | Versionar playbooks de respuesta a incidentes |
+
+::: {.note}
+**Nota del instructor:** Si alguna vez has llamado a un archivo `script_v2_FINAL_REAL_ultimo.py`, necesitas Git. Ese caos de nombres es exactamente lo que Git elimina.
+:::
+
+---
+
+## Conceptos clave
+
+### El flujo de trabajo de Git
+
+```
+    ┌─────────────────────────────────────────────────────────────┐
+    │                 FLUJO DE TRABAJO GIT                        │
+    │                                                             │
+    │   ┌──────────────┐                                          │
+    │   │  WORKING     │  ← Tu directorio de trabajo actual      │
+    │   │  DIRECTORY   │     (archivos que editas)               │
+    │   └──────┬───────┘                                          │
+    │          │ git add                                          │
+    │          ▼                                                  │
+    │   ┌──────────────┐                                          │
+    │   │  STAGING     │  ← Área de preparación                  │
+    │   │  AREA        │     (archivos listos para commit)       │
+    │   └──────┬───────┘                                          │
+    │          │ git commit                                       │
+    │          ▼                                                  │
+    │   ┌──────────────┐                                          │
+    │   │  LOCAL       │  ← Tu repositorio local                 │
+    │   │  REPO        │     (historial completo en tu máquina)  │
+    │   └──────┬───────┘                                          │
+    │          │ git push / git pull                              │
+    │          ▼                                                  │
+    │   ┌──────────────┐                                          │
+    │   │  REMOTE      │  ← Repositorio remoto (GitHub, GitLab)  │
+    │   │  REPO        │     (compartido con el equipo)          │
+    │   └──────────────┘                                          │
+    │                                                             │
+    └─────────────────────────────────────────────────────────────┘
+```
+
+### Commit: snapshot, no diferencia
+
+Un **commit** es una "foto" completa de tus archivos en un momento específico. No es una diferencia (diff) — es el estado completo del proyecto en ese instante.
+
+```
+    ┌──────────────────────────────────────────────────────┐
+    │                 HISTORIAL DE COMMITS                 │
+    │                                                      │
+    │   commit a1b2c3  ← "Agregar script de análisis"      │
+    │        │                                             │
+    │        ▼                                             │
+    │   commit d4e5f6  ← "Corregir bug en parser"          │
+    │        │                                             │
+    │        ▼                                             │
+    │   commit g7h8i9  ← "Documentar hallazgos"           │
+    │                                                      │
+    │   Cada commit tiene:                                 │
+    │   - Hash único (a1b2c3...)                          │
+    │   - Mensaje descriptivo                              │
+    │   - Autor y timestamp                                │
+    │   - Referencia al commit anterior                    │
+    │                                                      │
+    └──────────────────────────────────────────────────────┘
+```
+
+### Push / Pull: sincronización remota
+
+- **Push**: envía tus commits locales al repositorio remoto
+- **Pull**: trae los cambios del remoto a tu máquina local
+
+---
+
+## Comandos esenciales con ejemplos
+
+### git init — crear un repositorio
+
+```bash
+# Crear un directorio para el proyecto
+mkdir laboratorio-seguridad
+cd laboratorio-seguridad
+
+# Inicializar repositorio Git
+git init
+```
+```
+Initialized empty Git repository in /home/estudiante/laboratorio-seguridad/.git/
+```
+
+### git clone — clonar un repositorio existente
+
+```bash
+# Clonar un repositorio remoto
+git clone https://github.com/usuario/repo-seguridad.git
+```
+```
+Cloning into 'repo-seguridad'...
+remote: Enumerating objects: 42, done.
+Receiving objects: 100% (42/42), done.
+```
+
+### git add y git status — preparar cambios
+
+```bash
+# Verificar el estado actual
+git status
+```
+```
+On branch main
+Untracked files:
+  (use "git add <file>..." to include in commit)
+        script_analisis.sh
+
+nothing added to commit but untracked files present
+```
+
+```bash
+# Agregar un archivo específico al staging area
+git add script_analisis.sh
+
+# Agregar todos los cambios
+git add .
+```
+
+### git commit — guardar snapshot
+
+```bash
+# Crear commit con mensaje descriptivo
+git commit -m "Agregar script de análisis de logs"
+```
+```
+[main a1b2c3d] Agregar script de análisis de logs
+ 1 file changed, 15 insertions(+)
+ create mode 100644 script_analisis.sh
+```
+
+::: {.warning}
+**Advertencia:** Los mensajes de commit deben ser descriptivos. `git commit -m "cambios"` no dice nada. `git commit -m "Agregar parser para logs de autenticación"` sí.
+:::
+
+### git push y git pull — sincronizar con remoto
+
+```bash
+# Enviar commits locales al remoto
+git push origin main
+```
+```
+Enumerating objects: 4, done.
+To https://github.com/usuario/repo.git
+   d4e5f6g..a1b2c3d  main -> main
+```
+
+```bash
+# Traer cambios del remoto
+git pull origin main
+```
+```
+Updating a1b2c3d..h8i9j0k
+Fast-forward
+ README.md | 5 +++++
+ 1 file changed, 5 insertions(+)
+```
+
+### git log — ver historial
+
+```bash
+# Historial compacto
+git log --oneline
+```
+```
+h8i9j0k (HEAD -> main) Documentar hallazgos del laboratorio
+a1b2c3d Agregar script de análisis de logs
+d4e5f6g Commit inicial
+```
+
+### git diff — ver diferencias
+
+```bash
+# Ver cambios no guardados
+git diff
+```
+```
+diff --git a/script_analisis.sh b/script_analisis.sh
+index 1234567..89abcde 100644
+--- a/script_analisis.sh
++++ b/script_analisis.sh
+@@ -10,6 +10,7 @@
+ echo "Analizando..."
+ grep "Failed" /var/log/auth.log
++grep "Accepted" /var/log/auth.log
+```
+
+---
+
+## .gitignore correcto
+
+### Qué ignorar
+
+El archivo `.gitignore` le dice a Git qué archivos NO debe versionar. En ciberseguridad, esto es crítico.
+
+```gitignore
+# ═══════════════════════════════════════════════════
+# .gitignore para proyectos de ciberseguridad
+# ═══════════════════════════════════════════════════
+
+# CREDENALLES - NUNCA versionar
+*.pem
+*.key
+*.p12
+*.pfx
+.env
+.env.*
+secrets/
+credentials/
+passwords.txt
+*.secret
+
+# ARCHIVOS TEMPORALES
+*.tmp
+*.log
+*.bak
+*~
+.DS_Store
+Thumbs.db
+
+# OUTPUTS DE HERRAMIENTAS
+nmap_output/
+scan_reports/
+pcap_captures/*.pcap
+evidence/screenshots/
+
+# ARCHIVOS GRANDES
+*.iso
+*.img
+*.zip
+*.tar.gz
+
+# ENTORNOS VIRTUALES
+venv/
+.venv/
+node_modules/
+```
+
+### Qué NO ignorar
+
+| Archivo | Por qué versionarlo |
+|---------|---------------------|
+| Scripts (.sh, .py) | Son el trabajo principal |
+| Documentación (.md) | Explica el propósito y uso |
+| Plantillas (.template) | Base para configuraciones |
+| Archivos de configuración | Permiten reproducir el entorno |
+
+::: {.warning}
+**Advertencia de seguridad:** Si alguna vez commiteas credenciales por accidente, cambiar la contraseña inmediatamente. Eliminar el archivo de Git no basta — el historial conserva el commit. Usa `git filter-branch` o BFG Repo-Cleaner para eliminar datos sensibles del historial.
+:::
+
+---
+
+## Estrategia de ramas: Git Flow simplificado
+
+En este curso seguimos la convención definida en `CONTRIBUTING.md`: una estructura de tres niveles que separa el desarrollo de las correcciones de estabilidad.
+
+```
+    ┌────────────────────────────────────────────────────────────────────┐
+    │                    ESTRATEGIA DE RAMAS (CONTRIBUTING.md)          │
+    │                                                                    │
+    │   main   ──────●────────────────────●──────────────────●──────►     │
+    │              │                    │                    │             │
+    │              │        merge       │                    │             │
+    │              └────── develop ─────┘                    │             │
+    │                      │                                    │             │
+    │                      │                    merge         │             │
+    │                      │    ┌──── fix/corregir-timeout ────┘             │
+    │                      │    │                                        │
+    │                      ▼    ▼                                        │
+    │                    feature/                                      │
+    │                    nmap-escaneo                                    │
+    │                    │                                               │
+    │             ┌──────●───●───●───●───●─┐                           │
+    │             │  commits atómicos con  │                            │
+    │             │  Conventional Commits │                            │
+    │             └────────────────────────┘                           │
+    │                                                                    │
+    │   • main:     código de producción estable                          │
+    │   • develop:  integración de nuevas funcionalidades                 │
+    │   • feature/*: desarrollo de una funcionalidad concreta            │
+    │   • fix/*:    correcciones rápidas desde main (hotfixes)            │
+    │                                                                    │
+    └────────────────────────────────────────────────────────────────────┘
+```
+
+### Convenciones de ramas
+
+| Tipo de rama | Prefijo | Creado desde | Uso |
+|--------------|---------|--------------|-----|
+| **main** | — | — | Código estable, listo para producción |
+| **develop** | — | `main` | Integración de features antes de merge a `main` |
+| **Feature** | `feature/` | `develop` | Nueva funcionalidad (ej: `feature/nmap-escaneo`) |
+| **Fix** | `fix/` | `main` | Corrección urgente de producción (ej: `fix/corregir-timeout`) |
+
+### Conventional Commits
+
+Los mensajes de commit siguen el formato **Conventional Commits**:
+
+| Tipo | Uso | Ejemplo |
+|------|-----|---------|
+| `feat:` | Nueva funcionalidad | `feat: agregar parser para logs de autenticación` |
+| `fix:` | Corrección de bug | `fix: corregir regex que fallaba con timestamps` |
+| `docs:` | Cambios en documentación | `docs: actualizar guía de uso de tcpdump` |
+| `refactor:` | Reestructuración sin cambios de comportamiento | `refactor: simplificar lógica de validación` |
+
+```bash
+# ✅ BIEN: commits atómicos con tipo convencional
+git commit -m "feat: agregar script de descubrimiento de hosts"
+git commit -m "fix: corregir filtro tcpdump para tráfico DNS"
+git commit -m "docs: documentar filtros avanzados de tcpdump"
+
+# ❌ MAL: commit monolítico sin tipo
+git commit -m "cambios"
+```
+
+::: {.note}
+**Nota del instructor:** Cada commit debe ser una "foto" verificable. Si no puedes describir en una línea lo que cambió, el commit es demasiado grande. `feat:` y `fix:` no son solo estilo — son contratos con tu equipo y con el futuro tú.
+:::
+
+### Commits atómicos
+
+Un **commit atómico** contiene un solo cambio lógico. No mezcles correcciones de bugs con nuevas funcionalidades. Si un commit incluye "agregar funcionalidad" y "corregir bug", tu `git bisect` se vuelve inútil para localizar cuándo se introdujo el error.
+
+```bash
+# ❌ MAL: un commit con múltiples cambios no relacionados
+git commit -m "Varios cambios y correcciones"
+
+# ✅ BIEN: commits separados por cambio lógico
+git commit -m "feat: agregar parser para logs de autenticación"
+git commit -m "fix: corregir regex que fallaba con timestamps"
+git commit -m "docs: documentar uso del script de análisis"
+```
+
+---
+
+## Minipasos guiados
+
+### Paso 1: Crear repositorio local
+
+```bash
+mkdir lab-seguridad
+cd lab-seguridad
+git init
+
+# Configurar identidad (solo una vez por máquina)
+git config --global user.name "Tu Nombre"
+git config --global user.email "tu@email.com"
+```
+
+### Paso 2: Primer commit con notas de laboratorio
+
+```bash
+# Crear archivo de notas
+cat > notas_laboratorio.md << 'EOF'
+# Notas de Laboratorio
+
+## Fecha: 2024-01-15
+## Objetivo: Análisis de logs de autenticación
+
+### Hallazgos
+- 47 intentos de acceso fallidos desde IP 192.168.1.100
+- 2 accesos exitosos fuera de horario laboral
+
+### Próximos pasos
+- Investigar IP sospechosa
+- Revisar logs de los últimos 7 días
+EOF
+
+# Agregar y commitear
+git add notas_laboratorio.md
+git commit -m "Agregar notas iniciales de laboratorio"
+```
+
+### Paso 3: Push a repositorio remoto
+
+```bash
+# Agregar repositorio remoto
+git remote add origin https://github.com/tu-usuario/lab-seguridad.git
+
+# Enviar commits
+git push -u origin main
+```
+
+### Paso 4: Clonar en otra máquina
+
+```bash
+# En otra máquina, clonar el repositorio
+git clone https://github.com/tu-usuario/lab-seguridad.git
+cd lab-seguridad
+
+# Verificar el historial
+git log --oneline
+```
+
+---
+
+## Notas de seguridad: nunca commitees credenciales
+
+### El error más común (y más peligroso)
+
+```bash
+# ❌ NUNCA hagas esto
+echo "password123" > config.env
+git add config.env
+git commit -m "Agregar configuración"
+git push
+```
+
+Si subes credenciales a un repositorio público:
+
+1. **Cualquiera puede verlas** — bots escanean GitHub 24/7 buscando secretos
+2. **El historial persiste** — borrar el archivo no lo elimina del historial
+3. **El daño es inmediato** — atacantes automatizados explotan credenciales en minutos
+
+### Prevención
+
+```bash
+# 1. Crear .gitignore ANTES de empezar
+echo "*.env" >> .gitignore
+echo "credentials/" >> .gitignore
+
+# 2. Usar variables de entorno
+export DB_PASSWORD="secreto"
+# En el código: os.environ['DB_PASSWORD']
+
+# 3. Usar herramientas de detección
+# git-secrets, trufflehog, gitleaks
+```
+
+::: {.warning}
+**Advertencia de seguridad:** Si accidentalmente commiteas una contraseña, cámbiala INMEDIATEMENTE. No basta con hacer otro commit que elimine el archivo — el secreto sigue en el historial de Git.
+:::
+
+---
+
+## Checklist de autoevaluación
+
+Antes de avanzar al Módulo 4, verifica que puedes:
+
+- [ ] Explicar qué es Git y por qué es importante en ciberseguridad
+- [ ] Describir el flujo: working → staging → local → remoto
+- [ ] Crear un repositorio con `git init`
+- [ ] Clonar un repositorio con `git clone`
+- [ ] Preparar cambios con `git add` y `git status`
+- [ ] Crear commits con Conventional Commits (`feat:`, `fix:`)
+- [ ] Sincronizar con remoto usando `git push` y `git pull`
+- [ ] Ver el historial con `git log --oneline`
+- [ ] Crear un `.gitignore` apropiado para ciberseguridad
+- [ ] Explicar qué archivos NUNCA se deben versionar
+- [ ] Comprender la estrategia Git Flow (main, develop, feature/*, fix/*)
+- [ ] Aplicar el concepto de commits atómicos
+
+::: {.note}
+**Nota del instructor:** Git es como un seguro de vida para tu trabajo. Si algo sale mal, puedes volver a cualquier versión anterior. Pero solo funciona si haces commits frecuentes con mensajes claros. No esperes a tener "todo listo" para commitear.
+:::
+
+---
