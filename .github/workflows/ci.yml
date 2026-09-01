@@ -60,7 +60,7 @@ jobs:
       - name: Check for forbidden tools
         run: |
           cd content/ebook-guia
-          FORBIDDEN=$(grep -rn -E '(burpsuite|sqlmap|metasploit|nikto|openvas)' modulo-0*.qmd)
+          FORBIDDEN=$(grep -rn -E '(burpsuite|sqlmap|metasploit|nikto|openvas)' modulo-0*.qmd || true)
           if [ -n "$FORBIDDEN" ]; then
             echo "ERROR: Herramientas prohibidas encontradas:"
             echo "$FORBIDDEN"
@@ -72,9 +72,9 @@ jobs:
         run: |
           cd content/ebook-guia
           for f in modulo-0*.qmd; do
-            NOTES=$(grep -c '{.note}' "$f")
-            WARNINGS=$(grep -c '{.warning}' "$f")
-            CHECKLIST=$(grep -c '^\- \[ \]' "$f")
+            NOTES=$(grep -c '{.note}' "$f" || true)
+            WARNINGS=$(grep -c '{.warning}' "$f" || true)
+            CHECKLIST=$(grep -c '^\- \[ \]' "$f" || true)
             if [ "$NOTES" -eq 0 ]; then echo "WARN: $f has no {.note} callouts"; fi
             if [ "$WARNINGS" -eq 0 ]; then echo "WARN: $f has no {.warning} callouts"; fi
             if [ "$CHECKLIST" -lt 8 ]; then echo "ERROR: $f has only $CHECKLIST checklist items (minimum 8)"; exit 1; fi
@@ -99,7 +99,7 @@ jobs:
       - name: Validate index TOC lists exactly 6 modules
         run: |
           cd content/ebook-guia
-          MODULE_COUNT=$(grep -cE '^\| \*\*[1-6]' index.qmd)
+            MODULE_COUNT=$(grep -cE '^\| \*\*[1-6]' index.qmd || true)
           if [ "$MODULE_COUNT" -ne 6 ]; then
             echo "ERROR: index.qmd lists $MODULE_COUNT modules (expected 6)"
             exit 1
