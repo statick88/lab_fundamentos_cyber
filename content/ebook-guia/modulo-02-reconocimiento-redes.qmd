@@ -1,0 +1,430 @@
+---
+title: "Módulo 2 — Reconocimiento de Red con Ubuntu 24.04"
+author: "Diego Saavedra, Mg. Sc. | Abacom"
+format:
+  html:
+    toc: true
+    toc-location: left
+    code-fold: false
+    theme: cosmo
+---
+
+# Módulo 2 — Reconocimiento de Red con Ubuntu 24.04
+
+---
+
+## Introducción: reconocer antes de actuar
+
+**El mejor ataque es el que nunca necesitas lanzar — porque ya sabes todo sobre tu objetivo.**
+
+En ciberseguridad, la fase de *reconocimiento* es el primer paso de cualquier evaluación. Antes de intentar acceder a un sistema, necesitas entender qué está ejecutándose, qué puertos están abiertos, qué servicios responden y cómo se comunican. Esta fase no implica atacar — implica **observar**.
+
+En este curso trabajamos sobre **Ubuntu 24.04 LTS**, no sobre Kali Linux. Ubuntu es el sistema operativo de escritorio y servidor más usado en el mundo profesional: servidores de producción, máquinas de desarrollo y entornos empresariales. Aprender a hacer reconocimiento desde Ubuntu te prepara para entornar en un entorno real, no en un laboratorio aislado.
+
+El reconocimiento se divide en dos fases complementarias:
+
+1. **Descubrimiento de hosts** — ¿quiénes están conectados a la red?
+2. **Escaneo de puertos y servicios** — ¿qué puertos están abiertos y qué servicios responden?
+
+::: {.note}
+**Nota del instructor:** No subestimes el poder de empezar con pocos comandos bien ejecutados. `nmap` y `tcpdump` son herramientas que puedes dominar en una sola sesión. Lo importante no es cuántas herramientas conoces, sino cuántas usas con inteligencia.
+:::
+
+---
+
+## nmap: escaneo de hosts y puertos
+
+### ¿Qué es un escaneo y por qué es legal?
+
+**nmap** (Network Mapper) es una herramienta de escaneo de red que envía paquetes a objetivos y analiza las respuestas para determinar qué hosts están activos, qué puertos están abiertos y qué servicios se ejecutan.
+
+Un escaneo activo no modifica los sistemas objetivo — solo envía y recibe paquetes. Es legal siempre que tengas autorización explícita del propietario de la red. En este laboratorio, todos los objetivos son locales o de tu propiedad.
+
+### Flujo de trabajo de reconocimiento
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    RECONOCIMIENTO                        │
+│                                                          │
+│   Objetivo definido                                      │
+│         │                                                │
+│         ▼                                                │
+│   ┌─────────────┐    ┌─────────────┐    ┌─────────────┐│
+│   │  Host       │    │  Puerto     │    │  Servicio   ││
+│   │  Discovery  │───▶│  Scan       │───▶│  Detection  ││
+│   │  (nmap -sn) │    │ (nmap -p-)  │    │ (nmap -sV)  ││
+│   └─────────────┘    └─────────────┘    └─────────────┘│
+│                                                          │
+│   Captura de evidencia                                   │
+│         │                                                │
+│         ▼                                                │
+│   ┌─────────────┐                                        │
+│   │  tcpdump    │  ← Registra todo el tráfico            │
+│   │  -w file    │                                        │
+│   └─────────────┘                                        │
+│                                                          │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Puertos y protocolos esenciales
+
+Antes de escanear, debes entender qué puertos son comunes y qué servicios suelen correr en ellos. El archivo `/etc/services` en Ubuntu mantiene el mapeo oficial puerto ↔ servicio.
+
+| Puerto | Protocolo | Servicio típico | Comentario |
+|--------|-----------|-----------------|------------|
+| 22 | TCP | SSH | Administración remota segura |
+| 80 | TCP | HTTP | Web sin cifrar |
+| 443 | TCP | HTTPS | Web cifrada (TLS) |
+| 53 | UDP/TCP | DNS | Resolución de nombres |
+| 25 | TCP | SMTP | Correo electrónico |
+| 21 | TCP | FTP | Transferencia de archivos (inseguro) |
+| 23 | TCP | Telnet | Terminal remota (inseguro, no usar) |
+| 3306 | TCP | MySQL | Base de datos |
+| 5432 | TCP | PostgreSQL | Base de datos |
+
+```bash
+# Verificar qué puerto está asociado a un servicio
+grep "^https" /etc/services
+grep "^domain" /etc/services
+grep "^ssh" /etc/services
+```
+
+::: {.note}
+**Nota del laboratorio:** En la unidad *ii-firewalls-redes* (retos 2 y 4) practicas la identificación de puertos en `/etc/services`. En la unidad *ii* (reto 8) practicas `dpkg -S` para identificar qué paquete instaló un binario. Estos conocimientos complementan tu fase de reconocimiento.
+:::
+
+---
+
+## tcpdump: análisis de capturas de red
+
+### ¿Por qué capturar tráfico?
+
+**tcpdump** es una herramienta de captura y análisis de paquetes en la línea de comandos. Mientras `nmap` te dice qué puertos están abiertos, `tcpdump` te permite ver **el tráfico real** que fluye por la red — el protocolo exacto, los encabezados y hasta fragmentos de los datos que se transmiten.
+
+La combinación `nmap` + `tcpdump` es poderosa: nmap descubre el objetivo, tcpdump registra y analiza el tráfico para entender el comportamiento real de los servicios.
+
+### Filtros esenciales de tcpdump
+
+```
+┌──────────────────────────────────────────────────────┐
+│              SINTAXIS DE FILTROS tcpdump              │
+│                                                      │
+│  host 192.168.1.1       → tráfico hacia/Desde IP      │
+│  src 10.0.0.5           → tráfico ORIGINALMENTE desde │
+│  dst 10.0.0.5           → tráfico DESTINADO a          │
+│  port 80                → tráfico en puerto 80        │
+│  port 22 and tcp        → SSH sobre TCP               │
+│  icmp                   → mensajes ICMP (ping)         │
+│  not arp                → excluir ARP                 │
+│  -nn                    → no resolver nombres          │
+│  -r archivo.pcap        → leer captura grabada         │
+│  -c 10                  → capturar 10 paquetes y salir │
+└──────────────────────────────────────────────────────┘
+```
+
+### Leer una captura grabada
+
+Una captura `.pcapng` o `.pcap` es un archivo binario que contiene paquetes grabados. Puedes analizarlo con `tcpdump -r`:
+
+```bash
+# Listar todos los paquetes de una captura
+tcpdump -nn -r captura.pcapng
+
+# Buscar tráfico HTTP (puerto 80)
+tcpdump -nn -r captura.pcapng port 80
+
+# Buscar tráfico SSH (puerto 22)
+tcpdump -nn -r captura.pcapng port 22
+
+# Contar cuántos paquetes SYN existen (indica escaneo de puertos)
+tcpdump -nn -r captura.pcapng | grep -c "SYN"
+```
+
+::: {.note}
+**Nota del laboratorio:** En la unidad *ii-firewalls-redes* (retos 1-4) practicas la identificación de protocolos (HTTP, HTTPS, SSH, DNS) en capturas de red. Los archivos `captura_http.pcapng`, `captura_ssh.pcapng`, `captura_dns.pcapng` y `captura_scan.pcapng` están en `~/laboratorio/redes/`. El reto 10 detecta escaneos de puertos buscando paquetes `SYN` — exactamente lo que aprendes aquí.
+:::
+
+---
+
+## Scripting para automatización de reconocimiento
+
+### Por qué automatizar el reconocimiento
+
+Ejecutar el mismo escaneo cada semana contra tus servidores no es tarea de robot — es **tarea de analista con script**. Un script de bash puede:
+
+- Escanear una lista de hosts con nmap y guardar resultados
+- Analizar capturas con tcpdump y reportar protocolos
+- Auditar permisos de usuarios con privilegios y alertar
+
+Aprender a automatizar te libera de tareas repetitivas y te permite enfocarte en los hallazgos reales.
+
+### Estructura básica de un script de reconocimiento
+
+```bash
+#!/bin/bash
+# recon_automatico.sh — Escaneo automatizado de hosts
+
+HOSTS=("192.168.1.1" "192.168.1.10" "192.168.1.15")
+OUTPUT_DIR="$HOME/laboratorio/redes"
+
+mkdir -p "$OUTPUT_DIR"
+fecha=$(date +%Y%m%d_%H%M%S)
+
+for host in "${HOSTS[@]}"; do
+    echo "Escaneando $host..."
+    nmap -sn "$host" -oA "$OUTPUT_DIR/recon_$host_$fecha"
+done
+
+echo "Escaneo completado. Resultados en $OUTPUT_DIR/"
+```
+
+### Auditoría de usuarios con privilegios
+
+Un script de auditoría revisa quiénes tienen privilegios de root o pertenecen a grupos administrativos. Esto es fundamental para detectar accesos innecesarios.
+
+```bash
+#!/bin/bash
+# audit_privileged.sh — Auditar usuarios con privilegios
+
+echo "=== Usuarios con UID 0 (root) ==="
+awk -F: '$3 == 0 {print $1}' /etc/passwd
+
+echo ""
+echo "=== Miembros del grupo sudo ==="
+getent group sudo
+
+echo ""
+echo "=== Archivos sudoers ==="
+visudo -c -f /etc/sudoers
+```
+
+::: {.note}
+**Nota del laboratorio:** La unidad *iii-iam-mfa* (reto 5) te pide crear un script `audit_privileged.sh` en `~/laboratorio/iam/` que liste usuarios con UID 0 o permisos sudo. El script debe ser ejecutable y completarse exitosamente. Aquí tienes el punto de partida; en la unidad profundizas con políticas sudoers y configuración de MFA.
+:::
+
+::: {.warning}
+**Advertencia de seguridad:** Nunca ejecutes scripts de auditoría que descargues de fuentes no confiables. Un script malicioso puede usar `sudo`, `rm` o `iptables` con intenciones dañinas. Siempre revisa el contenido antes de ejecutar, y preferiblemente usa `sudo -n` (sin contraseña) solo para comandos específicos como indica el sudoers del laboratorio.
+:::
+
+---
+
+## Ejercicios prácticos
+
+### E1: Descubrimiento de hosts con nmap
+
+**Conexión a la unidad *ii-firewalls-redes* (reto 10) y *ii* (reto 2)**
+
+En este ejercicio practicas el descubrimiento de hosts activos y la identificación de servicios por puerto. El objetivo es determinar qué dispositivos responden en tu red local y qué puertos tienen abiertos.
+
+```bash
+# 1. Descubrir hosts activos en tu red local (solo ping, sin escanear puertos)
+nmap -sn 192.168.1.0/24
+
+# 2. Escanear los puertos más comunes en un host objetivo
+nmap -F 192.168.1.1
+
+# 3. Identificar servicios en los puertos descubiertos
+nmap -sV 192.168.1.1
+
+# 4. Verificar qué servicio corresponde al puerto 443 en /etc/services
+grep "^https" /etc/services
+```
+
+Salida esperada del paso 1:
+```
+Nmap scan report for 192.168.1.1
+Host is up (0.0030s latency).
+Nmap scan report for 192.168.1.10
+Host is up (0.0042s latency).
+Nmap done: 24 IP addresses (2 hosts up) scanned in 0.32 seconds
+```
+
+::: {.note}
+**Nota del laboratorio:** En la unidad *ii-firewalls-redes* (reto 10) detectas escaneos de puertos analizando capturas con `tcpdump -nn -r captura_scan.pcapng | grep -c "SYN"`. Un escaneo SYN típico de nmap genera múltiples paquetes SYN a distintos puertos.
+:::
+
+### E2: Análisis de capturas con tcpdump
+
+**Conexión a la unidad *ii-firewalls-redes* (retos 1-4)**
+
+En este ejercicio practicas el análisis de capturas de red para identificar protocolos. Trabajas con las capturas que generaste o que proporciona el laboratorio en `~/laboratorio/redes/`.
+
+```bash
+# 1. Navegar al directorio de capturas
+cd ~/laboratorio/redes/
+
+# 2. Analizar una captura HTTP
+# Busca el banner "GET / HTTP/1.1" que identifica tráfico web sin cifrar
+grep -i "GET" captura_http.pcapng
+grep -qi "HTTP" captura_http.pcapng && echo "Protocolo HTTP detectado"
+
+# 3. Analizar una captura SSH
+# El banner SSH típico es: "SSH-2.0-OpenSSH_..."
+grep -i "SSH" captura_ssh.pcapng
+
+# 4. Verificar puerto HTTPS en /etc/services
+grep "^https" /etc/services
+```
+
+Salida esperada del paso 2:
+```
+GET / HTTP/1.1
+Protocolo HTTP detectado
+```
+
+Salida esperada del paso 3:
+```
+SSH-2.0-OpenSSH_8.4p1 Ubuntu-5+ubuntu20.04
+```
+
+::: {.note}
+**Nota del laboratorio:** Los retos 1-4 de la unidad *ii-firewalls-redes* validan que identifiques correctamente HTTP (puerto 80), HTTPS (puerto 443), SSH (puerto 22) y DNS (puerto 53) en las capturas. Usa `grep -i` para búsquedas sin distinción de mayúsculas.
+:::
+
+### E3: Script de auditoría de usuarios con privilegios
+
+**Conexión a la unidad *iii-iam-mfa* (reto 5)**
+
+En este ejercicio escribes un script que audita usuarios con privilegios elevados. Este es el reto 5 de la unidad *iii-iam-mfa*: debes crear `~/laboratorio/iam/audit_privileged.sh` que liste usuarios con UID 0 o pertenecientes al grupo sudo.
+
+```bash
+# 1. Crear el directorio de trabajo
+mkdir -p ~/laboratorio/iam/
+
+# 2. Escribir el script de auditoría
+cat > ~/laboratorio/iam/audit_privileged.sh << 'SCRIPT'
+#!/bin/bash
+# audit_privileged.sh — Auditoría de usuarios privilegiados
+
+echo "=== REPORTE DE AUDITORÍA DE PRIVILEGIOS ==="
+echo "Fecha: $(date)"
+echo ""
+
+echo "--- Usuarios con UID 0 (equivalentes a root) ---"
+awk -F: '$3 == 0 {print $1, "(UID: " $3 ")"}' /etc/passwd
+
+echo ""
+echo "--- Usuarios en grupos privilegiados ---"
+for grupo in sudo adm wheel; do
+    miembros=$(getent group "$grupo" 2>/dev/null | cut -d: -f4)
+    if [ -n "$miembros" ]; then
+        echo "$grupo: $miembros"
+    fi
+done
+
+echo ""
+echo "--- Archivos sudoers personalizados ---"
+if [ -d /etc/sudoers.d ]; then
+    ls -la /etc/sudoers.d/ 2>/dev/null
+fi
+
+echo ""
+echo "Auditoría completada."
+SCRIPT
+
+# 3. Hacer el script ejecutable
+chmod +x ~/laboratorio/iam/audit_privileged.sh
+
+# 4. Ejecutar la auditoría
+bash ~/laboratorio/iam/audit_privileged.sh
+```
+
+Salida esperada:
+```
+=== REPORTE DE AUDITORÍA DE PRIVILEGIOS ===
+Fecha: lun sep  1 23:57:00 UTC 2025
+
+--- Usuarios con UID 0 (equivalentes a root) ---
+root (UID: 0)
+
+--- Usuarios en grupos privilegiados ---
+sudo: estudiante
+
+--- Archivos sudoers personalizados ---
+(total de archivos en /etc/sudoers.d/ si existen)
+
+Auditoría completada.
+```
+
+::: {.note}
+**Nota del laboratorio:** El reto 5 de *iii-iam-mfa* requiere que el script exista, sea ejecutable (`-x`) y se ejecute exitosamente (`"script" > /dev/null 2>&1`). Usa `awk -F: '$3 == 0 {print $1}' /etc/passwd` o `getent group sudo` para identificar usuarios con privilegios.
+:::
+
+---
+
+## Notas de seguridad: el reconocimiento responsable
+
+### ¿Cuándo es legal hacer reconocimiento de red?
+
+```
+┌──────────────────────────────────────────────────────┐
+│           ESCALA DE LEGALIDAD DEL RECON               │
+│                                                      │
+│   ✅ TÚ ERES EL PROPIETARIO                            │
+│      → Escanea tu propia red doméstica                 │
+│                                                      │
+│   ✅ Tienes PERMISO POR ESCRITO                          │
+│      → Contrato de consultoría, autorización explícita │
+│                                                      │
+│   ⚠️  Dominio público (.com, .org sin permiso           │
+│      → Solo descubrimiento de hosts, no escaneo        │
+│                                                      │
+│   ❌ Sin permiso, red ajenos                          │
+│      → DELITO en casi todos los países                 │
+└──────────────────────────────────────────────────────┘
+```
+
+### Kali Linux: referencia profesional, no entorno de estudio
+
+Kali Linux es una distribución especializada con cientos de herramientas preinstaladas. Es útil **como referencia profesional**: cuando un cliente pide una auditoría completa, Kali tiene todo lo necesario en un solo lugar.
+
+**Sin embargo, en este curso usamos Ubuntu 24.04 porque:**
+
+| Criterio | Kali Linux | Ubuntu 24.04 |
+|----------|-----------|--------------|
+| Uso profesional real | 5% de los servidores | 43% de los servidores web |
+| Permisos de root | Root por defecto | sudo para tareas específicas |
+| Curva de aprendizaje | Aprender herramientas primero | Aprender conceptos primero |
+| Reproducibilidad | Difícil de replicar | Fácil de instalar en cualquier lugar |
+| Actualizaciones | Rolling release (puede romperse) | LTS con 5 años de soporte |
+
+::: {.warning}
+**Advertencia de seguridad:** El reconocimiento de red no es un delito siempre que tengas autorización. Sin embargo, muchos proveedores de servicios consideran el escaneo activo como abuso de términos de servicio. Siempre obtén permiso por escrito antes de escanear cualquier red que no sea tuya.
+:::
+
+### Marco legal en Latinoamérica
+
+| País | Ley aplicable | Consecuencia para reconocimiento no autorizado |
+|------|---------------|-------------------------------------------------|
+| Ecuador | Código Integral Penal | 1-3 años de prisión por acceso no autorizado |
+| México | Código Penal Federal | 6 meses-2 años por delitos informáticos |
+| Colombia | Ley 1273 de 2009 | 4-8 años por acceso abusivo a sistema informático |
+| España | Ley 40/2015 | Multas y responsabilidad civil por vulneración de sistemas |
+
+::: {.warning}
+**Advertencia ética:** El conocimiento es neutral, pero su uso no. Aprender a escanear redes te hace un profesional mas preparado, pero usar ese conocimiento sin autorización convierte a un profesional en un delincuente. La diferencia entre un pentester y un atacante es el **documento firmado** que autoriza el trabajo.
+:::
+
+---
+
+## Checklist de autoevaluación
+
+Antes de avanzar al Módulo 3, verifica que puedes:
+
+- [ ] Explicar qué es el reconocimiento de red y por qué se hace primero
+- [ ] Distinguir entre descubrimiento de hosts y escaneo de puertos
+- [ ] Ejecutar `nmap -sn` para descubrir hosts activos en una red
+- [ ] Usar `nmap -F` y `nmap -sV` para escanear puertos y servicios
+- [ ] Consultar `/etc/services` para mapear puertos a servicios
+- [ ] Usar `tcpdump -nn -r` para leer capturas de red grabadas
+- [ ] Aplicar filtros de tcpdump (host, port, proto) para aislar tráfico
+- [ ] Identificar tráfico HTTP, SSH y DNS en una captura
+- [ ] Escribir un script bash con `for`, `awk` y `getent` para automatizar tareas
+- [ ] Crear un script de auditoría que liste usuarios con UID 0 y miembros de sudo
+- [ ] Comprender que Kali Linux es referencia profesional, no entorno de estudio
+- [ ] Reconocer que el reconocimiento requiere autorización explícita
+- [ ] Conocer las consecuencias legales del escaneo no autorizado
+
+::: {.note}
+**Nota del instructor:** El reconocimiento de red es como la fase de "ojo de águila" en tu entrenamiento. Las mejores herramientas no son las que escanean más rápido, sino las que te ayudan a entender el objetivo. Domina nmap y tcpdump, y el resto vendrá naturalmente.
+:::
