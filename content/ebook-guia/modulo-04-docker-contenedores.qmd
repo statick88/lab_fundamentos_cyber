@@ -1,0 +1,555 @@
+---
+title: "Módulo 4 — Docker: contenedores y aislamiento"
+author: "Diego Saavedra, Mg. Sc. | Abacom"
+format:
+  html:
+    toc: true
+    toc-location: left
+    code-fold: false
+    theme: cosmo
+---
+
+# Módulo 4 — Docker: contenedores y aislamiento
+
+---
+
+## Introducción: el contenedor no es una máquina virtual
+
+**Un contenedor es como un apartamento amoblado: tiene todo lo que necesitas para vivir, pero comparte los cimientos del edificio con tus vecinos.**
+
+Si una máquina virtual es una casa independiente — con sus propios cimientos, tuberías y electricidad —, un contenedor es un apartamento funcional dentro de un edificio compartido. El edificio es el sistema operativo anfitrión (el host). Cada apartamento tiene su propia cocina, baño y espacio privado, pero todos comparten la estructura base: el kernel del sistema.
+
+En ciberseguridad, esta distinción importa. Un contenedor NO es una caja fuerte sellada. Comparte el kernel con el host, lo que significa que si un atacante escapa del contenedor, puede comprometer todo el sistema. Entender los límites reales del aislamiento es el primer paso para defenderlo.
+
+::: {.note}
+**Nota del instructor:** Este laboratorio mismo corre dentro de un contenedor Docker. Cuando ejecutas `docker inspect` sobre tu propio entorno, estás haciendo algo que los analistas de seguridad hacen todos los días: auditar la configuración real de un contenedor en producción. No es teoría abstracta — es tu realidad.
+:::
+
+---
+
+## ¿Qué es un contenedor? Aislamiento real vs. ilusión de aislamiento
+
+Un contenedor es una unidad ligera de software que empaqueta una aplicación junto con todas sus dependencias (bibliotecas, archivos de configuración, variables de entorno) en un paquete ejecutable y portátil.
+
+### La arquitectura contenedor vs. máquina virtual
+
+```
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                    MÁQUINA VIRTUAL vs CONTENEDOR                │
+    │                                                                 │
+    │  MÁQUINA VIRTUAL (pesada)          CONTENEDOR (ligero)          │
+    │                                                                 │
+    │  ┌──────────┐ ┌──────────┐         ┌──────────┐ ┌──────────┐  │
+    │  │ App A    │ │ App B    │         │ App A    │ │ App B    │  │
+    │  │ + Deps   │ │ + Deps   │         │ + Deps   │ │ + Deps   │  │
+    │  │ + Guest  │ │ + Guest  │         │          │ │          │  │
+    │  │   OS     │ │   OS     │         │          │ │          │  │
+    │  └────┬─────┘ └────┬─────┘         └────┬─────┘ └────┬─────┘  │
+    │       │             │                    │           │         │
+    │  ┌────┴─────────────┴────┐          ┌────┴───────────┴────┐   │
+    │  │     HYPERVISOR        │          │   DOCKER ENGINE    │   │
+    │  │  (VMware, KVM)        │          │   (containerd)     │   │
+    │  └───────────┬───────────┘          └───────┬────────────┘   │
+    │              │                              │                 │
+    │  ┌───────────┴───────────┐          ┌───────┴────────────┐   │
+    │  │   SISTEMA OPERATIVO   │          │   SISTEMA OPERATIVO│   │
+    │  │       HOST            │          │       HOST (kernel)│   │
+    │  └───────────┬───────────┘          └───────┬────────────┘   │
+    │              │                              │                 │
+    │  ┌───────────┴───────────┐          ┌───────┴────────────┐   │
+    │  │      HARDWARE         │          │      HARDWARE      │   │
+    │  └───────────────────────┘          └────────────────────┘   │
+    └─────────────────────────────────────────────────────────────────┘
+```
+
+### Analogía del edificio
+
+| Concepto | Analogía | Técnica |
+|----------|----------|---------|
+| Host (anfitrión) | El edificio completo | El servidor Linux real |
+| Kernel | Los cimientos y estructura | El núcleo del SO compartido |
+| Contenedor | Un apartamento amoblado | Proceso aislado con su filesystem |
+| Docker Engine | El administrador del edificio | El motor que gestiona contenedores |
+| Imagen | Los planos del apartamento | Plantilla inmutable para crear contenedores |
+| Dockerfile | El manual de construcción | Script que define cómo construir la imagen |
+| Capabilities | Las llaves de cada puerto | Permisos granulares del kernel |
+
+::: {.note}
+**Nota:** Los contenedores usan dos features del kernel de Linux para aislar: **namespaces** (aísla qué ve el contenedor: red, procesos, usuarios) y **cgroups** (limita cuánto consume: CPU, memoria). Ninguno de los dos es seguridad perimetral — son contención, no defensa en profundidad.
+:::
+
+---
+
+## Arquitectura del laboratorio: docker-compose.yml en detalle
+
+Este laboratorio corre en un contenedor Docker definido por `docker-compose.yml`. Vamos a diseccionar su configuración de seguridad, línea por línea.
+
+### El servicio `lab-linux`
+
+```yaml
+services:
+  lab-linux:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lab-ciberseguridad
+    volumes:
+      - lab-data:/home/estudiante/laboratorio
+      - ./resultados:/home/estudiante/laboratorio/resultados
+    networks:
+      lab-cyber:
+        ipv4_address: 172.20.0.10
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SETUID
+      - SETGID
+```
+
+### La estrategia de capacidades: lo que se quita y lo que se devuelve
+
+La configuración de capacidades (capabilities) es la decisión de seguridad más crítica del laboratorio:
+
+| Directiva | Valor | Significado |
+|-----------|-------|-------------|
+| `cap_drop` | `ALL` | **Elimina TODAS** las capacidades del contenedor |
+| `cap_add` | `NET_ADMIN` | Permite administración de red (necesario para iptables, ufw) |
+| `cap_add` | `NET_RAW` | Permite sockets raw (necesario para nmap, tcpdump) |
+| `cap_add` | `SETUID` | Permite cambiar UID de procesos (necesario para sudo) |
+| `cap_add` | `SETGID` | Permite cambiar GID de procesos (necesario para grupos) |
+| **NO `SYS_ADMIN`** | ausente | **Deliberadamente excluido** — evita montar filesystems y escapar |
+
+::: {.warning}
+**Advertencia de seguridad:** `SYS_ADMIN` es la capacidad más peligrosa en un contenedor. Permite montar sistemas de archivos, modificar namespaces y es la vía principal de escapes de contenedores (container escape). Que este laboratorio la excluya NO es casualidad — es la primera línea de defensa. Si ves `SYS_ADMIN` en un Dockerfile de producción, cuestionalo inmediatamente.
+:::
+
+### La red aislada
+
+```yaml
+networks:
+  lab-cyber:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+          gateway: 172.20.0.1
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: "false"
+```
+
+La red `lab-cyber` usa un bridge dedicado con `/24` y —crucialmente— tiene **IP deshabilitado** (`enable_ip_masquerade: "false"`). Esto significa que el contenedor no puede enmascarar su tráfico para salir al exterior. Es una red de laboratorio, no una red de producción.
+
+### Volumen persistente
+
+```yaml
+volumes:
+  - lab-data:/home/estudiante/laboratorio
+  - ./resultados:/home/estudiante/laboratorio/resultados
+```
+
+El volumen `lab-data` preserva tu trabajo entre reinicios. El bind mount `./resultados` sincroniza evidencias con el host. Esta separación es intencional: tus archivos de trabajo viven en un volumen gestionado, mientras que los resultados de auditoría se exportan al host.
+
+---
+
+## Estrategia de backup con rsync
+
+Antes de hablar de hardening, necesitas entender cómo proteger los datos que viven dentro y fuera del contenedor. La regla es simple: **un contenedor es efímero, los datos no lo son**.
+
+### ¿Por qué rsync?
+
+`rsync` es la herramienta estándar para backups incrementales en Linux. A diferencia de `cp`, rsync:
+- Solo copia lo que cambió (incremental)
+- Preserva permisos, dueños y timestamps
+- Puede comprimir durante la transferencia
+- Funciona sobre SSH para backups remotos
+
+::: {.note}
+**Nota del laboratorio:** `rsync` está instalado en el contenedor (Dockerfile, línea 34). `tar` y `gzip` están disponibles a través del paquete `coreutils`. No necesitas instalar nada adicional para los ejercicios de este módulo.
+:::
+
+### La regla 3-2-1 del backup
+
+| Regla | Significado | Aplicación en este laboratorio |
+|-------|-------------|-------------------------------|
+| **3** copias | Original + 2 respaldos | Datos en volumen + backup local + exportado al host |
+| **2** medios | Distintos tipos de almacenamiento | Volumen Docker + bind mount en host |
+| **1** offsite | Una copia fuera del sitio físico | (Conceptual) subir a almacenamiento externo |
+
+### Backup conceptual con restic
+
+`restic` es una herramienta moderna de backup que soporta deduplicación, cifrado y almacenamiento remoto. Aunque no está instalado en este laboratorio, es el tipo de herramienta que usarías en producción. La idea conceptual:
+
+```bash
+# CONCEPTUAL (no ejecutable en este laboratorio)
+# Inicializar repositorio de backup
+restic init --repo /backup/restic-repo
+
+# Crear backup cifrado
+restic backup /home/estudiante/laboratorio
+
+# Restaurar desde backup
+restic restore latest --target /restaurado
+```
+
+---
+
+## Hardening de Docker: defensa en capas
+
+Hardening significa reducir la superficie de attack al mínimo indispensable. En Docker, esto se aplica en tres capas: la imagen, el contenedor y el daemon.
+
+### Capa 1: la imagen — no incluyas lo que no usas
+
+Una imagen minimalista es una imagen segura. Cada paquete extra es una posible vulnerabilidad.
+
+| Mala práctica | Buena práctica | Por qué |
+|---------------|----------------|---------|
+| `FROM ubuntu:latest` | `FROM ubuntu:24.04` | Fijar versión evita sorpresas |
+| Instalar con shell | Dockerfile con `--no-install-recommends` | Menos paquetes = menos superficie |
+| Imagen con shell | Imagen distroless o sin shell | Sin shell = sin ejecución interactiva para atacantes |
+| Usuario root por defecto | Usuario no-root explícito | Principio de mínimo privilegio |
+
+### Capa 2: el contenedor — lo que se ejecuta
+
+```dockerfile
+# Crear usuario no-root con UID fijo
+RUN groupadd -r appuser && useradd -r -g appuser -u 1000 -d /app -s /sbin/nologin appuser
+
+# Copiar archivos con dueño correcto
+COPY --chown=appuser:appuser . /app
+
+# Cambiar a usuario no-root
+USER appuser
+
+# Exponer puerto no privilegiado
+EXPOSE 8080
+```
+
+### Capa 3: el daemon — la configuración del motor
+
+```json
+{
+  "icc": false,
+  "userns-remap": "default",
+  "no-new-privileges": true,
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  }
+}
+```
+
+::: {.warning}
+**Advertencia de seguridad:** La opción `no-new-privileges: true` (notar: `true`, NO `false`) impide que un proceso dentro del contenedor gane privilegios adicionales durante su ejecución. El laboratorio usa `false` deliberadamente para permitir que herramientas como `sudo` y `nmap` funcionen correctamente — pero en producción, esta opción debe ser `true`.
+:::
+
+---
+
+## Ejercicios prácticos progresivos
+
+### E1: Inspeccionar la configuración de capacidades del contenedor
+
+Este contenedor está configurado con `cap_drop: ALL` y cuatro capacidades añadidas. Vamos a verificarlo.
+
+```bash
+# Desde el host, inspeccionar las capacidades del contenedor
+docker inspect lab-ciberseguridad --format '{{.HostConfig.CapAdd}}'
+```
+
+Salida esperada:
+```
+[NET_ADMIN NET_RAW SETUID SETGID]
+```
+
+```bash
+# Verificar que NO tiene SYS_ADMIN (capacidad de escape)
+docker inspect lab-ciberseguridad --format '{{.HostConfig.CapAdd}}' | grep SYS_ADMIN
+```
+
+Salida esperada:
+```
+(sin salida — confirmando que SYS_ADMIN NO está presente)
+```
+
+```bash
+# Verificar la red aislada del laboratorio
+docker inspect lab-ciberseguridad --format '{{.NetworkSettings.Networks}}'
+```
+
+```bash
+# Verificar los volúmenes montados
+docker inspect lab-ciberseguridad --format '{{.Mounts}}'
+```
+
+::: {.note}
+**Nota del instructor:** Que `SYS_ADMIN` no aparezca en la salida es una BUENA señal. Significa que la configuración de defensa en profundidad está funcionando. Si apareciera, tendrías una vulnerabilidad crítica de container escape.
+:::
+
+### E2: Crear un backup incremental con rsync
+
+Vamos a crear una estructura de trabajo y respaldarla incrementalmente con `rsync`.
+
+```bash
+# 1. Crear estructura de trabajo
+mkdir -p ~/laboratorio/{proyectos/scripts,evidencias/capturas,config}
+echo "configuracion_sensible" > ~/laboratorio/config/app.conf
+echo "scan_resultado" > ~/laboratorio/evidencias/capturas/scan1.txt
+echo '#!/bin/bash' > ~/laboratorio/proyectos/scripts/audit.sh
+echo 'echo "auditando..."' >> ~/laboratorio/proyectos/scripts/audit.sh
+
+# 2. Crear directorio de backup
+mkdir -p ~/backup
+
+# 3. Primer backup completo
+rsync -avz ~/laboratorio/ ~/backup/laboratorio_backup/
+```
+
+Salida esperada:
+```
+incremental file list
+config/app.conf
+evidencias/capturas/scan1.txt
+proyectos/scripts/audit.sh
+
+sent 1,234 bytes  received 89 bytes  2,646.00 bytes/sec
+total size is 890  speedup is 0.67
+```
+
+```bash
+# 4. Simular un cambio (archivo nuevo)
+echo "nuevo_scan" > ~/laboratorio/evidencias/capturas/scan2.txt
+
+# 5. Backup incremental — solo copia lo que cambió
+rsync -avz ~/laboratorio/ ~/backup/laboratorio_backup/
+```
+
+Salida esperada:
+```
+incremental file list
+evidencias/capturas/scan2.txt
+
+sent 345  received 45 bytes  780.00 bytes/sec
+total size is 12  speedup is 0.03
+```
+
+Observa que el segundo backup solo transfiere `scan2.txt`. Eso es la eficiencia incremental de rsync.
+
+```bash
+# 6. Verificar integridad del backup con checksums
+find ~/laboratorio -type f -exec md5sum {} \; | sort > /tmp/original.md5
+find ~/backup/laboratorio_backup -type f -exec md5sum {} \; | sort > /tmp/backup.md5
+diff /tmp/original.md5 /tmp/backup.md5
+```
+
+Salida esperada:
+```
+(sin salida — los checksums coinciden, backup íntegro)
+```
+
+```bash
+# 7. Comprimir el backup con tar + gzip
+tar -czf ~/backup/backup_$(date +%Y%m%d).tar.gz ~/laboratorio/
+
+# 8. Verificar el archivo comprimido
+tar -tzf ~/backup/backup_*.tar.gz | head -5
+```
+
+### E3: Construir un Dockerfile hardened con usuario no-root
+
+Vamos a escribir un Dockerfile que sigue las prácticas de hardening aprendidas.
+
+```bash
+# 1. Crear directorio para el ejercicio
+mkdir -p ~/laboratorio/docker-hardening
+cd ~/laboratorio/docker-hardening
+
+# 2. Crear el Dockerfile
+cat > Dockerfile << 'DOCKERFILE'
+FROM ubuntu:24.04
+
+# Instalar solo lo necesario, sin recomendaciones
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nginx \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Crear usuario no-root explícito
+RUN groupadd -r webuser && \
+    useradd -r -g webuser -u 1000 -d /var/www -s /sbin/nologin webuser
+
+# Crear directorio de trabajo con dueño correcto
+RUN mkdir -p /var/www/app && chown -R webuser:webuser /var/www
+
+# Copiar configuración personalizada
+COPY --chown=webuser:webuser index.html /var/www/app/
+
+# Cambiar a usuario no-root (OBLIGATORIO para hardening)
+USER webuser
+
+# Exponer puerto no privilegiado
+EXPOSE 8080
+
+# Healthcheck simple
+HEALTHCHECK --interval=30s --timeout=3s CMD curl -f http://localhost:8080/ || exit 1
+
+# Comando por defecto
+CMD ["nginx", "-g", "daemon off;"]
+DOCKERFILE
+
+# 3. Crear archivo index.html de prueba
+echo "<h1>Contenedor Hardened</h1>" > index.html
+
+# 4. Verificar el Dockerfile creado
+cat Dockerfile
+```
+
+Salida esperada:
+```
+FROM ubuntu:24.04
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nginx \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+RUN groupadd -r webuser && \
+    useradd -r -g webuser -u 1000 -d /var/www -s /sbin/nologin webuser
+RUN mkdir -p /var/www/app && chown -R webuser:webuser /var/www
+COPY --chown=webuser:webuser index.html /var/www/app/
+USER webuser
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=3s CMD curl -f http://localhost:8080/ || exit 1
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+```bash
+# 5. Construir la imagen (requiere grupo docker)
+docker build -t lab-hardened:v1 .
+```
+
+Salida esperada (parcial):
+```
+Step 1/8 : FROM ubuntu:24.04
+ ---> a04dc4851cbc
+Step 2/8 : RUN apt-get update...
+...
+Successfully built abc123def456
+Successfully tagged lab-hardened:v1
+```
+
+```bash
+# 6. Verificar que la imagen corre como usuario no-root
+docker run --rm lab-hardened:v1 id
+```
+
+Salida esperada:
+```
+uid=1000(webuser) gid=1000(webuser) groups=1000(webuser)
+```
+
+::: {.note}
+**Nota del instructor:** Si la salida muestra `uid=0(root)`, el hardening falló. El paso `USER webuser` es la línea que garantiza esto. Verificar el usuario en tiempo de ejecución es la prueba de que tu hardening funciona — no basta con que el Dockerfile esté bien escrito; hay que comprobarlo.
+:::
+
+### E4: Analizar capacidades vs. CIS Docker Benchmark
+
+El CIS Docker Benchmark es el estándar de la industria para configurar Docker de forma segura. Vamos a comparar la configuración del laboratorio contra los controles CIS.
+
+```bash
+# 1. Verificar el usuario que ejecuta los procesos dentro del contenedor
+ps aux | head -5
+```
+
+Salida esperada:
+```
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+estudiante    1  0.0  0.0   4624  3456 pts/0    Ss   12:00   0:00 /bin/bash
+estudiante    7  0.0  0.0  10192  3200 pts/0    R+   12:00   0:00 ps aux
+```
+
+```bash
+# 2. Verificar capacidades del proceso actual
+cat /proc/self/status | grep Cap
+```
+
+Salida esperada (parcial):
+```
+CapEff:	00000000a80425fb
+CapPrm:	00000000a80425fb
+CapBnd:	00000000a80425fb
+```
+
+```bash
+# 3. Listar contenedores en ejecución (desde el host)
+docker ps --format "table {{.ID}}\t{{.Image}}\t{{.Status}}"
+```
+
+```bash
+# 4. Verificar la red del contenedor
+docker network inspect lab-cyber --format '{{.IPAM.Config}}'
+```
+
+Ahora completa esta tabla de verificación CIS:
+
+| Control CIS | Descripción | ¿Cumple el laboratorio? | Evidencia |
+|-------------|-------------|------------------------|-----------|
+| 5.1 | Contenedores con usuario no-root | Sí (estudiante) | `whoami` = estudiante |
+| 5.2 | No-new-privileges habilitado | No (false, intencional) | docker-compose línea 34 |
+| 5.25 | Capacidades limitadas | Sí (solo 4) | cap_add restringido |
+| 5.28 | Montajes de filesystem restringidos | Sí (solo volúmenes definidos) | volumes en docker-compose |
+| 5.31 | Filtrado de red habilitado | Sí (iptables/ufw) | NET_ADMIN capability |
+
+::: {.warning}
+**Advertencia de seguridad:** Encontrar que el laboratorio NO cumple con `no-new-privileges` puede parecer alarmante, pero es una decisión pedagógica deliberada: necesitas privilegios para aprender herramientas de seguridad. En producción, este control sería obligatorio. Aprender a identificar estos tradeoffs entre seguridad y funcionalidad es parte de ser un profesional competente.
+:::
+
+---
+
+## Notas de seguridad: el contenedor no es una frontera
+
+Docker proporciona aislamiento, NO seguridad perimetral. Un contenedor comprometido con las capacidades correctas puede escapar al host.
+
+### Tabla de capacidades peligrosas
+
+| Capacidad | Riesgo | Por qué importa |
+|-----------|--------|-----------------|
+| `SYS_ADMIN` | **CRÍTICO** | Permite montar filesystems y modificar namespaces |
+| `DAC_READ_SEARCH` | Alto | Puede leer cualquier archivo del host |
+| `NET_ADMIN` | Medio | Puede modificar reglas de red (necesario aquí) |
+| `SYS_PTRACE` | Alto | Permite depurar otros procesos |
+| `SYS_MODULE` | Crítico | Permite cargar módulos de kernel |
+
+### Principios de hardening para recordar
+
+1. **Mínimo privilegio**: Solo las capacidades que necesitas, nada más
+2. **Imagen minimalista**: Menos paquetes = menos vulnerabilidades
+3. **Usuario no-root**: Nunca ejecutes aplicaciones como root en un contenedor
+4. **Root filesystem de solo lectura**: Impide que atacantes modifiquen el filesystem
+5. **Escaneo de imágenes**: Usa herramientas como Trivy o Grype para detectar vulnerabilidades
+
+::: {.warning}
+**Advertencia de seguridad:** La seguridad de contenedores NO es configurarla y olvidarla. Requiere monitoreo continuo, actualización de imágenes y auditorías periódicas. Un contenedor que fue seguro ayer puede ser vulnerable hoy si su imagen tiene una CVE recién descubierta. La seguridad es un proceso, no un estado.
+:::
+
+---
+
+## Checklist de autoevaluación
+
+Antes de avanzar al Módulo 5, verifica que puedes:
+
+- [ ] Explicar la diferencia entre un contenedor y una máquina virtual
+- [ ] Describir qué son las capabilities de Linux y por qué importan en Docker
+- [ ] Explicar por qué `SYS_ADMIN` está ausente en este laboratorio
+- [ ] Describir la estrategia `cap_drop: ALL` + `cap_add` selectivo
+- [ ] Crear un backup incremental con `rsync`
+- [ ] Comprimir y verificar un backup con `tar` y `gzip`
+- [ ] Escribir un Dockerfile con usuario no-root explícito
+- [ ] Construir una imagen Docker y verificar el usuario en runtime
+- [ ] Identificar al menos 3 controles del CIS Docker Benchmark
+- [ ] Explicar por qué `no-new-privileges` es `false` en este laboratorio
+- [ ] Describir la arquitectura de red `lab-cyber` y su configuración de IP
+- [ ] Aplicar el principio de mínimo privilegio en la configuración de un contenedor
+
+::: {.note}
+**Nota del instructor:** Si no puedes marcar al menos 9 de estos 12 ítems, repasa los ejercicios del módulo. Docker es el estándar de la industria para despliegue de aplicaciones — entender su seguridad es tan importante como saber usarlo. Los wargames del Módulo 5 requieren que comprendas aislamiento: no avances con dudas.
+:::
