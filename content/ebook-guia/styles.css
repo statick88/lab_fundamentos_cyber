@@ -1,0 +1,38 @@
+/* Estilos para la Guía de Laboratorio de Fundamentos de Ciberseguridad */
+/* Universidad de Guayaquil — ESPE */
+
+.quarto-title .quarto-title-banner {
+  background: linear-gradient(135deg, #0f4c75 0%, #1e6b9a 100%);
+}
+
+.quarto-title h1 {
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+code {
+  background-color: #f0f0f0;
+  border-radius: 3px;
+  padding: 0.15em 0.3em;
+}
+
+pre {
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+pre code {
+  background-color: transparent;
+  color: #d4d4d4;
+}
+
+.note {
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+}
+
+.warning {
+  background-color: #f8d7da;
+  border-left: 4px solid #dc3545;
+}

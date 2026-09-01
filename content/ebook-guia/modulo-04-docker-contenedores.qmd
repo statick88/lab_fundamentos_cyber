@@ -553,3 +553,11 @@ Antes de avanzar al Módulo 5, verifica que puedes:
 ::: {.note}
 **Nota del instructor:** Si no puedes marcar al menos 9 de estos 12 ítems, repasa los ejercicios del módulo. Docker es el estándar de la industria para despliegue de aplicaciones — entender su seguridad es tan importante como saber usarlo. Los wargames del Módulo 5 requieren que comprendas aislamiento: no avances con dudas.
 :::
+
+## Próximo paso
+
+En el **[Módulo 5 — Wargames y Ataques Controlados](modulo-05-wargames.qmd)** pondrás a prueba tus contenedores en entornos de ataque reales. Todo lo que has construido y aislado se convierte en objetivo controlado: ataca para defender.
+
+> *"El cuarto principio de la ciberseguridad es: no puedes defender lo que no puedes atacar. Los wargames son tu academia de ataque ético."*
+
+[← Volver al índice de la guía](./index.qmd)

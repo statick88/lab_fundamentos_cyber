@@ -497,4 +497,10 @@ Antes de avanzar al Módulo 4, verifica que puedes:
 **Nota del instructor:** Git es como un seguro de vida para tu trabajo. Si algo sale mal, puedes volver a cualquier versión anterior. Pero solo funciona si haces commits frecuentes con mensajes claros. No esperes a tener "todo listo" para commitear.
 :::
 
----
+## Próximo paso
+
+En el **[Módulo 4 — Contenedores Docker](modulo-04-docker-contenedores.qmd)** aprenderás a aislar servicios completos en contenedores, el estándar de la industria para despliegue seguro de aplicaciones. El control de versiones que dominaste aquí aplica al ciclo de vida de imágenes y contenedores.
+
+> *"El tercer principio de la ciberseguridad es: no puedes escalar lo que no puedes replicar. Docker es tu capacidad de replicar."*
+
+[← Volver al índice de la guía](./index.qmd)

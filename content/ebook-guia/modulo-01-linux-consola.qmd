@@ -582,4 +582,12 @@ Antes de avanzar al Módulo 2, verifica que puedes:
 
 ::: {.note}
 **Nota del instructor:** Si no puedes marcar al menos 9 de estos 12 ítems, repasa los ejercicios del módulo. La terminal es la base de todo lo que viene. No avances con dudas.
----
+:::
+
+## Próximo paso
+
+En el **[Módulo 2 — Reconocimiento de Redes](modulo-02-reconocimiento-redes.qmd)** aplicarás los comandos que has aprendido para mapear la superficie de ataque. La terminal ya no es un miedo: es tu instrumento de exploración.
+
+> *"El primer principio de la ciberseguridad es: no puedes atacar lo que no puedes ver. El escaneo de red es tu vista a distancia."*
+
+[← Volver al índice de la guía](./index.qmd)

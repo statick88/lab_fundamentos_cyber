@@ -429,5 +429,13 @@ Antes de avanzar al Módulo 3, verifica que puedes:
 - [ ] Conocer las consecuencias legales del escaneo no autorizado
 
 ::: {.note}
-**Nota del instructor:** El reconocimiento de red es como la fase de "ojo de águila" en tu entrenamiento. Las mejores herramientas no son las que escanean más rápido, sino las que te ayudan a entender el objetivo. Domina nmap y tcpdump, y el resto vendrá naturalmente.
+**Nota del instructor:** El reconocimiento de red es como la fase de "ojo de águja" en tu entrenamiento. Las mejores herramientas no son las que escanean más rápido, sino las que te ayudan a entender el objetivo. Domina nmap y tcpdump, y el resto vendrá naturalmente.
 :::
+
+## Próximo paso
+
+En el **[Módulo 3 — Git y Control de Versiones](modulo-03-git.qmd)** aprenderás a proteger tu trabajo como lo harías protegiendo una instalación: con estratégia, documentación y control de cambios. Todo hallazgo de reconocimiento debe quedar registrado.
+
+> *"El segundo principio de la ciberseguridad es: no puedes defender lo que no puedes reproducir. Git es tu capacidad de reproducir."*
+
+[← Volver al índice de la guía](./index.qmd)
