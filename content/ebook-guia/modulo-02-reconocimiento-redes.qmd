@@ -217,6 +217,9 @@ visudo -c -f /etc/sudoers
 En este ejercicio practicas el descubrimiento de hosts activos y la identificación de servicios por puerto. El objetivo es determinar qué dispositivos responden en tu red local y qué puertos tienen abiertos.
 
 ```bash
+# 0. Verificar que nmap está instalado (ver unidad ii — gestión de paquetes)
+which nmap || echo "Instalar con: sudo apt-get install -y nmap"
+
 # 1. Descubrir hosts activos en tu red local (solo ping, sin escanear puertos)
 nmap -sn 192.168.1.0/24
 
