@@ -249,6 +249,10 @@ EXPOSE 8080
 
 ## Ejercicios prácticos progresivos
 
+::: {.note}
+**Modo nativo (sin Docker):** Los ejercicios E1 y E4 de este módulo están diseñados para auditar el contenedor Docker del laboratorio. En modo nativo, instala Docker con `sudo apt-get install -y docker.io docker-compose-v2`. Luego ejecuta `docker inspect` sobre cualquier contenedor que tengas, o usa `docker run -it ubuntu:24.04` para crear un entorno de prueba equivalente. Los ejercicios E2 (rsync backup) y E3 (Dockerfile hardening) funcionan idénticamente en modo nativo.
+:::
+
 ### E1: Inspeccionar la configuración de capacidades del contenedor
 
 Este contenedor está configurado con `cap_drop: ALL` y cuatro capacidades añadidas. Vamos a verificarlo.

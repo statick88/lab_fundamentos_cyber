@@ -96,6 +96,19 @@ Al final de cada módulo encontrarás un **checklist de autoevaluación**. Si no
 
 ## Tabla de Contenidos
 
+### Modo de ejecución: Docker o nativo
+
+Este curso está pensado para ejecutarse en **dos modos**. Elige el que mejor se ajuste a tu entorno:
+
+| Modo | Cuándo usarlo | Ventajas | Requisitos |
+|------|--------------|----------|------------|
+| **Docker** | Entorno aislado, herramientas pre-instaladas, permisos configurados | No instala nada en tu máquina; entorno controlado y reproducible | Docker + `git clone` del repositorio |
+| **Nativo (sin Docker)** | Prefieres trabajar directamente en tu máquina Ubuntu 24.04 (o similar) | No necesitas Docker; trabajas en tu sistema real | Instalar herramientas con `apt-get` según las notas de cada módulo |
+
+::: {.tip}
+**Consejo:** Si es tu primera vez, usa el **modo Docker**. Las notas `{.note} **Modo nativo (sin Docker):**` en cada módulo te indican los comandos equivalentes cuando difieren del contenedor.
+:::
+
 | Módulo | Tema | Duración estimada |
 |--------|------|-------------------|
 | **0** | Esta guía — Diagnóstico y método de estudio | 30 min |

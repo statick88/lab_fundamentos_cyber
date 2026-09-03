@@ -275,7 +275,6 @@ head /var/log/syslog
 # tail: últimas 10 líneas (útil para logs en tiempo real)
 tail -f /var/log/auth.log
 ```
-
 ### sudo — ejecutar como superusuario
 
 ```bash
@@ -285,6 +284,10 @@ sudo apt update
 # Editar archivo de configuración del sistema
 sudo nano /etc/hosts
 ```
+
+::: {.note}
+**Modo nativo (sin Docker):** En el contenedor, `estudiante` tiene permisos NOPASSWD para sudo. En tu máquina nativa, deberás escribir tu contraseña de usuario cada vez que uses `sudo`. Si no estás en el grupo `sudo`, añádete con `sudo usermod -aG sudo $USER` (requiere cerrar y volver a abrir la sesión).
+:::
 
 ::: {.warning}
 **Advertencia de seguridad:** `sudo` te da poderes de administrador. Úsalo SOLO cuando sea necesario. Cada vez que uses `sudo`, pregúntate: "¿realmente necesito privilegios de root para esto?"

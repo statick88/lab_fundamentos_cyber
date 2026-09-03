@@ -161,6 +161,10 @@ Los comandos clave que registrarás según la plantilla: `pwd`, `ls -la`, `cat`,
 
 ## Ejercicios prácticos progresivos
 
+::: {.note}
+**Modo nativo (sin Docker):** En el contenedor, `openssh-client`, `john` y `nmap` vienen preinstalados. En modo nativo, instala las dependencias con `sudo apt-get install -y openssh-client john nmap`. Las conexiones SSH funcionan igual; la única diferencia es que en modo nativo necesitarás usar tu propia contraseña de usuario para `sudo` en ejercicios que requieran permisos administrativos.
+:::
+
 ### E1: Comprender la mecánica de Bandit (niveles 0→5)
 
 Antes de conectar, entiende la progresión. Cada nivel introduce UN concepto nuevo:

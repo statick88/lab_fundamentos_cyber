@@ -210,6 +210,10 @@ visudo -c -f /etc/sudoers
 
 ## Ejercicios prácticos
 
+::: {.note}
+**Modo nativo (sin Docker):** En el contenedor Docker, `nmap` y `tcpdump` vienen preinstalados y `estudiante` tiene permisos NOPASSWD. En modo nativo, instala las herramientas con `sudo apt-get install -y nmap tcpdump`. Ten en cuenta también que el nombre de la interfaz de red varía: en el contenedor es `eth0`, pero en tu máquina nativa puede ser `enp0s3`, `wlan0`, `ens33`, etc. Usa `ip link` para identificar tu interfaz principal.
+:::
+
 ### E1: Descubrimiento de hosts con nmap
 
 **Conexión a la unidad *ii-firewalls-redes* (reto 10) y *ii* (reto 2)**

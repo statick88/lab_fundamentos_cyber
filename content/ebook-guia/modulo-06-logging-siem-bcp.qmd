@@ -230,6 +230,10 @@ Elementos clave de un BCP:
 
 ## Ejercicios prácticos progresivos
 
+::: {.note}
+**Modo nativo (sin Docker):** En el contenedor, `tcpdump` funciona con NOPASSWD sudo y la interfaz se llama `eth0`. En modo nativo, `tcpdump` requiere `sudo` para acceder a la interfaz de red, y el nombre de tu interfaz probablemente sea diferente (`enp0s3`, `wlan0`, `ens33`, etc.). Usa `ip link` para identificar tu interfaz principal, por ejemplo: `sudo tcpdump -i $(ip -o link show | awk -F': ' '/state UP/ {print $2; exit}') -c 10`. Además, `john` y `logrotate` deben instalarse con `sudo apt-get install -y john logrotate`.
+:::
+
 ### E1: Capturar y analizar tráfico de red con tcpdump
 
 **Objetivo:** Capturar paquetes en tu interfaz de red y analizar el contenido.
