@@ -427,20 +427,21 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "  Unit III — Shell Scripting"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-UNITIII_DIR="${HOME_DIR}/laboratorio/shell"
-UNITIII_TEST="${UNITIII_DIR}/test.sh"
-UNITIII_SETUP="${UNITIII_DIR}/setup.sh"
+UNITIII_UNITS="${HOME_DIR}/laboratorio/units/iii"
+UNITIII_SHELL="${HOME_DIR}/laboratorio/shell"
+UNITIII_TEST="${UNITIII_UNITS}/test.sh"
+UNITIII_SETUP="${UNITIII_UNITS}/setup.sh"
 
 # ── UNITIII.1: Directory structure ────────────────────────────
 echo ""
 echo "--- UNITIII.1: Directory structure ---"
 
-assert_dir_exists "shell directory exists" "$UNITIII_DIR"
+assert_dir_exists "units/iii directory exists" "$UNITIII_UNITS"
 assert_file_exists "test.sh exists" "$UNITIII_TEST"
 assert_file_not_empty "test.sh is not empty" "$UNITIII_TEST"
 assert_file_exists "setup.sh exists" "$UNITIII_SETUP"
 assert_file_not_empty "setup.sh is not empty" "$UNITIII_SETUP"
-assert_file_exists "manual.sh exists" "${UNITIII_DIR}/manual.sh"
+assert_file_exists "manual.sh exists" "${UNITIII_UNITS}/manual.sh"
 
 # ── UNITIII.2: Shell scripts source shared/common.sh ──────────
 echo ""
@@ -454,7 +455,7 @@ echo ""
 echo "--- UNITIII.3: test.sh standalone execution ---"
 
 UNITIII_OUTPUT=$( (
-    cd "$UNITIII_DIR" || exit 1
+    cd "$UNITIII_UNITS" || exit 1
     bash "$UNITIII_TEST" 2>&1
 ) 2>&1 )
 UNITIII_EXIT=$?
@@ -470,8 +471,8 @@ echo "--- UNITIII.4: setup.sh scaffolding ---"
 
 assert_file_contains "setup.sh TOTAL_RETOS=15" "$UNITIII_SETUP" "TOTAL_RETOS=15"
 
-# Check reto1 script exists (created by setup.sh)
-assert_file_exists "reto1.sh exists" "${UNITIII_DIR}/reto1.sh"
+# Check reto1 script exists in laboratorio/shell/ (created by setup.sh)
+assert_file_exists "reto1.sh exists" "${UNITIII_SHELL}/reto1.sh"
 
 # ── UNITIII.5: Reto count validation ──────────────────────────
 echo ""
@@ -489,20 +490,21 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "  Unit III-iam-mfa — IAM, MFA y Control de Acceso"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-UNITIAM_DIR="${HOME_DIR}/laboratorio/iam"
-UNITIAM_TEST="${UNITIAM_DIR}/test.sh"
-UNITIAM_SETUP="${UNITIAM_DIR}/setup.sh"
+UNITIAM_UNITS="${HOME_DIR}/laboratorio/units/iii-iam-mfa"
+UNITIAM_IAM="${HOME_DIR}/laboratorio/iam"
+UNITIAM_TEST="${UNITIAM_UNITS}/test.sh"
+UNITIAM_SETUP="${UNITIAM_UNITS}/setup.sh"
 
 # ── UNITIAM.1: Directory structure ────────────────────────────
 echo ""
 echo "--- UNITIAM.1: Directory structure ---"
 
-assert_dir_exists "iam directory exists" "$UNITIAM_DIR"
+assert_dir_exists "units/iii-iam-mfa directory exists" "$UNITIAM_UNITS"
 assert_file_exists "test.sh exists" "$UNITIAM_TEST"
 assert_file_not_empty "test.sh is not empty" "$UNITIAM_TEST"
 assert_file_exists "setup.sh exists" "$UNITIAM_SETUP"
 assert_file_not_empty "setup.sh is not empty" "$UNITIAM_SETUP"
-assert_file_exists "manual.sh exists" "${UNITIAM_DIR}/manual.sh"
+assert_file_exists "manual.sh exists" "${UNITIAM_UNITS}/manual.sh"
 
 # ── UNITIAM.2: Scripts source shared modules ──────────────────
 echo ""
@@ -516,7 +518,7 @@ echo ""
 echo "--- UNITIAM.3: test.sh standalone execution ---"
 
 UNITIAM_OUTPUT=$( (
-    cd "$UNITIAM_DIR" || exit 1
+    cd "$UNITIAM_UNITS" || exit 1
     bash "$UNITIAM_TEST" 2>&1
 ) 2>&1 )
 UNITIAM_EXIT=$?
@@ -529,8 +531,8 @@ assert_file_contains "test.sh has standalone block" "$UNITIAM_TEST" "BASH_SOURCE
 echo ""
 echo "--- UNITIAM.4: setup.sh scaffolding ---"
 
-assert_file_exists "crear_grupo_usuario.sh exists" "${UNITIAM_DIR}/crear_grupo_usuario.sh"
-assert_file_exists "audit_privileged.sh exists" "${UNITIAM_DIR}/audit_privileged.sh"
+assert_file_exists "crear_grupo_usuario.sh exists" "${UNITIAM_IAM}/crear_grupo_usuario.sh"
+assert_file_exists "audit_privileged.sh exists" "${UNITIAM_IAM}/audit_privileged.sh"
 
 # ── UNITIAM.5: Reto count ────────────────────────────────────
 echo ""

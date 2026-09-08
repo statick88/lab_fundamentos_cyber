@@ -16,6 +16,52 @@ if [ ! -f "$UNITS_MARKER" ]; then
     touch "$UNITS_MARKER"
 fi
 
+# ─── Crear directorios de ejercicios que no vienen de setup.sh ───────────────
+EXERCISES_MARKER="$HOME/.exercises_scaffolded"
+if [ ! -f "$EXERCISES_MARKER" ]; then
+    info "Creando directorios de ejercicios..."
+
+    # M4 E5 — Nginx hardening (carpeta de trabajo del estudiante)
+    mkdir -p "$HOME/laboratorio/nginx-hardening"
+    [ -f "$HOME/laboratorio/nginx-hardening/nginx.conf" ] || cat > "$HOME/laboratorio/nginx-hardening/nginx.conf" <<'NGINXCONF'
+# TODO: Configurar nginx para escuchar solo en HTTPS
+# Requisitos:
+#   - Escuchar únicamente en puerto 443 (HTTPS)
+#   - Deshabilitar directors listing
+#   - Configurar headers de seguridad
+#   - Usar certificados TLS del directorio ../certificados/
+server {
+    listen 443 ssl;
+    server_name localhost;
+
+    ssl_certificate     /etc/nginx/certs/servidor.crt;
+    ssl_certificate_key /etc/nginx/certs/servidor.key;
+
+    # TODO: Agregar headers de seguridad
+    # TODO: Deshabilitar directorio listing
+}
+NGINXCONF
+    [ -f "$HOME/laboratorio/nginx-hardening/Dockerfile" ] || cat > "$HOME/laboratorio/nginx-hardening/Dockerfile" <<'DOCKERFILE'
+FROM nginx:alpine
+# TODO: Copiar nginx.conf y certificados, exponer solo 443
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY ../certificados/servidor.crt /etc/nginx/certs/servidor.crt
+COPY ../certificados/servidor.key /etc/nginx/certs/servidor.key
+EXPOSE 443
+DOCKERFILE
+
+    # M6 E5 — Certificados TLS (carpeta de trabajo del estudiante)
+    mkdir -p "$HOME/laboratorio/certificados"
+    [ -f "$HOME/laboratorio/certificados/servidor.key" ] || openssl genrsa -out "$HOME/laboratorio/certificados/servidor.key" 2048 2>/dev/null
+    [ -f "$HOME/laboratorio/certificados/servidor.crt" ] || openssl req -x509 -new -nodes \
+        -key "$HOME/laboratorio/certificados/servidor.key" \
+        -sha256 -days 365 \
+        -out "$HOME/laboratorio/certificados/servidor.crt" \
+        -subj "/C=EC/ST=Loja/L=Loja/O=CyberLab/CN=localhost" 2>/dev/null
+
+    touch "$EXERCISES_MARKER"
+fi
+
 # ─── Detectar primer inicio y limpiar progreso anterior ──────────────────────
 MARKER="$HOME/.lab_initialized"
 if [ ! -f "$MARKER" ]; then

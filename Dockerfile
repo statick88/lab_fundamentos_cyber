@@ -53,6 +53,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     john \
     fail2ban \
     logrotate \
+    gpg \
+    netcat-openbsd \
+    socat \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
