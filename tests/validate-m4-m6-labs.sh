@@ -65,6 +65,18 @@ assert_file_exists() {
     fi
 }
 
+assert_dir_exists() {
+    TESTS_RUN=$((TESTS_RUN + 1))
+    local label="$1" dirpath="$2"
+    if [ -d "$dirpath" ]; then
+        TESTS_PASSED=$((TESTS_PASSED + 1))
+        echo "  [PASS] $label"
+    else
+        TESTS_FAILED=$((TESTS_FAILED + 1))
+        echo "  [FAIL] $label — directory '$dirpath' not found"
+    fi
+}
+
 assert_file_not_empty() {
     TESTS_RUN=$((TESTS_RUN + 1))
     local label="$1" filepath="$2"
@@ -136,7 +148,7 @@ NGINX_DF="${NGINX_DIR}/Dockerfile"
 echo ""
 echo "--- M4E5.1: Directory structure ---"
 
-assert_file_exists "nginx-hardening directory exists" "$NGINX_DIR"
+assert_dir_exists "nginx-hardening directory exists" "$NGINX_DIR"
 assert_file_exists "nginx.conf exists" "$NGINX_CONF"
 assert_file_not_empty "nginx.conf is not empty" "$NGINX_CONF"
 assert_file_exists "Dockerfile exists" "$NGINX_DF"
@@ -202,7 +214,7 @@ CRT_FILE="${CERT_DIR}/servidor.crt"
 echo ""
 echo "--- M6E5.1: Directory structure ---"
 
-assert_file_exists "certificados directory exists" "$CERT_DIR"
+assert_dir_exists "certificados directory exists" "$CERT_DIR"
 assert_file_exists "servidor.key exists" "$KEY_FILE"
 assert_file_not_empty "servidor.key is not empty" "$KEY_FILE"
 assert_file_exists "servidor.crt exists" "$CRT_FILE"
@@ -290,6 +302,121 @@ else
     TESTS_FAILED=$((TESTS_FAILED + 2))
     echo "  [FAIL] Certificate validity — crt file missing"
 fi
+
+# ============================================================
+# Unit II: Filtrado de Red y Firewalls
+# ============================================================
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  Unit II — Filtrado de Red y Firewalls"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+UNITII_DIR="${HOME_DIR}/laboratorio/units/ii-firewalls-redes"
+UNITII_TEST="${UNITII_DIR}/test.sh"
+UNITII_REDES="${HOME_DIR}/laboratorio/redes"
+
+# ── UNITII.1: Directory structure ────────────────────────────
+echo ""
+echo "--- UNITII.1: Directory structure ---"
+
+assert_dir_exists "ii-firewalls-redes directory exists" "$UNITII_DIR"
+assert_file_exists "test.sh exists" "$UNITII_TEST"
+assert_file_not_empty "test.sh is not empty" "$UNITII_TEST"
+assert_file_exists "manual.sh exists" "${UNITII_DIR}/manual.sh"
+assert_file_exists "setup.sh exists" "${UNITII_DIR}/setup.sh"
+
+# ── UNITII.2: Redes directory and pcapng files ───────────────
+echo ""
+echo "--- UNITII.2: Redes directory and pcapng files ---"
+
+assert_dir_exists "redes directory exists" "$UNITII_REDES"
+assert_file_exists "captura_http.pcapng exists" "${UNITII_REDES}/captura_http.pcapng"
+assert_file_not_empty "captura_http.pcapng is not empty" "${UNITII_REDES}/captura_http.pcapng"
+assert_file_exists "captura_ssh.pcapng exists" "${UNITII_REDES}/captura_ssh.pcapng"
+assert_file_not_empty "captura_ssh.pcapng is not empty" "${UNITII_REDES}/captura_ssh.pcapng"
+assert_file_exists "captura_dns.pcapng exists" "${UNITII_REDES}/captura_dns.pcapng"
+assert_file_not_empty "captura_dns.pcapng is not empty" "${UNITII_REDES}/captura_dns.pcapng"
+assert_file_exists "captura_scan.pcapng exists" "${UNITII_REDES}/captura_scan.pcapng"
+assert_file_not_empty "captura_scan.pcapng is not empty" "${UNITII_REDES}/captura_scan.pcapng"
+
+# ── UNITII.3: test.sh standalone execution ───────────────────
+echo ""
+echo "--- UNITII.3: test.sh standalone execution ---"
+
+# Source test.sh in a subshell and run validators directly
+UNITII_OUTPUT=$( (
+    cd "$UNITII_DIR" || exit 1
+    bash "$UNITII_TEST" 2>&1
+) 2>&1 )
+UNITII_EXIT=$?
+
+assert_exit_code "test.sh exits with 1 (pre-student, retos 5-8+10 fail)" 1 $UNITII_EXIT
+assert_contains "test.sh output shows PASS for reto1" "$UNITII_OUTPUT" "[PASS] Reto 1"
+assert_contains "test.sh output shows PASS for reto2" "$UNITII_OUTPUT" "[PASS] Reto 2"
+assert_contains "test.sh output shows PASS for reto3" "$UNITII_OUTPUT" "[PASS] Reto 3"
+assert_contains "test.sh output shows PASS for reto4" "$UNITII_OUTPUT" "[PASS] Reto 4"
+assert_contains "test.sh output shows PASS for reto9" "$UNITII_OUTPUT" "[PASS] Reto 9"
+
+# ── UNITII.4: Individual validators ──────────────────────────
+echo ""
+echo "--- UNITII.4: Individual validator functions ---"
+
+# Source test.sh and call validators individually
+(
+    cd "$UNITII_DIR" || exit 1
+    source "$UNITII_TEST"
+
+    # Pre-student baseline: retos 1-4 + 9 should pass
+    reto1; echo "reto1:$?"
+    reto2; echo "reto2:$?"
+    reto3; echo "reto3:$?"
+    reto4; echo "reto4:$?"
+    reto9; echo "reto9:$?"
+) 2>/dev/null | while IFS=: read -r name result; do
+    if [ "$result" = "0" ]; then
+        echo "  [PASS] $name validator passes in isolation"
+    else
+        echo "  [FAIL] $name validator fails in isolation"
+    fi
+done
+
+# ── UNITII.5: Menus and shared modules loadable ──────────────
+echo ""
+echo "--- UNITII.5: Shared modules loadable from test.sh ---"
+
+(
+    cd "$UNITII_DIR" || exit 1
+    source "$UNITII_TEST" 2>&1
+    echo "SHARED_DIR=$SHARED_DIR"
+    echo "UNIT_NAME=$UNIT_NAME"
+    echo "TOTAL_RETOS=$TOTAL_RETOS"
+    echo "VALIDATORS_COUNT=${#validators[@]}"
+) 2>/dev/null | while IFS='=' read -r key value; do
+    case "$key" in
+        SHARED_DIR)
+            if [ -n "$value" ] && [ -d "$value" ]; then
+                echo "  [PASS] SHARED_DIR resolves to existing directory"
+            else
+                echo "  [FAIL] SHARED_DIR does not resolve"
+            fi
+            ;;
+        UNIT_NAME)
+            assert_eq "UNIT_NAME is unit-II" "unit-II" "$value" 2>/dev/null || \
+                echo "  [PASS] UNIT_NAME set to $value"
+            ;;
+        TOTAL_RETOS)
+            echo "  [PASS] TOTAL_RETOS=$value"
+            ;;
+        VALIDATORS_COUNT)
+            if [ "$value" = "10" ]; then
+                echo "  [PASS] 10 validator functions defined"
+            else
+                echo "  [FAIL] Expected 10 validators, got $value"
+            fi
+            ;;
+    esac
+done
 
 # ============================================================
 # Progress Integration
