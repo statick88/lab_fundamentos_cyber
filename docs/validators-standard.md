@@ -59,6 +59,8 @@ reto15() {
 - **Unit III** (Shell Scripting) — 15/15 PASS
 - **Unit IX** (Nginx) — 10/10 PASS — fix: `pkill` para detener nginx
 - **Unit XI** (Backup & Recovery) — 10/10 PASS
+- **Unit II** (Package Management) — 9/10 PASS — baseline: reto 9 requiere vim eliminado
+- **Unit V** (Processes & Services) — 10/10 PASS
 
 ## Auditoría de privilegios por unidad
 

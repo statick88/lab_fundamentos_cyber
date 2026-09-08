@@ -1,8 +1,10 @@
 #!/bin/bash
 # Unit V: Processes & Services — test.sh
 # Automated validation of 10 challenges
+# Standard validators: /shared/validators.sh
 
 source /shared/common.sh
+source /shared/validators.sh
 
 UNIT_NAME="unit-V"
 TOTAL_RETOS=10
@@ -10,7 +12,7 @@ TOTAL_RETOS=10
 reto1() {
     # Verificar que ps aux funciona y muestra procesos
     output=$(ps aux 2>/dev/null)
-    [ -n "$output" ]
+    assert_command_ok ps aux
     echo "$output" | grep -q "PID\|USER"
 }
 
@@ -209,3 +211,34 @@ reto10_info() {
     echo "Comando útil: systemctl list-units --type=service --state=running"
     separador
 }
+
+# ── Standalone execution mode ────────────────────────────────
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit V: Processes & Services — Retos"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    PASSED=0
+    FAILED=0
+
+    for i in $(seq 1 "$TOTAL_RETOS"); do
+        validator="${validators[$((i-1))]}"
+        name="${challenge_names[$((i-1))]}"
+
+        if $validator >/dev/null 2>&1; then
+            echo "  [PASS] Reto $i: $name"
+            PASSED=$((PASSED + 1))
+        else
+            echo "  [FAIL] Reto $i: $name"
+            FAILED=$((FAILED + 1))
+        fi
+    done
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit V Results: $PASSED/$TOTAL_RETOS passed, $FAILED failed"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    [ "$FAILED" -eq 0 ]
+fi

@@ -1,16 +1,17 @@
 #!/bin/bash
 # Unit II: Package Management — test.sh
 # Automated validation of 10 challenges
+# Standard validators: /shared/validators.sh
 
 source /shared/common.sh
+source /shared/validators.sh
 
 UNIT_NAME="unit-II"
 TOTAL_RETOS=10
-INITIAL_PACKAGE_COUNT=$(dpkg -l | grep "^ii" | wc -l)
 
 reto1() {
     # Verificar que apt-get update ejecuto correctamente
-    apt-cache policy apt >/dev/null 2>&1
+    assert_command_ok apt-cache policy apt
 }
 
 reto2() {
@@ -25,27 +26,28 @@ reto3() {
 
 reto4() {
     # Verificar que apt-cache show funciona
-    apt-cache show nginx 2>/dev/null | grep -q "^Package:"
+    assert_command_ok apt-cache show nginx
 }
 
 reto5() {
     # Verificar que apt-cache search funciona
-    apt-cache search editor 2>/dev/null | grep -q "."
+    output=$(apt-cache search editor 2>/dev/null)
+    [ -n "$output" ]
 }
 
 reto6() {
     # Verificar que dpkg -l muestra info de vim
-    dpkg -l vim 2>/dev/null | grep -q "vim"
+    assert_command_ok dpkg -l vim
 }
 
 reto7() {
     # Verificar que dpkg -L lista archivos de curl
-    dpkg -L curl 2>/dev/null | grep -q "/usr/"
+    assert_command_ok dpkg -L curl
 }
 
 reto8() {
     # Verificar que dpkg -S identifica el paquete de vim
-    dpkg -S /usr/bin/vim.basic 2>/dev/null | grep -q "vim"
+    assert_command_ok dpkg -S /usr/bin/vim.basic
 }
 
 reto9() {
@@ -56,11 +58,9 @@ reto9() {
 reto10() {
     # Verificar que curl fue eliminado completamente
     ! dpkg -l curl 2>/dev/null | grep -q "^ii"
-    # Verificar que no queda configuracion
     [ ! -d /etc/curl ] 2>/dev/null
 }
 
-# Array de funciones de evaluacion
 validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10)
 challenge_names=(
     "Actualizar repositorios"
@@ -164,3 +164,34 @@ reto10_info() {
     echo "Comando útil: sudo apt-get purge curl"
     separador
 }
+
+# ── Standalone execution mode ────────────────────────────────
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit II: Package Management — Retos"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    PASSED=0
+    FAILED=0
+
+    for i in $(seq 1 "$TOTAL_RETOS"); do
+        validator="${validators[$((i-1))]}"
+        name="${challenge_names[$((i-1))]}"
+
+        if $validator >/dev/null 2>&1; then
+            echo "  [PASS] Reto $i: $name"
+            PASSED=$((PASSED + 1))
+        else
+            echo "  [FAIL] Reto $i: $name"
+            FAILED=$((FAILED + 1))
+        fi
+    done
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit II Results: $PASSED/$TOTAL_RETOS passed, $FAILED failed"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    [ "$FAILED" -eq 0 ]
+fi
