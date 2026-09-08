@@ -1,7 +1,7 @@
 #!/bin/bash
 # Funciones de evaluacion y progreso
-STATE_DIR="/var/lab-state"
-PROGRESS_FILE="${STATE_DIR}/progress"
+STATE_DIR="${STATE_DIR:=/var/lab-state}"
+PROGRESS_FILE="${PROGRESS_FILE:=${STATE_DIR}/progress}"
 OLD_PROGRESS_FILE="${HOME}/.lab_state/progress"
 
 init_state() {
