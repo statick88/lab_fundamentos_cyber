@@ -36,5 +36,23 @@ PASS_MIN_DAYS 1
 PASS_WARN_AGE 14
 LOGINDEFS
 
-exito "Entorno de Unit III preparado con 5 retos"
+# Reto 1: Crear grupo y usuario (scaffolding)
+cat > crear_grupo_usuario.sh << 'EOF'
+#!/bin/bash
+# Reto 1: Crear un grupo y un usuario — completa la implementación
+echo " Este script debe crear un grupo y usuario de laboratorio"
+echo " Usa: groupadd, useradd, usermod"
+EOF
+chmod +x crear_grupo_usuario.sh
+
+# Reto 5: Auditoría de cuentas privilegiadas (scaffolding)
+cat > audit_privileged.sh << 'EOF'
+#!/bin/bash
+# Reto 5: Auditar cuentas con privilegios — completa la implementación
+echo " Este script debe listar cuentas con UID 0, membretes sudo, etc."
+echo " Usa: getent passwd, getent group"
+EOF
+chmod +x audit_privileged.sh
+
+exito "Entorno de Unit III-IAM-MFA preparado con 5 retos"
 echo -e "${AMARILLO}Escribe ${CYAN}'manual'${AMARILLO} para ver la guía o ${CYAN}'evaluar'${AMARILLO} para evaluar.${RESET}"

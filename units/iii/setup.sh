@@ -7,12 +7,12 @@ source /shared/common.sh
 
 UNIT_NAME="unit-III"
 UNIT_NUM=3
-export TOTAL_RETOS=10
+export TOTAL_RETOS=15
 
 banner_unidad "$UNIT_NUM" "Scripting en Shell"
 
 echo -e "${CYAN}Esta unidad ensena los fundamentos del scripting en Bash.${RESET}"
-echo -e "${AMARILLO}Completarás 10 retos progresivos.${RESET}\n"
+echo -e "${AMARILLO}Completarás 15 retos progresivos.${RESET}\n"
 
 mkdir -p "$HOME/laboratorio/shell"
 cd "$HOME/laboratorio/shell"
@@ -186,5 +186,103 @@ chmod +x verificar_archivo.sh
 EOF
 chmod +x reto10.sh
 
-exito "Entorno de Unit III preparado con 10 retos"
+# Reto 11: Hash SHA-256 de un archivo
+cat > reto11.sh << 'EOF'
+#!/bin/bash
+# Reto 11: Generar hash SHA-256 de un archivo
+cat > hash_archivo.sh << 'INNER'
+#!/bin/bash
+if [ $# -eq 0 ]; then
+    echo "Uso: ./hash_archivo.sh archivo"
+    exit 1
+fi
+sha256sum "$1"
+INNER
+chmod +x hash_archivo.sh
+EOF
+chmod +x reto11.sh
+
+# Reto 12: Hash SHA-3 con openssl
+cat > reto12.sh << 'EOF'
+#!/bin/bash
+# Reto 12: Generar hash SHA-3 con openssl
+cat > hash_sha3.sh << 'INNER'
+#!/bin/bash
+if [ $# -eq 0 ]; then
+    echo "Uso: ./hash_sha3.sh archivo"
+    exit 1
+fi
+openssl dgst -sha3-256 "$1"
+INNER
+chmod +x hash_sha3.sh
+EOF
+chmod +x reto12.sh
+
+# Reto 13: Comparar hashes
+cat > reto13.sh << 'EOF'
+#!/bin/bash
+# Reto 13: Comparar dos hashes para verificar si son iguales
+cat > comparar_hashes.sh << 'INNER'
+#!/bin/bash
+if [ $# -lt 2 ]; then
+    echo "Uso: ./comparar_hashes.sh archivo1 archivo2"
+    exit 1
+fi
+hash1=$(sha256sum "$1" | awk '{print $1}')
+hash2=$(sha256sum "$2" | awk '{print $1}')
+if [ "$hash1" = "$hash2" ]; then
+    echo "Los hashes son iguales: integridad verificada"
+else
+    echo "Los hashes son diferentes: archivos distintos"
+fi
+INNER
+chmod +x comparar_hashes.sh
+EOF
+chmod +x reto13.sh
+
+# Reto 14: Firmar y verificar archivo
+cat > reto14.sh << 'EOF'
+#!/bin/bash
+# Reto 14: Firmar un archivo con SHA-256 y verificar la firma
+cat > firmar_verificar.sh << 'INNER'
+#!/bin/bash
+if [ $# -eq 0 ]; then
+    echo "Uso: ./firmar_verificar.sh archivo"
+    exit 1
+fi
+ARCHIVO="$1"
+openssl genrsa -out clave_privada.pem 2048 2>/dev/null
+openssl rsa -in clave_privada.pem -pubout -out clave_publica.pem 2>/dev/null
+openssl dgst -sha256 -sign clave_privada.pem -out firma.sig "$ARCHIVO"
+echo "Firma creada: firma.sig"
+openssl dgst -sha256 -verify clave_publica.pem -signature firma.sig "$ARCHIVO"
+INNER
+chmod +x firmar_verificar.sh
+EOF
+chmod +x reto14.sh
+
+# Reto 15: Verificar integridad de un archivo
+cat > reto15.sh << 'EOF'
+#!/bin/bash
+# Reto 15: Verificar integridad de un archivo contra un hash esperado
+cat > verificar_integridad.sh << 'INNER'
+#!/bin/bash
+if [ $# -lt 2 ]; then
+    echo "Uso: ./verificar_integridad.sh archivo hash_esperado"
+    exit 1
+fi
+ARCHIVO="$1"
+HASH_Esperado="$2"
+HASH_Real=$(sha256sum "$ARCHIVO" | awk '{print $1}')
+if [ "$HASH_Real" = "$HASH_Esperado" ]; then
+    echo "Integridad verificada: OK"
+else
+    echo "Integridad fallida: el archivo ha sido modificado"
+fi
+INNER
+chmod +x verificar_integridad.sh
+EOF
+chmod +x reto15.sh
+
+exito "Entorno de Unit III preparado con 15 retos"
 echo -e "${AMARILLO}Escribe ${CYAN}'manual'${AMARILLO} para ver las instrucciones o ${CYAN}'evaluar'${AMARILLO} para evaluar.${RESET}"

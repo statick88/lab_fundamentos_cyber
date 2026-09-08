@@ -220,3 +220,37 @@ reto10_info() {
     echo "  tcpdump -nn -r captura_scan.pcapng"
     separador
 }
+
+# ── Standalone execution mode ────────────────────────────────
+# When invoked directly (not sourced), run all validators and report results.
+# This enables: bash test.sh | ./test.sh | validate-m4-m6-labs.sh sourcing.
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit II: Filtrado de Red y Firewalls — Retos"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    PASSED=0
+    FAILED=0
+
+    for i in $(seq 1 "$TOTAL_RETOS"); do
+        validator="${validators[$((i-1))]}"
+        name="${challenge_names[$((i-1))]}"
+        icon="${ICONOS[$((i-1))]}"
+
+        if $validator >/dev/null 2>&1; then
+            echo "  [PASS] Reto $i: $name $icon"
+            PASSED=$((PASSED + 1))
+        else
+            echo "  [FAIL] Reto $i: $name"
+            FAILED=$((FAILED + 1))
+        fi
+    done
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit II Results: $PASSED/$TOTAL_RETOS passed, $FAILED failed"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    [ "$FAILED" -eq 0 ]
+fi

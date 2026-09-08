@@ -1,11 +1,11 @@
 #!/bin/bash
 # Unit III: Shell Scripting — test.sh
-# Automated validation of 10 challenges
+# Automated validation of 15 challenges
 
 source /shared/common.sh
 
 UNIT_NAME="unit-III"
-TOTAL_RETOS=10
+TOTAL_RETOS=15
 
 reto1() {
     # Verificar que saludar.sh existe y es ejecutable
@@ -84,19 +84,37 @@ reto10() {
     echo "$output" | grep -q "no existe"
 }
 
-validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10)
-challenge_names=(
-    "Crear primer script"
-    "Variables y entrada"
-    "Condicionales if/else"
-    "Bucle for"
-    "Bucle while"
-    "Funciones"
-    "Arrays"
-    "Argumentos de linea"
-    "Redireccion de salida"
-    "Manejo de errores"
-)
+reto11() {
+    [ -f "$HOME/laboratorio/shell/hash_archivo.sh" ] && [ -x "$HOME/laboratorio/shell/hash_archivo.sh" ]
+    output=$(cd "$HOME/laboratorio/shell" && ./hash_archivo.sh 2>&1)
+    echo "$output" | grep -qi "sha256\|hash"
+}
+
+reto12() {
+    [ -f "$HOME/laboratorio/shell/hash_sha3.sh" ] && [ -x "$HOME/laboratorio/shell/hash_sha3.sh" ]
+    output=$(cd "$HOME/laboratorio/shell" && ./hash_sha3.sh 2>&1)
+    echo "$output" | grep -qi "sha3\|sha-3\|openssl"
+}
+
+reto13() {
+    [ -f "$HOME/laboratorio/shell/comparar_hashes.sh" ] && [ -x "$HOME/laboratorio/shell/comparar_hashes.sh" ]
+    output=$(cd "$HOME/laboratorio/shell" && ./comparar_hashes.sh 2>&1)
+    echo "$output" | grep -qi "igual\|diferente\|match"
+}
+
+reto14() {
+    [ -f "$HOME/laboratorio/shell/firmar_verificar.sh" ] && [ -x "$HOME/laboratorio/shell/firmar_verificar.sh" ]
+    output=$(cd "$HOME/laboratorio/shell" && ./firmar_verificar.sh 2>&1)
+    echo "$output" | grep -qi "firma\|verif"
+}
+
+reto15() {
+    [ -f "$HOME/laboratorio/shell/verificar_integridad.sh" ] && [ -x "$HOME/laboratorio/shell/verificar_integridad.sh" ]
+    output=$(cd "$HOME/laboratorio/shell" && ./verificar_integridad.sh 2>&1)
+    echo "$output" | grep -qi "integridad\|ok\|válido\|valido"
+}
+
+validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10 reto11 reto12 reto13 reto14 reto15)
 
 reto1_info() {
     separador
@@ -325,37 +343,6 @@ reto10_info() {
     separador
 }
 
-reto11() {
-    [ -f "$HOME/laboratorio/shell/hash_archivo.sh" ] && [ -x "$HOME/laboratorio/shell/hash_archivo.sh" ]
-    output=$(cd "$HOME/laboratorio/shell" && ./hash_archivo.sh 2>&1)
-    echo "$output" | grep -qi "sha256"
-}
-
-reto12() {
-    [ -f "$HOME/laboratorio/shell/hash_sha3.sh" ] && [ -x "$HOME/laboratorio/shell/hash_sha3.sh" ]
-    output=$(cd "$HOME/laboratorio/shell" && ./hash_sha3.sh 2>&1)
-    echo "$output" | grep -qi "sha3\|sha-3"
-}
-
-reto13() {
-    [ -f "$HOME/laboratorio/shell/comparar_hashes.sh" ] && [ -x "$HOME/laboratorio/shell/comparar_hashes.sh" ]
-    output=$(cd "$HOME/laboratorio/shell" && ./comparar_hashes.sh 2>&1)
-    echo "$output" | grep -qi "igual\|diferente\|match"
-}
-
-reto14() {
-    [ -f "$HOME/laboratorio/shell/firmar_verificar.sh" ] && [ -x "$HOME/laboratorio/shell/firmar_verificar.sh" ]
-    output=$(cd "$HOME/laboratorio/shell" && ./firmar_verificar.sh 2>&1)
-    echo "$output" | grep -qi "firma\|verif"
-}
-
-reto15() {
-    [ -f "$HOME/laboratorio/shell/verificar_integridad.sh" ] && [ -x "$HOME/laboratorio/shell/verificar_integridad.sh" ]
-    output=$(cd "$HOME/laboratorio/shell" && ./verificar_integridad.sh 2>&1)
-    echo "$output" | grep -qi "integridad\|ok\|válido\|valido"
-}
-
-validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10 reto11 reto12 reto13 reto14 reto15)
 challenge_names=(
     "Crear primer script"
     "Variables y entrada"
@@ -438,3 +425,37 @@ reto15_info() {
     echo "  echo \"hash_esperado archivo.txt\" | sha256sum -c -"
     separador
 }
+
+# ── Standalone execution mode ────────────────────────────────
+# When invoked directly (not sourced), run all validators and report results.
+# This enables: bash test.sh | ./test.sh | validate-m4-m6-labs.sh sourcing.
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit III: Shell Scripting — Retos"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    PASSED=0
+    FAILED=0
+
+    for i in $(seq 1 "$TOTAL_RETOS"); do
+        validator="${validators[$((i-1))]}"
+        name="${challenge_names[$((i-1))]}"
+        icon="${ICONOS[$((i-1))]}"
+
+        if $validator >/dev/null 2>&1; then
+            echo "  [PASS] Reto $i: $name $icon"
+            PASSED=$((PASSED + 1))
+        else
+            echo "  [FAIL] Reto $i: $name"
+            FAILED=$((FAILED + 1))
+        fi
+    done
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit III Results: $PASSED/$TOTAL_RETOS passed, $FAILED failed"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    [ "$FAILED" -eq 0 ]
+fi
