@@ -203,12 +203,44 @@ lab-linux/
 │   └── checkpoint-v/       # Checkpoint Módulo V (5 retos, CORE)
 ├── GUIA_DOCENTE_LAB.md     # Guía para el docente
 ├── ESPECIFICACION_CIBERSEGURIDAD.md # Especificación detallada
+├── GUIA_INCIDENCIAS_ESTUDIANTES.md # Guía de gestión de incidencias
+├── content/
+│   └── ebook-guia/         # Ebook interactivo (Quarto)
+│       ├── index.qmd       # Índice principal
+│       ├── modulo-01-*.qmd  # Módulos 1-6
+│       └── ...
 └── README.md               # Este archivo
 ```
+
+## Ebook interactivo: Fundamentos de Ciberseguridad
+
+Guía de laboratorio paso a paso en formato Quarto HTML, alineada con las 18 unidades del contenedor.
+
+```bash
+# Renderizar el ebook (requiere Quarto)
+quarto render content/ebook-guia/
+
+# Abrir en navegador
+open content/ebook-guia/index.html
+```
+
+El ebook cubre 6 módulos temáticos:
+
+| Módulo | Contenido | Archivo |
+|--------|-----------|---------|
+| 1 | Principios y Gestión de Riesgo | `modulo-01-principios-riesgo.qmd` |
+| 2 | Redes, Firewalls y Servicios | `modulo-02-redes-firewalls.qmd` |
+| 3 | Scripting y Control de Acceso | `modulo-03-scripting-acceso.qmd` |
+| 4 | Docker y Contenedores | `modulo-04-docker-contenedores.qmd` |
+| 5 | Wargames y Ataques Controlados | `modulo-05-wargames.qmd` |
+| 6 | Logging, SIEM y BCP | `modulo-06-logging-siem-bcp.qmd` |
+
+Cada módulo incluye ejercicios prácticos con evidencia, advertencias de seguridad, notas del instructor y checklist de autoevaluación.
 
 ## Novedades v2.0
 
 - **Alineación curricular ABC-CYB-101**: 18 unidades organizadas en 5 módulos
+- **Ebook interactivo**: 6 módulos en Quarto con ejercicios, evidencias y checklist
 - **Nuevas unidades**: Firewalls, IAM/MFA, Criptografía/CVSS, Logging/SIEM/BCP
 - **Checkpoints**: Evaluaciones formativas automáticas por módulo
 - **Hardening CIS**: Referencias a CIS Benchmarks en unidad VII

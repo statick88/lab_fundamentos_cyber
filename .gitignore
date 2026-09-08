@@ -23,6 +23,13 @@ Thumbs.db
 *.swo
 *~
 
+# CodeGraph
+.codegraph/
+
+# Python
+__pycache__/
+*.pyc
+
 # Environment
 .env
 .env.local
