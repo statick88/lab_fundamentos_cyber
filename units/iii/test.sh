@@ -1,115 +1,103 @@
 #!/bin/bash
 # Unit III: Shell Scripting — test.sh
 # Automated validation of 15 challenges
+# Standard validators: /shared/validators.sh
 
 source /shared/common.sh
+source /shared/validators.sh
 
 UNIT_NAME="unit-III"
 TOTAL_RETOS=15
 
 reto1() {
-    # Verificar que saludar.sh existe y es ejecutable
-    [ -x "$HOME/laboratorio/shell/saludar.sh" ]
-    # Verificar que imprime algo
+    assert_file_exists "$HOME/laboratorio/shell/saludar.sh"
     output=$(cd "$HOME/laboratorio/shell" && ./saludar.sh 2>&1)
     [ -n "$output" ]
 }
 
 reto2() {
-    # Verificar que pedir_nombre.sh existe
-    [ -x "$HOME/laboratorio/shell/pedir_nombre.sh" ]
-    # Verificar que usa read
-    grep -q "read" "$HOME/laboratorio/shell/pedir_nombre.sh"
+    assert_file_exists "$HOME/laboratorio/shell/pedir_nombre.sh"
+    assert_file_contains "$HOME/laboratorio/shell/pedir_nombre.sh" "read"
 }
 
 reto3() {
-    # Verificar que par_o_impar.sh existe y usa if
-    [ -x "$HOME/laboratorio/shell/par_o_impar.sh" ]
-    grep -q "if" "$HOME/laboratorio/shell/par_o_impar.sh"
+    assert_file_exists "$HOME/laboratorio/shell/par_o_impar.sh"
+    assert_file_contains "$HOME/laboratorio/shell/par_o_impar.sh" "if"
 }
 
 reto4() {
-    # Verificar que contar.sh existe y usa for
-    [ -x "$HOME/laboratorio/shell/contar.sh" ]
-    grep -q "for" "$HOME/laboratorio/shell/contar.sh"
-    # Verificar que imprima numeros
+    assert_file_exists "$HOME/laboratorio/shell/contar.sh"
+    assert_file_contains "$HOME/laboratorio/shell/contar.sh" "for"
     output=$(cd "$HOME/laboratorio/shell" && ./contar.sh 2>&1)
     echo "$output" | grep -q "Numero: 1"
 }
 
 reto5() {
-    # Verificar que contar_while.sh existe y usa while
-    [ -x "$HOME/laboratorio/shell/contar_while.sh" ]
-    grep -q "while" "$HOME/laboratorio/shell/contar_while.sh"
+    assert_file_exists "$HOME/laboratorio/shell/contar_while.sh"
+    assert_file_contains "$HOME/laboratorio/shell/contar_while.sh" "while"
 }
 
 reto6() {
-    # Verificar que sumar.sh existe y define una funcion
-    [ -x "$HOME/laboratorio/shell/sumar.sh" ]
-    grep -q "sumar()" "$HOME/laboratorio/shell/sumar.sh"
-    # Verificar que funcione
+    assert_file_exists "$HOME/laboratorio/shell/sumar.sh"
+    assert_file_contains "$HOME/laboratorio/shell/sumar.sh" "sumar()"
     output=$(cd "$HOME/laboratorio/shell" && ./sumar.sh 2>&1)
     echo "$output" | grep -q "8"
 }
 
 reto7() {
-    # Verificar que frutas.sh existe y usa arrays
-    [ -x "$HOME/laboratorio/shell/frutas.sh" ]
-    grep -q "manzana" "$HOME/laboratorio/shell/frutas.sh"
+    assert_file_exists "$HOME/laboratorio/shell/frutas.sh"
+    assert_file_contains "$HOME/laboratorio/shell/frutas.sh" "manzana"
     output=$(cd "$HOME/laboratorio/shell" && ./frutas.sh 2>&1)
     echo "$output" | grep -q "manzana"
 }
 
 reto8() {
-    # Verificar que saludo.sh existe y usa $1
-    [ -x "$HOME/laboratorio/shell/saludo.sh" ]
-    grep -q '\$1' "$HOME/laboratorio/shell/saludo.sh"
+    assert_file_exists "$HOME/laboratorio/shell/saludo.sh"
+    assert_file_contains "$HOME/laboratorio/shell/saludo.sh" '$1'
     output=$(cd "$HOME/laboratorio/shell" && ./saludo.sh Test 2>&1)
     echo "$output" | grep -q "Test"
 }
 
 reto9() {
-    # Verificar que registrar.sh existe y crea registro.txt
-    [ -x "$HOME/laboratorio/shell/registrar.sh" ]
+    assert_file_exists "$HOME/laboratorio/shell/registrar.sh"
     output=$(cd "$HOME/laboratorio/shell" && ./registrar.sh 2>&1)
     [ -f "$HOME/laboratorio/shell/registro.txt" ]
-    grep -q "Fecha" "$HOME/laboratorio/shell/registro.txt"
+    assert_file_contains "$HOME/laboratorio/shell/registro.txt" "Fecha"
 }
 
 reto10() {
-    # Verificar que verificar_archivo.sh existe y maneja errores
-    [ -x "$HOME/laboratorio/shell/verificar_archivo.sh" ]
-    grep -q "\-f" "$HOME/laboratorio/shell/verificar_archivo.sh"
+    assert_file_exists "$HOME/laboratorio/shell/verificar_archivo.sh"
+    assert_file_contains "$HOME/laboratorio/shell/verificar_archivo.sh" "-f"
     output=$(cd "$HOME/laboratorio/shell" && ./verificar_archivo.sh archivo_inexistente.txt 2>&1)
     echo "$output" | grep -q "no existe"
 }
 
 reto11() {
-    [ -f "$HOME/laboratorio/shell/hash_archivo.sh" ] && [ -x "$HOME/laboratorio/shell/hash_archivo.sh" ]
+    assert_file_exists "$HOME/laboratorio/shell/hash_archivo.sh"
     output=$(cd "$HOME/laboratorio/shell" && ./hash_archivo.sh 2>&1)
     echo "$output" | grep -qi "sha256\|hash"
 }
 
 reto12() {
-    [ -f "$HOME/laboratorio/shell/hash_sha3.sh" ] && [ -x "$HOME/laboratorio/shell/hash_sha3.sh" ]
+    assert_file_exists "$HOME/laboratorio/shell/hash_sha3.sh"
     output=$(cd "$HOME/laboratorio/shell" && ./hash_sha3.sh 2>&1)
     echo "$output" | grep -qi "sha3\|sha-3\|openssl"
 }
 
 reto13() {
-    [ -f "$HOME/laboratorio/shell/comparar_hashes.sh" ] && [ -x "$HOME/laboratorio/shell/comparar_hashes.sh" ]
+    assert_file_exists "$HOME/laboratorio/shell/comparar_hashes.sh"
     output=$(cd "$HOME/laboratorio/shell" && ./comparar_hashes.sh 2>&1)
     echo "$output" | grep -qi "igual\|diferente\|match"
 }
 
 reto14() {
-    [ -f "$HOME/laboratorio/shell/firmar_verificar.sh" ] && [ -x "$HOME/laboratorio/shell/firmar_verificar.sh" ]
+    assert_file_exists "$HOME/laboratorio/shell/firmar_verificar.sh"
     output=$(cd "$HOME/laboratorio/shell" && ./firmar_verificar.sh 2>&1)
     echo "$output" | grep -qi "firma\|verif"
 }
 
 reto15() {
-    [ -f "$HOME/laboratorio/shell/verificar_integridad.sh" ] && [ -x "$HOME/laboratorio/shell/verificar_integridad.sh" ]
+    assert_file_exists "$HOME/laboratorio/shell/verificar_integridad.sh"
     output=$(cd "$HOME/laboratorio/shell" && ./verificar_integridad.sh 2>&1)
     echo "$output" | grep -qi "integridad\|ok\|válido\|valido"
 }
