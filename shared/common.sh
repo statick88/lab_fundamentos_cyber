@@ -4,7 +4,7 @@ COURSE_DIR="/shared"
 source "${COURSE_DIR}/colors.sh"
 source "${COURSE_DIR}/eval.sh"
 source "${COURSE_DIR}/metrics.sh" 2>/dev/null || true
-source "${COURSE_DIR}/units_manifest.sh"
+source "${COURSE_DIR}/units_manifest.sh" 2>/dev/null || true
 source "${COURSE_DIR}/menu.sh"
 source "${COURSE_DIR}/banner.sh"
 init_state

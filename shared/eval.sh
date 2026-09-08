@@ -1,23 +1,16 @@
 #!/bin/bash
 # Funciones de evaluacion y progreso
-STATE_DIR="${STATE_DIR:=/var/lab-state}"
+STATE_DIR="${STATE_DIR:=${HOME}/.lab-state}"
 PROGRESS_FILE="${PROGRESS_FILE:=${STATE_DIR}/progress}"
 OLD_PROGRESS_FILE="${HOME}/.lab_state/progress"
 
 init_state() {
-    if [ ! -d "$STATE_DIR" ]; then
-        mkdir -p "$STATE_DIR" 2>/dev/null || true
-        chown root:sudo "$STATE_DIR" 2>/dev/null || true
-        chmod 0770 "$STATE_DIR" 2>/dev/null || true
-    fi
-    if [ ! -f "$PROGRESS_FILE" ]; then
-        touch "$PROGRESS_FILE" 2>/dev/null || true
-        chown root:sudo "$PROGRESS_FILE" 2>/dev/null || true
-        chmod 0660 "$PROGRESS_FILE" 2>/dev/null || true
-    fi
+    mkdir -p "$STATE_DIR" 2>/dev/null || true
+    touch "$PROGRESS_FILE" 2>/dev/null || true
+    chmod 0770 "$STATE_DIR" 2>/dev/null || true
+    chmod 0660 "$PROGRESS_FILE" 2>/dev/null || true
     if [ -f "$OLD_PROGRESS_FILE" ] && [ ! -s "$PROGRESS_FILE" ]; then
         cp "$OLD_PROGRESS_FILE" "$PROGRESS_FILE" 2>/dev/null || true
-        chown root:sudo "$PROGRESS_FILE" 2>/dev/null || true
         chmod 0660 "$PROGRESS_FILE" 2>/dev/null || true
         rm -f "$OLD_PROGRESS_FILE" 2>/dev/null || true
     fi
@@ -277,3 +270,6 @@ celebrar() {
     echo "║   🎉  $1"
     echo -e "╚══════════════════════════════════════════════════╝${RESET}"
 }
+
+# Auto-initialize state directory when sourced
+init_state
