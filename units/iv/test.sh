@@ -1,25 +1,27 @@
 #!/bin/bash
 # Unit IV: User Management — test.sh
 # Automated validation of 10 challenges
+# System-Bound unit: uses /shared/sudo-wrappers.sh for privileged assertions
 
 source /shared/common.sh
+source /shared/sudo-wrappers.sh
 
 UNIT_NAME="unit-IV"
 TOTAL_RETOS=10
 
 reto1() {
     # Verificar que el usuario practicante existe
-    id practicante >/dev/null 2>&1
+    assert_user_exists practicante
 }
 
 reto2() {
     # Verificar que el grupo desarrolladores existe
-    getent group desarrolladores >/dev/null 2>&1
+    assert_group_exists desarrolladores
 }
 
 reto3() {
     # Verificar que practicante esta en el grupo desarrolladores
-    groups practicante 2>/dev/null | grep -q "desarrolladores"
+    assert_user_in_group practicante desarrolladores
 }
 
 reto4() {
@@ -35,13 +37,13 @@ reto5() {
 reto6() {
     # Verificar que el directorio home existe y tiene ownership correcto
     [ -d "/home/practicante" ]
-    ls -la /home/practicante | grep -q "practicante"
+    assert_file_owner "/home/practicante" "practicante"
 }
 
 reto7() {
     # Verificar que el archivo tiene el propietario correcto
     [ -f "/tmp/archivo_practicante.txt" ]
-    ls -la /tmp/archivo_practicante.txt | grep -q "practicante"
+    assert_file_owner "/tmp/archivo_practicante.txt" "practicante"
 }
 
 reto8() {
@@ -178,3 +180,34 @@ reto10_info() {
     echo "Verificacion: getent group desarrolladores"
     separador
 }
+
+# ── Standalone execution mode ────────────────────────────────
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit IV: User Management — Retos"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    PASSED=0
+    FAILED=0
+
+    for i in $(seq 1 "$TOTAL_RETOS"); do
+        validator="${validators[$((i-1))]}"
+        name="${challenge_names[$((i-1))]}"
+
+        if $validator >/dev/null 2>&1; then
+            echo "  [PASS] Reto $i: $name"
+            PASSED=$((PASSED + 1))
+        else
+            echo "  [FAIL] Reto $i: $name"
+            FAILED=$((FAILED + 1))
+        fi
+    done
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit IV Results: $PASSED/$TOTAL_RETOS passed, $FAILED failed"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    [ "$FAILED" -eq 0 ]
+fi

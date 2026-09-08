@@ -24,6 +24,7 @@ Se estandarizó la lógica de aserciones de `test.sh` bajo un contrato común y 
 ## Helpers disponibles
 
 ```bash
+# Validadores estándar (sin sudo)
 source /shared/validators.sh
 
 assert_file_exists <ruta>
@@ -31,6 +32,17 @@ assert_file_contains <archivo> <patrón>
 assert_command_ok <comando> [args...]
 assert_openssl_chain <cert> <ca>
 assert_openssl_subject_matches <cert> <patrón>
+
+# Wrappers System-Bound (con sudo controlado)
+source /shared/sudo-wrappers.sh
+
+assert_sudo_ok <comando> [args...]
+assert_file_owner <ruta> <usuario_esperado>
+assert_mount_active <mountpoint>
+assert_ufw_active
+assert_user_exists <usuario>
+assert_group_exists <grupo>
+assert_user_in_group <usuario> <grupo>
 ```
 
 ## Ejemplo de uso
@@ -61,6 +73,13 @@ reto15() {
 - **Unit XI** (Backup & Recovery) — 10/10 PASS
 - **Unit II** (Package Management) — 9/10 PASS — baseline: reto 9 requiere vim eliminado
 - **Unit V** (Processes & Services) — 10/10 PASS
+
+## Unidades System-Bound (piloto completado)
+
+- **Unit IV** (User Management) — **Piloto System-Bound** — wrappers aplicados: `assert_user_exists`, `assert_group_exists`, `assert_user_in_group`, `assert_file_owner`
+- **Unit VI** (Storage Management) — pendiente de migración con `assert_mount_active`
+- **Unit VII** (Security Hardening) — pendiente de migración con `assert_ufw_active`
+- **Unit VIII** (Docker) — fuera de scope (Docker daemon)
 
 ## Auditoría de privilegios por unidad
 
@@ -102,17 +121,16 @@ reto15() {
 
 ## Próximas unidades
 
-### Candidatas a migración estándar (inmediatas)
+### Pendientes de migración estándar (candidatas)
 
-- **Unit II** (Package Management) — reemplazar dpkg/apt-cache checks por helpers
-- **Unit V** (Processes & Services) — mantener systemctl como `assert_command_ok` con fallback
+- Unit I — pendiente de análisis
 
-### System-Bound (requiere arquitectura específica)
+### System-Bound (piloto completado, wrappers disponibles)
 
-- **Unit IV** (User Management) — `useradd`, `groupadd`, `/etc/passwd` (diseño inherente)
-- **Unit VI** (Storage Management) — `mkfs.ext4`, `mount/umount`, loop devices
-- **Unit VII** (Security Hardening) — `/etc/sudoers`, `ufw/iptables`, auth logs
-- **Unit VIII** (Docker) — Docker daemon socket
+- **Unit IV** — Piloto completado ✅ — wrappers aplicados
+- **Unit VI** — siguiente: aplicar `assert_mount_active`
+- **Unit VII** — siguiente: aplicar `assert_ufw_active`, `assert_file_contains` para `/etc/ssh/sshd_config`
+- **Unit VIII** — fuera de scope (Docker daemon)
 
 ## Propuesta arquitectónica para System-Bound
 
