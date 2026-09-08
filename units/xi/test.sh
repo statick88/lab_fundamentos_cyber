@@ -1,20 +1,24 @@
 #!/bin/bash
 # Unit XI: Backup & Recovery — test.sh
 # Automated validation of 10 challenges
+# Standard validators: /shared/validators.sh
 
 source /shared/common.sh
+source /shared/validators.sh
 
 UNIT_NAME="unit-XI"
 TOTAL_RETOS=10
 
 reto1() {
-    which tar && which gzip && which rsync
+    assert_command_ok which tar
+    assert_command_ok which gzip
+    assert_command_ok which rsync
 }
 
 reto2() {
     cd "$HOME/laboratorio/backup" 2>/dev/null || cd ~
     tar -czf backup_test.tar.gz datos/ 2>/dev/null
-    [ -f backup_test.tar.gz ]
+    assert_file_exists "$HOME/laboratorio/backup/backup_test.tar.gz"
 }
 
 reto3() {
@@ -29,14 +33,14 @@ reto4() {
     tar -czf backup_test.tar.gz datos/ 2>/dev/null
     mkdir -p restaurado
     tar -xzf backup_test.tar.gz -C restaurado/ 2>/dev/null
-    [ -d restaurado/datos ]
+    [ -d "restaurado/datos" ]
 }
 
 reto5() {
     cd "$HOME/laboratorio/backup" 2>/dev/null || cd ~
     tar -czf backup_full.tar.gz datos/ 2>/dev/null
     touch backup_inc.tar.gz  # Simular incremental
-    [ -f backup_full.tar.gz ]
+    assert_file_exists "$HOME/laboratorio/backup/backup_full.tar.gz"
 }
 
 reto6() {
@@ -49,7 +53,7 @@ reto7() {
     cd "$HOME/laboratorio/backup" 2>/dev/null || cd ~
     tar -czf backup_test.tar.gz datos/ 2>/dev/null
     sha256sum backup_test.tar.gz > backup_test.tar.gz.sha256 2>/dev/null
-    [ -f backup_test.tar.gz.sha256 ]
+    assert_file_exists "$HOME/laboratorio/backup/backup_test.tar.gz.sha256"
 }
 
 reto8() {
@@ -57,7 +61,7 @@ reto8() {
     mkdir -p backup_config
     cp /etc/hosts backup_config/ 2>/dev/null
     tar -czf backup_config_test.tar.gz backup_config/ 2>/dev/null
-    [ -f backup_config_test.tar.gz ]
+    assert_file_exists "$HOME/laboratorio/backup/backup_config_test.tar.gz"
 }
 
 reto9() {
@@ -68,7 +72,8 @@ DATE=$(date +%Y%m%d_%H%M%S)
 echo "Backup ejecutado: ${DATE}"
 BACKUP
     chmod +x backup_auto_test.sh
-    [ -f backup_auto_test.sh ] && [ -x backup_auto_test.sh ]
+    assert_file_exists "$HOME/laboratorio/backup/backup_auto_test.sh"
+    [ -x "$HOME/laboratorio/backup/backup_auto_test.sh" ]
 }
 
 reto10() {
@@ -191,3 +196,34 @@ reto10_info() {
     echo "Primero verifica con sha256sum -c, luego restaura si el checksum es OK"
     separador
 }
+
+# ── Standalone execution mode ────────────────────────────────
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit XI: Backup & Recovery — Retos"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    PASSED=0
+    FAILED=0
+
+    for i in $(seq 1 "$TOTAL_RETOS"); do
+        validator="${validators[$((i-1))]}"
+        name="${challenge_names[$((i-1))]}"
+
+        if $validator >/dev/null 2>&1; then
+            echo "  [PASS] Reto $i: $name"
+            PASSED=$((PASSED + 1))
+        else
+            echo "  [FAIL] Reto $i: $name"
+            FAILED=$((FAILED + 1))
+        fi
+    done
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit XI Results: $PASSED/$TOTAL_RETOS passed, $FAILED failed"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    [ "$FAILED" -eq 0 ]
+fi
