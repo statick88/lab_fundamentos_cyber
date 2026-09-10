@@ -1,0 +1,278 @@
+---
+title: "Módulo — Procesos y Servicios"
+author: "Diego Saavedra, Mg. Sc. | Abacom"
+format:
+  html:
+    toc: true
+    toc-location: left
+    code-fold: false
+    theme: cosmo
+---
+
+# Módulo — Procesos y Servicios
+
+---
+
+## Introducción: el sistema como organismo vivo
+
+**Un sistema Linux es un ecosistema de procesos en constante movimiento.** Cada comando que ejecutas, cada servicio en segundo plano, cada tarea programada es un proceso con su propio ciclo de vida. En ciberseguridad, entender los procesos es fundamental para detectar malware, analizar comportamiento anómalo y asegurar la integridad del sistema.
+
+En este módulo aprenderás a gestionar procesos, administrar servicios con systemd, programar tareas con cron y detectar actividad sospechosa en el sistema.
+
+::: {.note}
+**Contexto profesional:** El 60% de los incidentes de seguridad involucran procesos maliciosos. Saber listar, filtrar y matar procesos es la base del análisis forense en vivo.
+:::
+
+---
+
+## Procesos: conceptos esenciales
+
+### Tipos de procesos
+
+| Tipo | Descripción | Ejemplo |
+|------|-------------|---------|
+| **Foreground** | Interactúa con el usuario | `nano archivo.txt` |
+| **Background** | Ejecuta sin bloquear terminal | `servidor &` |
+| **Daemon** | Servicio en segundo plano | `sshd`, `nginx` |
+| **Zombie** | Terminado pero no recolectado | Estado `Z` en `ps aux` |
+
+### Comandos de procesos
+
+```bash
+# Listar todos los procesos
+ps aux                    # Formato BSD
+ps -ef                    # Formato SysV
+ps aux --sort=-%cpu       # Ordenar por CPU
+ps aux --sort=-%mem       # Ordenar por memoria
+
+# Monitor en tiempo real
+top                       # Monitor básico
+htop                      # Monitor mejorado
+
+# Información de proceso
+ps -p PID                 # Info de proceso específico
+cat /proc/PID/status      # Estado detallado
+ls -la /proc/PID/fd       # Archivos abiertos
+```
+
+### Gestión de procesos
+
+```bash
+# Ejecutar en background
+comando &
+
+# Ver procesos en background
+jobs
+
+# Traer proceso al foreground
+fg %1
+
+# Pausar proceso
+Ctrl+Z
+
+# Reanudar en background
+bg %1
+
+# Terminar proceso (SIGTERM)
+kill PID
+
+# Forzar terminación (SIGKILL)
+kill -9 PID
+
+# Matar todos los procesos con nombre
+killall nombre
+
+# Matar por patrón
+pkill patron
+```
+
+---
+
+## Servicios con systemd
+
+systemd es el sistema de inicio y gestión de servicios en Linux moderno.
+
+### Comandos esenciales
+
+```bash
+# Iniciar/detener servicio
+sudo systemctl start servicio
+sudo systemctl stop servicio
+sudo systemctl restart servicio
+sudo systemctl reload servicio   # Recargar sin cortar
+
+# Estado
+sudo systemctl status servicio
+sudo systemctl list-units        # Todos los servicios
+sudo systemctl list-units --type=service --state=failed  # Fallidos
+
+# Habilitar/deshabilitar al inicio
+sudo systemctl enable servicio
+sudo systemctl disable servicio
+
+# Ver logs de servicio
+sudo journalctl -u servicio
+sudo journalctl -u servicio --since "1 hour ago"
+```
+
+### Ejemplo: servicio de firewall
+
+```bash
+# Verificar estado de ufw
+sudo systemctl status ufw
+
+# Habilitar al inicio
+sudo systemctl enable ufw
+
+# Ver logs
+sudo journalctl -u ufw -f
+```
+
+---
+
+## Cron: tareas programadas
+
+### Formato de cron
+
+```
+┌───── minuto (0-59)
+│ ┌───── hora (0-23)
+│ │ ┌───── día (1-31)
+│ │ │ ┌───── mes (1-12)
+│ │ │ │ ┌───── día semana (0-7, 0 y 7 = domingo)
+│ │ │ │ │
+* * * * * comando
+```
+
+### Comandos esenciales
+
+```bash
+# Editar cron jobs
+crontab -e
+
+# Listar cron jobs
+crontab -l
+
+# Eliminar todos los cron jobs
+crontab -r
+
+# Ejemplos útiles
+*/5 * * * * /ruta/comando.sh          # Cada 5 minutos
+0 2 * * * /ruta/backup.sh             # A las 2:00 AM
+@reboot /ruta/inicio.sh               # Al arrancar
+```
+
+---
+
+## Detección de actividad sospechosa
+
+### Procesos maliciosos
+
+```bash
+# Ver procesos con alto CPU
+ps aux --sort=-%cpu | head -10
+
+# Ver procesos con alta memoria
+ps aux --sort=-%mem | head -10
+
+# Buscar procesos sin padre legítimo
+ps -eo pid,ppid,cmd | awk '$2 == 1 {print}'
+
+# Detectar procesos con nombres sospechosos
+ps aux | grep -E "(\.hidden|tmp|\.sh|nc |ncat|reverse)"
+```
+
+### Conexiones de red
+
+```bash
+# Ver todas las conexiones
+sudo ss -tulnp
+
+# Ver conexiones establecidas
+sudo ss -tnp state established
+
+# Ver procesos escuchando
+sudo ss -tlnp
+```
+
+### Cron jobs sospechosos
+
+```bash
+# Listar cron jobs de todos los usuarios
+for user in $(cut -d: -f1 /etc/passwd); do
+    echo "=== $user ==="
+    crontab -l -u $user 2>/dev/null
+done
+
+# Detectar scripts en /tmp
+grep -r "/tmp" /var/spool/cron/
+```
+
+---
+
+## 5.1 🎯 Ejercicio práctico: auditoría de procesos
+
+**Objetivo**: Identificar procesos del sistema, gestionar servicios y detectar actividad sospechosa.
+
+**Pasos**:
+
+1. Listar procesos del sistema:
+   ```bash
+   ps aux --sort=-%cpu | head -10
+   ```
+
+2. Identificar servicios activos:
+   ```bash
+   sudo systemctl list-units --type=service --state=running
+   ```
+
+3. Verificar servicio crítico (SSH):
+   ```bash
+   sudo systemctl status sshd
+   ```
+
+4. Detectar procesos sospechosos:
+   ```bash
+   ps aux | grep -E "(\.hidden|tmp|\.sh)"
+   ```
+
+5. Revisar cron jobs:
+   ```bash
+   crontab -l
+   sudo cat /etc/crontab
+   ```
+
+6. Ver conexiones de red activas:
+   ```bash
+   sudo ss -tulnp
+   ```
+
+**Validación**:
+
+| Prueba | Comando | Esperado |
+|--------|---------|----------|
+| Procesos listados | `ps aux` | Output con encabezados |
+| SSH activo | `systemctl status sshd` | active (running) |
+| Sin procesos sospechosos | `ps aux grep` | Solo procesos legítimos |
+| Conexiones visibles | `ss -tulnp` | Al menos SSH en :22 |
+
+---
+
+## 5.2 📋 Checklist de autoevaluación
+
+- [ ] Explicar tipos de procesos (foreground, background, daemon)
+- [ ] Listar procesos con `ps aux` y `top`
+- [ ] Matar procesos con `kill` y `killall`
+- [ ] Gestionar servicios con `systemctl`
+- [ ] Ver logs de servicio con `journalctl`
+- [ ] Programar tareas con `cron`
+- [ ] Leer formato de cron
+- [ ] Detectar procesos con alto consumo
+- [ ] Detectar procesos sospechosos
+- [ ] Verificar conexiones de red con `ss`
+
+**Criterio de aprobación**: 8/10 casillas marcadas.
+
+---
+
+*📖 Tiempo estimado: 2-3 h • 🎯 5 retos • 📝 1 proyecto*

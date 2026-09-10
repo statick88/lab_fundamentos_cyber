@@ -1,0 +1,526 @@
+---
+title: "Módulo 7 — Almacenamiento y Cifrado"
+author: "Diego Saavedra, Mg. Sc. | Abacom"
+format:
+  html:
+    toc: true
+    toc-location: left
+    code-fold: false
+    theme: cosmo
+---
+
+# Módulo 7 — Almacenamiento y Cifrado
+
+---
+
+## Introducción: el almacenamiento como superficie de ataque
+
+**El almacenamiento es el repositorio permanente de tu sistema.** Aquí residen los datos sensibles: bases de datos, claves privadas, contraseñas hasheadas, logs de auditoría, configuraciones de seguridad. Un atacante que accede a tu disco no solo roba archivos: puede modificar binarios, plantar puertas traseras y persistir en el sistema incluso después de un reinicio.
+
+En ciberseguridad, el almacenamiento se protege en tres capas:
+1. **Cifrado en reposo**: LUKS, dm-crypt — protege contra robo físico del disco.
+2. **Control de acceso**: permisos, propietarios, opciones de montaje — protege contra acceso no autorizado.
+3. **Integridad**: hashes, verificación — protege contra manipulación.
+
+En este módulo aprenderás a gestionar discos, particiones y sistemas de archivos en Linux, con especial énfasis en el **cifrado de almacenamiento** y la **protección de datos sensibles**.
+
+::: {.note}
+**Nota del instructor:** Este módulo usa dispositivos de bucle (loop devices) para crear discos virtuales a partir de archivos. Es la misma técnica que usan las máquinas virtuales y los contenedores para gestionar almacenamiento: un archivo se comporta como un disco físico. Dominar esta técnica te da control total sobre el almacenamiento sin riesgo de perder datos reales.
+:::
+
+---
+
+## Arquitectura de almacenamiento en Linux
+
+### Del hardware al filesystem: la pila completa
+
+Linux organiza el almacenamiento en capas:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   PILA DE ALMACENAMIENTO                     │
+│                                                             │
+│  Aplicación (archivos, bases de datos)                      │
+│       │                                                    │
+│       ▼                                                    │
+│  ┌──────────────┐                                           │
+│  │  Filesystem  │  ext4, xfs, btrfs, ntfs                  │
+│  └──────┬───────┘                                           │
+│         │                                                   │
+│         ▼                                                   │
+│  ┌──────────────┐                                           │
+│  │   Block      │  Asigna bloques a inodos                  │
+│  │   Layer      │                                           │
+│  └──────┬───────┘                                           │
+│         │                                                   │
+│         ▼                                                   │
+│  ┌──────────────┐                                           │
+│  │   Driver     │  Controlador de disco (SATA, NVMe, USB)  │
+│  └──────┬───────┘                                           │
+│         │                                                   │
+│         ▼                                                   │
+│  ┌──────────────┐                                           │
+│  │   Disco      │  /dev/sda, /dev/nvme0n1                  │
+│  │   Físico     │                                           │
+│  └──────────────┘                                           │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Dispositivos de bloque en Linux
+
+Linux representa todo disco como un archivo en `/dev/`:
+
+| Dispositivo | Tipo | Uso |
+|-------------|------|-----|
+| `/dev/sda` | SATA/SCSI | Disco completo |
+| `/dev/sda1` | Partición | Primera partición de sda |
+| `/dev/nvme0n1` | NVMe | Disco SSD NVMe |
+| `/dev/loop0` | Loop | Archivo como disco virtual |
+| `/dev/dm-0` | Device Mapper | LVM, cifrado LUKS |
+
+### El comando `lsblk`: tu radar de discos
+
+`lsblk` es el comando básico para visualizar la estructura de discos:
+
+```bash
+# Ver todos los dispositivos de bloque
+lsblk
+
+# Ver con tipo de filesystem
+lsblk -f
+
+# Ver árbol completo
+lsblk -t
+```
+
+Salida típica:
+```
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda      8:0    0  512G  0 disk 
+├─sda1   8:1    0  512M  0 part /boot/efi
+├─sda2   8:2    0    1T  0 part /
+└─sda3   8:3    0  511G  0 part /home
+```
+
+### La tabla de particiones: `fdisk` y `parted`
+
+Cada disco puede dividirse en particiones. `fdisk` es la herramienta clásica:
+
+```bash
+# Ver tabla de particiones de todos los discos
+sudo fdisk -l
+
+# Ver solo un disco específico
+sudo fdisk -l /dev/sda
+
+# Modo interactivo (crear/eliminar particiones)
+sudo fdisk /dev/sdb
+```
+
+Comandos en modo interactivo `fdisk`:
+- `n` → nueva partición
+- `d` → eliminar partición
+- `p` → imprimir tabla
+- `w` → escribir cambios y salir
+
+::: {.warning}
+**Advertencia:** `fdisk` modifica la tabla de particiones en memoria. Los cambios no son permanentes hasta que ejecutas `w` (write). Si sales con `q` (quit), se descartan. Nunca ejecutes `w` sin estar seguro: puedes destruir datos de un disco real.
+:::
+
+---
+
+## Sistemas de archivos: formatos y características
+
+### ¿Qué es un filesystem?
+
+Un **sistema de archivos** es la estructura que organiza datos en bloques en el disco. Define:
+- Cómo se asignan bloques a archivos
+- Cómo se almacenan nombres y permisos
+- Cómo se manejan directorios
+- Cómo se implementa el journaling (recuperación ante fallos)
+
+### Comparativa de filesystems
+
+| Filesystem | Características | Uso recomendado |
+|------------|-----------------|-----------------|
+| **ext4** | Estable, journaling, amplio soporte | Servidores, desktop |
+| **xfs** | Alto rendimiento, escalable | Big data, bases de datos |
+| **btrfs** | Snapshots, compresión, RAID | Backup, sistemas complejos |
+| **vfat** | Compatible con Windows | USB, compartir datos |
+
+### Crear un filesystem: `mkfs`
+
+`mkfs` (make filesystem) formatea una partición o archivo con un filesystem específico:
+
+```bash
+# Formatear con ext4
+sudo mkfs.ext4 /dev/sdb1
+
+# Formatear con xfs
+sudo mkfs.xfs /dev/sdb1
+
+# Formatear archivo como disco virtual (loop device)
+sudo mkfs.ext4 disco_virtual.img
+```
+
+---
+
+## Dispositivos de bucle (loop devices)
+
+### ¿Qué es un loop device?
+
+Un **dispositivo de bucle** permite tratar un archivo regular como si fuera un disco físico. Es la base de:
+- Discos virtuales en máquinas virtuales
+- Imágenes ISO montadas
+- Contenedores Docker (storage drivers)
+- Entornos de laboratorio como este curso
+
+### Crear un disco virtual paso a paso
+
+```bash
+# 1. Crear archivo vacío de 10MB
+dd if=/dev/zero of=disco.img bs=1M count=10
+
+# 2. Formatear con ext4
+sudo mkfs.ext4 disco.img
+
+# 3. Crear punto de montaje
+mkdir -p montaje
+
+# 4. Montar el disco virtual
+sudo mount disco.img montaje
+
+# 5. Verificar
+df -h montaje
+```
+
+### El comando `dd`: copiar y convertir
+
+`dd` es una herramienta de bajo nivel para copiar datos byte a byte:
+
+```bash
+# Crear disco de 10MB lleno de ceros
+dd if=/dev/zero of=disco.img bs=1M count=10
+
+# Crear disco de 100MB
+dd if=/dev/zero of=disco.img bs=1M count=100
+
+# Ver progreso (en sistemas modernos usar status=progress)
+dd if=/dev/zero of=disco.img bs=1M count=10 status=progress
+```
+
+Parámetros clave:
+- `if=` = input file (origen)
+- `of=` = output file (destino)
+- `bs=` = block size (tamaño de bloque)
+- `count=` = número de bloques a copiar
+
+---
+
+## Montaje y desmontaje
+
+### Montar sistemas de archivos
+
+El comando `mount` conecta un filesystem a un punto del árbol de directorios:
+
+```bash
+# Montar disco virtual
+sudo mount disco.img /mnt/punto
+
+# Montar con opciones específicas
+sudo mount -o ro,noexec disco.img /mnt/punto
+
+# Montar automáticamente al boot (/etc/fstab)
+echo "/dev/sdb1 /mnt/datos ext4 defaults 0 0" | sudo tee -a /etc/fstab
+```
+
+### Desmontar sistemas de archivos
+
+```bash
+# Desmontar
+sudo umount /mnt/punto
+
+# Desmontar forzado (si está ocupado)
+sudo umount -f /mnt/punto
+
+# Ver todos los montajes activos
+mount | grep ' on / '
+```
+
+### El archivo `/etc/fstab`
+
+`/etc/fstab` define los montajes permanentes del sistema:
+
+```
+# <dispositivo>  <punto_montaje>  <tipo>  <opciones>  <dump>  <pass>
+/dev/sda1       /boot/efi        vfat    defaults    0       2
+/dev/sda2       /                ext4    defaults    0       1
+/dev/sdb1       /mnt/datos       xfs     defaults    0       2
+```
+
+---
+
+## Espacio en disco y uso
+
+### `df`: espacio por filesystem
+
+```bash
+# Ver espacio en disco
+df -h
+
+# Ver inodos disponibles
+df -i
+```
+
+Salida típica:
+```
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda2       50G   30G   20G  60% /
+/dev/sda1      512M  200M  312M  40% /boot/efi
+```
+
+### `du`: uso por directorio
+
+```bash
+# Ver tamaño de un directorio
+du -sh /home/estudiante/
+
+# Ver los 10 directorios más grandes
+du -sh /home/* | sort -rh | head -10
+
+# Ver tamaño de archivos individuales
+du -h archivo.iso
+```
+
+---
+
+## Seguridad en almacenamiento
+
+### Permisos y propiedad
+
+El almacenamiento no es solo espacio: es **control de acceso**. Cada filesystem hereda el modelo de permisos de Linux:
+
+```bash
+# Ver permisos de un punto de montaje
+ls -ld /mnt/punto
+
+# Cambiar propietario
+sudo chown usuario:grupo /mnt/punto
+
+# Cambiar permisos
+sudo chmod 700 /mnt/punto
+```
+
+### Opciones de montaje seguras
+
+Las opciones de montaje pueden endurecer la seguridad:
+
+| Opción | Efecto |
+|--------|--------|
+| `noexec` | No permite ejecutar binarios |
+| `nosuid` | Ignora bits SUID/SGID |
+| `nodev` | No interpreta dispositivos |
+| `ro` | Monta solo lectura |
+| `user` | Permite montar a usuarios normales |
+
+Ejemplo de montaje seguro para `/tmp`:
+```bash
+sudo mount -o noexec,nosuid,nodev /dev/sda1 /tmp
+```
+
+### Cifrado de discos con LUKS
+
+**LUKS (Linux Unified Key Setup)** es el estándar de cifrado de discos en Linux. Protege datos en reposo: si el disco es robado, los datos son ilegibles sin la clave.
+
+```bash
+# 1. Crear disco virtual de 20MB
+dd if=/dev/zero of=disco_cifrado.img bs=1M count=20
+
+# 2. Inicializar LUKS
+sudo cryptsetup luksFormat disco_cifrado.img
+
+# 3. Abrir contenedor LUKS (crea /dev/mapper/disco_seguro)
+sudo cryptsetup open disco_cifrado.img disco_seguro
+
+# 4. Formatear el dispositivo mapeado
+sudo mkfs.ext4 /dev/mapper/disco_seguro
+
+# 5. Montar
+sudo mkdir -p /mnt/seguro
+sudo mount /dev/mapper/disco_seguro /mnt/seguro
+
+# 6. Escribir datos sensibles
+echo "Datos protegidos" > /mnt/seguro/confidencial.txt
+
+# 7. Desmontar y cerrar
+sudo umount /mnt/seguro
+sudo cryptsetup close disco_seguro
+```
+
+Verificar que el archivo está cifrado:
+```bash
+# Sin la clave LUKS, el contenido es ilegible
+xxd disco_cifrado.img | head -5
+```
+
+### Eliminación segura de datos
+
+Borrar un archivo no elimina los datos del disco. Para proteger datos sensivos:
+
+```bash
+# Sobrescribir archivo con ceros (1 pasada)
+shred -n 1 -z archivo_sensible.txt
+
+# Sobrescribir dispositivo completo
+sudo shred -n 3 /dev/sdb
+
+# Limpiar firma de filesystem
+sudo wipefs -a disco_virtual.img
+```
+
+::: {.warning}
+**Advertencia:** `shred` y `wipefs` destruyen datos irreversiblemente. Úsalos solo cuando estés seguro de que no necesitas recuperar el contenido.
+:::
+
+### Verificación de integridad
+
+```bash
+# Verificar integridad de archivo
+sha256sum disco.img
+
+# Comparar con hash conocido
+sha256sum -c disco.img.sha256
+```
+
+---
+
+## 7.1 🎯 Ejercicio práctico: disco virtual cifrado con LUKS
+
+**Objetivo**: Crear un disco virtual, cifrarlo con LUKS y demostrar que protege datos sensibles.
+
+**Requisitos previos**:
+- Terminal con bash
+- Permisos de sudo configurados
+- Directorio `~/laboratorio/storage` creado
+
+**Pasos**:
+
+1. Crear el directorio de trabajo:
+   ```bash
+   mkdir -p ~/laboratorio/storage
+   cd ~/laboratorio/storage
+   ```
+
+2. Crear disco virtual de 20MB:
+   ```bash
+   dd if=/dev/zero of=disco_cifrado.img bs=1M count=20
+   ```
+
+3. Inicializar LUKS:
+   ```bash
+   sudo cryptsetup luksFormat disco_cifrado.img
+   ```
+
+4. Abrir contenedor LUKS:
+   ```bash
+   sudo cryptsetup open disco_cifrado.img disco_seguro
+   ```
+
+5. Formatear el dispositivo mapeado:
+   ```bash
+   sudo mkfs.ext4 /dev/mapper/disco_seguro
+   ```
+
+6. Montar y escribir datos sensibles:
+   ```bash
+   sudo mkdir -p /mnt/seguro
+   sudo mount /dev/mapper/disco_seguro /mnt/seguro
+   echo "Datos confidenciales" > /mnt/seguro/privado.txt
+   ```
+
+7. Verificar que el archivo está protegido:
+   ```bash
+   cat /mnt/seguro/privado.txt
+   ```
+
+8. Desmontar y cerrar:
+   ```bash
+   sudo umount /mnt/seguro
+   sudo cryptsetup close disco_seguro
+   ```
+
+9. Verificar que el contenido es ilegible sin clave:
+   ```bash
+   xxd disco_cifrado.img | head -5
+   ```
+
+**Troubleshooting**:
+
+| Problema | Solución |
+|----------|----------|
+| `Device is busy` | Usar `sudo umount -f /mnt/seguro` o cerrar procesos |
+| `No key available` | Volver a abrir con `cryptsetup open` |
+| `Invalid argument` | Verificar que el archivo existe y tiene tamaño |
+
+---
+
+## 7.2 📋 Checklist de autoevaluación
+
+Marca cada casilla solo si puedes hacerlo **sin consultar apuntes**:
+
+- [ ] Listar dispositivos de bloque con `lsblk`
+- [ ] Ver tabla de particiones con `sudo fdisk -l`
+- [ ] Crear un archivo de disco virtual con `dd`
+- [ ] Formatear con `mkfs.ext4`
+- [ ] Montar y desmontar con `mount`/`umount`
+- [ ] Ver espacio con `df -h` y `du -sh`
+- [ ] Entender la diferencia entre disco, partición y filesystem
+- [ ] Inicializar y abrir un volumen LUKS
+- [ ] Aplicar opciones de montaje seguras (`noexec`, `nosuid`, `nodev`)
+- [ ] Explicar por qué el cifrado protege datos en reposo
+
+**Criterio de aprobación**: 8/10 casillas marcadas.
+
+---
+
+## 7.3 🔑 Puntos clave
+
+- **Disco**: dispositivo físico o virtual que almacena datos en bloques.
+- **Partición**: división lógica de un disco para separar sistemas de archivos.
+- **Filesystem**: estructura que organiza archivos en bloques (ext4, xfs, btrfs).
+- **Loop device**: archivo tratado como disco virtual (`/dev/loop0`).
+- **Montaje**: conexión de un filesystem a un punto del árbol (`mount`/`umount`).
+- **`/etc/fstab`**: configuración de montajes permanentes del sistema.
+- **`df`** vs **`du`**: `df` ve espacio por filesystem; `du` ve uso por directorio.
+- **LUKS**: cifrado de discos estándar en Linux. Protege datos en reposo.
+- **Opciones seguras**: `noexec`, `nosuid`, `nodev` reducen superficie de ataque.
+- **Eliminación segura**: `shred` sobrescribe datos para prevenir recuperación.
+
+---
+
+## 7.4 🛡️ Proyecto: servidor con almacenamiento cifrado
+
+**Objetivo**: Diseñar e implementar esquema de almacenamiento cifrado para servidor.
+
+**Entregable**: Documento `storage-security.md` con:
+
+1. **Esquema de particiones**: diagrama de discos y puntos de montaje.
+2. **Configuración LUKS**: paso a paso de cifrado de volumen sensible.
+3. **Opciones de montaje**: tabla con opciones seguras por punto de montaje.
+4. **Política de backups**: estrategia 3-2-1 aplicada al servidor.
+5. **Verificación**: procedimiento de comprobación de integridad.
+
+**Criterios de evaluación**:
+
+| Criterio | Peso |
+|----------|------|
+| Esquema de particiones | 20% |
+| Configuración LUKS funcional | 30% |
+| Opciones de montaje seguras | 25% |
+| Política de backups | 15% |
+| Verificación de integridad | 10% |
+
+---
+
+*📖 Tiempo estimado: 3-4 h • 🎯 10 retos • 📝 1 proyecto*

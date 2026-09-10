@@ -1,0 +1,233 @@
+---
+title: "Módulo — Criptografía y CVSS"
+author: "Diego Saavedra, Mg. Sc. | Abacom"
+format:
+  html:
+    toc: true
+    toc-location: left
+    code-fold: false
+    theme: cosmo
+---
+
+# Módulo — Criptografía y CVSS
+
+---
+
+## Introducción: proteger datos y medir vulnerabilidades
+
+**La criptografía es el fundamento de la confianza digital.** Sin cifrado, no existirían las transacciones bancarias, la navegación segura (HTTPS), ni la privacidad de las comunicaciones. En ciberseguridad, entender cómo funcionan los algoritmos criptográficos y saber medir la severidad de vulnerabilidades es indispensable.
+
+CVSS (Common Vulnerability Scoring System) es el estándar internacional para cuantificar la gravedad de una vulnerabilidad. Permite priorizar respuestas: no todas las vulnerabilidades requieren la misma urgencia.
+
+En este módulo aprenderás a calcular puntuaciones CVSS, implementar cifrado simétrico y asimétrico con OpenSSL, y analizar vectores de ataque comunes.
+
+::: {.note}
+**Contexto profesional:** CVSS v3.1 es el estándar usado por NVD, CISA y todos los vendors. Saber calcularlo manualmente te permite priorizar parches antes de que el scanner te lo diga.
+:::
+
+---
+
+## CVSS v3.1: midiendo la severidad
+
+CVSS calcula una puntuación de 0.0 a 10.0 basada en métricas organizadas en grupos.
+
+### Métricas Base (obligatorias)
+
+| Grupo | Métrica | Valores |
+|-------|---------|---------|
+| **Attack Vector (AV)** | Vecindad del atacante | Network (0.85), Adjacent (0.62), Local (0.55), Physical (0.2) |
+| **Attack Complexity (AC)** | Complejidad del ataque | Low (0.77), High (0.44) |
+| **Privileges Required (PR)** | Privilegios necesarios | None (0.85), Low (0.62), High (0.27) |
+| **User Interaction (UI)** | Interacción del usuario | None (0.85), Required (0.62) |
+| **Scope (S)** | Cambio de alcance | Unchanged, Changed |
+| **C/I/A** | Impacto en Confidencialidad, Integridad, Disponibilidad | High (0.56), Low (0.22), None (0.0) |
+
+### Fórmula simplificada
+
+```
+Base Score = f(Impact, Exploitability)
+Impact = 1 - (1 - C) × (1 - I) × (1 - A) × ScopeFactor
+Exploitability = 8.22 × AV × AC × PR × UI
+```
+
+### Severity Rating
+
+| Puntuación | Severity |
+|------------|----------|
+| 0.0 - 3.9 | Low (Bajo) |
+| 4.0 - 6.9 | Medium (Medio) |
+| 7.0 - 8.9 | High (Alto) |
+| 9.0 - 10.0 | Critical (Crítico) |
+
+### Ejemplo práctico: RCE en servidor web
+
+```yaml
+Vector: Network (AV:N)
+Complejidad: Low (AC:L)
+Privilegios: None (PR:N)
+Usuario: None (UI:N)
+Scope: Changed (S:C)
+Confidencialidad: High (C:H)
+Integridad: High (I:H)
+Disponibilidad: High (A:H)
+
+Cálculo:
+Impact = 1 - (1-0.56)² × 1.08 = 0.86
+Exploitability = 8.22 × 0.85 × 0.77 × 0.85 × 0.85 = 3.86
+Base Score = 10.0 (Critical)
+```
+
+---
+
+## Criptografía aplicada
+
+### Hash criptográfico
+
+```bash
+# SHA-256: estándar actual
+sha256sum archivo.txt
+
+# SHA-3: diseño Keccak, más resistente
+sha3sum archivo.txt
+
+# Verificar integridad de archivo
+sha256sum -c checksums.sha256
+```
+
+### Cifrado simétrico (AES)
+
+```bash
+# Cifrar con AES-256-CBC
+openssl enc -aes-256-cbc -salt -in archivo.txt -out archivo.enc
+
+# Descifrar
+openssl enc -aes-256-cbc -d -in archivo.enc -out archivo.txt
+```
+
+### Cifrado asimétrico (RSA)
+
+```bash
+# Generar par de claves
+openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
+openssl rsa -pubout -in private.pem -out public.pem
+
+# Cifrar con clave pública
+openssl pkeyutl -encrypt -pubin -inkey public.pem -in mensaje.txt -out mensaje.enc
+
+# Descifrar con clave privada
+openssl pkeyutl -decrypt -inkey private.pem -in mensaje.enc -out mensaje.txt
+```
+
+### Firma digital
+
+```bash
+# Firmar archivo
+openssl dgst -sha256 -sign private.pem -out archivo.sig archivo.txt
+
+# Verificar firma
+openssl dgst -sha256 -verify public.pem -signature archivo.sig archivo.txt
+```
+
+---
+
+## Análisis de vectores de ataque
+
+### SQL Injection
+
+```bash
+# Detectar en logs de nginx
+grep -iE "(union|select|insert|drop|script|alert)" /var/log/nginx/access.log
+
+# Patrones comunes
+' OR '1'='1
+'; DROP TABLE usuarios;--
+' UNION SELECT NULL--
+```
+
+### Path Traversal
+
+```bash
+# Detectar en logs
+grep -E "(\.\.\/|\.\.\\\)" /var/log/nginx/access.log
+
+# Patrones comunes
+../../../etc/passwd
+..\\..\\..\\windows\\system32\\config\\sam
+```
+
+### Phishing
+
+```bash
+# Headers sospechosos
+grep -E "(X-Priority|Reply-To|X-Mailer)" /var/log/mail.log
+
+# Dominios sospechosos
+grep -iE "(bit.ly|tinyurl|t.co)" /var/log/mail.log
+```
+
+---
+
+## 4.1 🎯 Ejercicio práctico: CVSS y criptografía
+
+**Objetivo**: Calcular CVSS para vulnerabilidades reales y practicar cifrado.
+
+**Parte A: CVSS**
+
+1. Dada la siguiente vulnerabilidad, calcula su puntuación:
+   - Vector: Network
+   - Complejidad: Low
+   - Privilegios: None
+   - Usuario: None
+   - Scope: Unchanged
+   - C: High, I: High, A: None
+
+2. Interpreta el resultado y clasifica la severidad.
+
+**Parte B: Criptografía**
+
+1. Generar par de claves RSA-2048:
+   ```bash
+   openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
+   openssl rsa -pubout -in private.pem -out public.pem
+   ```
+
+2. Cifrar y descifrar mensaje:
+   ```bash
+   echo "Mensaje secreto" > mensaje.txt
+   openssl pkeyutl -encrypt -pubin -inkey public.pem -in mensaje.txt -out mensaje.enc
+   openssl pkeyutl -decrypt -inkey private.pem -in mensaje.enc -out mensaje.txt
+   ```
+
+3. Verificar integridad con SHA-256:
+   ```bash
+   sha256sum mensaje.txt
+   ```
+
+**Validación**:
+
+| Prueba | Comando | Esperado |
+|--------|---------|----------|
+| Claves generadas | `ls private.pem public.pem` | Ambos archivos existen |
+| Cifrado exitoso | `openssl pkeyutl -decrypt...` | Mensaje original recuperado |
+| Hash consistente | `sha256sum archivo` | Hash idéntico en repetidas ejecuciones |
+
+---
+
+## 4.2 📋 Checklist de autoevaluación
+
+- [ ] Explicar métricas base de CVSS v3.1
+- [ ] Calcular CVSS manualmente para RCE
+- [ ] Interpretar severity rating
+- [ ] Generar hashes SHA-256 y SHA-3
+- [ ] Cifrar/descifrar con AES-256-CBC
+- [ ] Generar par de claves RSA-2048
+- [ ] Cifrar con clave pública y descifrar con privada
+- [ ] Firmar y verificar archivo digitalmente
+- [ ] Detectar SQL injection en logs
+- [ ] Detectar path traversal en logs
+
+**Criterio de aprobación**: 8/10 casillas marcadas.
+
+---
+
+*📖 Tiempo estimado: 3-4 h • 🎯 5 retos • 📝 1 proyecto*

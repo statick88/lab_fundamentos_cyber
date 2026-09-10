@@ -17,19 +17,21 @@ fi
 # Extraer número de unidad del nombre (unit-II -> II)
 UNIT_ROMAN=$(echo "$CURRENT_UNIT" | sed 's/unit-//')
 
-# Mapear romano a directorio lowercase
-case "$UNIT_ROMAN" in
-    I) UNIT_DIR="i" ;;
-    II) UNIT_DIR="ii" ;;
-    III) UNIT_DIR="iii" ;;
-    IV) UNIT_DIR="iv" ;;
-    V) UNIT_DIR="v" ;;
-    VI) UNIT_DIR="vi" ;;
-    VII) UNIT_DIR="vii" ;;
-    VIII) UNIT_DIR="viii" ;;
-    IX) UNIT_DIR="ix" ;;
-    X) UNIT_DIR="x" ;;
-    XI) UNIT_DIR="xi" ;;
+# Mapear romano a directorio lowercase (case-insensitive para soportar I-RISK)
+UNIT_ROMAN_LC=$(echo "$UNIT_ROMAN" | tr '[:upper:]' '[:lower:]')
+case "$UNIT_ROMAN_LC" in
+    i) UNIT_DIR="i" ;;
+    ii) UNIT_DIR="ii" ;;
+    iii) UNIT_DIR="iii" ;;
+    iv) UNIT_DIR="iv" ;;
+    v) UNIT_DIR="v" ;;
+    vi) UNIT_DIR="vi" ;;
+    vii) UNIT_DIR="vii" ;;
+    viii) UNIT_DIR="viii" ;;
+    ix) UNIT_DIR="ix" ;;
+    x) UNIT_DIR="x" ;;
+    xi) UNIT_DIR="xi" ;;
+    i-risk) UNIT_DIR="i-risk-assessment" ;;
     *) UNIT_DIR="" ;;
 esac
 

@@ -30,6 +30,7 @@ case "$UNIT_NUM" in
     ix) UNIT_DIR="ix" ;;
     x) UNIT_DIR="x" ;;
     xi) UNIT_DIR="xi" ;;
+    i-risk) UNIT_DIR="i-risk-assessment" ;;
     *) UNIT_DIR="" ;;
 esac
 

@@ -1,0 +1,372 @@
+---
+title: "Módulo 11 — Backup y Recuperación"
+author: "Diego Saavedra, Mg. Sc. | Abacom"
+format:
+  html:
+    toc: true
+    toc-location: left
+    code-fold: false
+    theme: cosmo
+---
+
+# Módulo 11 — Backup y Recuperación
+
+---
+
+## Introducción: la última línea de defensa
+
+**El backup no es solo una copia de seguridad — es tu plan de supervivencia.** Cuando un ransomware cifra tus archivos, cuando un servidor falla, cuando un error humano borra datos críticos: el backup es lo que separa una interrupción temporal de una pérdida permanente.
+
+En ciberseguridad, el backup es el **último control de defensa en profundidad**. Si todo lo demás falla (firewalls, antivirus, MFA, parches), un backup intacto y verificado te permite recuperarte sin pagar rescates ni perder meses de trabajo.
+
+En este módulo aprenderás estrategias de backup, herramientas de sincronización, verificación de integridad y planificación de recuperación ante desastres.
+
+::: {.note}
+**Contexto profesional:** El 60% de las PyMEs que sufren ransomware cierran en 6 meses. La diferencia entre sobrevivir y quebrar casi siempre es la misma: backups probados y recuperación planificada. No subestimes esta habilidad.
+:::
+
+---
+
+## Estrategias de backup
+
+### Tipos de backup
+
+| Tipo | Descripción | Velocidad | Espacio | Uso |
+|------|-------------|-----------|---------|-----|
+| **Completo** | Todos los archivos | Lenta | Alto | Base inicial |
+| **Incremental** | Solo cambios desde último backup | Rápida | Bajo | Backups frecuentes |
+| **Diferencial** | Cambios desde último completo | Media | Medio | Balance |
+
+### La regla 3-2-1
+
+```
+3 copias de tus datos
+2 medios diferentes
+1 copia offsite (fuera de tus instalaciones)
+```
+
+Esta regla es el estándar de la industria. Ejemplo:
+- **Copia 1**: Datos originales en servidor
+- **Copia 2**: Backup en disco USB local
+- **Copia 3**: Backup en cloud (AWS S3, Backblaze, etc.)
+
+---
+
+## Herramientas de backup
+
+### tar: archivador universal
+
+```bash
+# Backup completo comprimido
+tar -czf backup_20240901.tar.gz /home/usuario/documentos/
+
+# Ver contenido del backup
+tar -tzf backup_20240901.tar.gz
+
+# Extraer backup
+tar -xzf backup_20240901.tar.gz -C /tmp/restore/
+
+# Backup incremental (solo archivos nuevos/modificados)
+tar -czf backup_inc.tar.gz --newer=backup_full.tar.gz /datos/
+```
+
+### rsync: sincronización eficiente
+
+```bash
+# Sincronizar directorio completo
+rsync -av /datos/ /backup/datos/
+
+# Sincronizar con borrado (espejo exacto)
+rsync -av --delete /datos/ /backup/datos/
+
+# Sincronizar remoto (por SSH)
+rsync -avz /datos/ usuario@servidor:/backup/
+
+# Excluir archivos
+rsync -av --exclude="*.log" --exclude="node_modules" /datos/ /backup/
+```
+
+### dd: imagen de disco
+
+```bash
+# Imagen completa de disco
+sudo dd if=/dev/sda of=/backup/sda.img bs=4M status=progress
+
+# Clonar disco a disco
+sudo dd if=/dev/sda of=/dev/sdb bs=4M status=progress
+
+# Crear archivo de imagen desde archivo
+dd if=/dev/zero of=archivo.img bs=1M count=1024
+```
+
+---
+
+## Verificación de integridad
+
+### Hashes criptográficos
+
+```bash
+# Generar hash SHA-256 de backup
+sha256sum backup.tar.gz > backup.tar.gz.sha256
+
+# Verificar integridad
+sha256sum -c backup.tar.gz.sha256
+
+# Salida esperada: backup.tar.gz: OK
+```
+
+### ¿Por qué verificar?
+
+Un backup corrupto es peor que no tener backup: te da una falsa sensación de seguridad. La verificación garantiza que los datos son recuperables.
+
+```bash
+# Verificar todos los backups de un directorio
+for f in *.tar.gz; do
+    echo "Verificando $f..."
+    sha256sum -c "${f}.sha256"
+done
+```
+
+---
+
+## Automatización con cron
+
+### Programar backup diario
+
+```bash
+# Editar crontab
+crontab -e
+
+# Agregar línea: backup diario a las 2 AM
+0 2 * * * /home/usuario/scripts/backup.sh
+
+# Backup semanal (domingos a medianoche)
+0 0 * * 0 /home/usuario/scripts/backup-semanal.sh
+```
+
+### Script de backup con rotación
+
+```bash
+#!/bin/bash
+# backup.sh — Backup diario con rotación
+
+BACKUP_DIR="/backup"
+SOURCE="/home/usuario/documentos"
+DATE=$(date +%Y%m%d_%H%M%S)
+KEEP=7  # Mantener últimos 7 backups
+
+# Crear backup
+tar -czf ${BACKUP_DIR}/backup_${DATE}.tar.gz ${SOURCE}/
+
+# Generar hash
+sha256sum ${BACKUP_DIR}/backup_${DATE}.tar.gz > ${BACKUP_DIR}/backup_${DATE}.tar.gz.sha256
+
+# Rotar backups antiguos
+find ${BACKUP_DIR} -name "backup_*.tar.gz" -mtime +${KEEP} -delete
+find ${BACKUP_DIR} -name "backup_*.sha256" -mtime +${KEEP} -delete
+
+echo "Backup completado: ${DATE}"
+```
+
+---
+
+## Cifrado de backups
+
+### Cifrar con GPG
+
+```bash
+# Cifrar backup con clave simétrica
+gpg --symmetric --cipher-algo AES256 backup.tar.gz
+
+# Cifrar con clave pública de destinatario
+gpg --encrypt --recipient backup@empresa.com backup.tar.gz
+
+# Descifrar
+gpg --decrypt backup.tar.gz.gpg > backup.tar.gz
+```
+
+### ¿Por qué cifrar backups?
+
+Los backups contienen todos tus datos en un solo archivo. Si un atacante roba el backup, tiene acceso a todo. El cifrado protege los backups en reposo y en tránsito.
+
+---
+
+## RTO y RPO: métricas de recuperación
+
+### RTO (Recovery Time Objective)
+
+**Tiempo máximo aceptable para recuperar un sistema.**
+
+| Sistema | RTO aceptable | Implicación |
+|---------|---------------|-------------|
+| Servidor web público | 4 horas | Backup frecuente + réplica |
+| Base de datos transaccional | 15 minutos | Backup continuo + failover |
+| Servidor de archivos interno | 24 horas | Backup nocturno |
+
+### RPO (Recovery Point Objective)
+
+**Pérdida máxima de datos aceptable.**
+
+| Sistema | RPO aceptable | Frecuencia de backup |
+|---------|---------------|----------------------|
+| Transacciones financieras | 5 minutos | Backup continuo |
+| Correo electrónico | 1 hora | Backup cada hora |
+| Archivos de usuario | 24 horas | Backup diario |
+
+---
+
+## Plan de Recuperación ante Desastres (DRP)
+
+### Fases del IR (Incident Response)
+
+```
+PREPARACIÓN → DETECCIÓN → CONTENCIÓN → ERRADICACIÓN → RECUPERACIÓN → LECCIONES
+```
+
+### Documentación mínima
+
+| Documento | Contenido |
+|-----------|-----------|
+| **Inventario** | Sistemas, datos, dependencias |
+| **Procedimientos** | Paso a paso de recuperación |
+| **Contactos** | Equipo de respuesta, proveedores |
+| **RTO/RPO** | Objetivos por sistema |
+| **Pruebas** | Frecuencia de pruebas de recuperación |
+
+---
+
+## 11.1 🎯 Ejercicio práctico: estrategia de backup completa
+
+**Objetivo**: Implementar estrategia de backup 3-2-1 con verificación.
+
+**Pasos**:
+
+1. Crear estructura de directorios:
+   ```bash
+   mkdir -p ~/laboratorio/backup/{datos,scripts,config}
+   echo "Datos de prueba" > ~/laboratorio/backup/datos/archivo1.txt
+   echo "Información sensible" > ~/laboratorio/backup/datos/archivo2.txt
+   ```
+
+2. Crear backup completo con tar:
+   ```bash
+   cd ~/laboratorio/backup
+   tar -czf backup_full.tar.gz datos/
+   ```
+
+3. Verificar contenido:
+   ```bash
+   tar -tzf backup_full.tar.gz | grep datos/
+   ```
+
+4. Generar hash SHA-256:
+   ```bash
+   sha256sum backup_full.tar.gz > backup_full.tar.gz.sha256
+   ```
+
+5. Verificar integridad:
+   ```bash
+   sha256sum -c backup_full.tar.gz.sha256
+   ```
+
+6. Sincronizar con rsync:
+   ```bash
+   rsync -av datos/ backup-copia/
+   ```
+
+7. Crear script de backup automatizado:
+   ```bash
+   cat > scripts/backup.sh << 'EOF'
+   #!/bin/bash
+   DATE=$(date +%Y%m%d_%H%M%S)
+   tar -czf /backup/backup_${DATE}.tar.gz /home/usuario/laboratorio/backup/datos/
+   sha256sum /backup/backup_${DATE}.tar.gz > /backup/backup_${DATE}.tar.gz.sha256
+   EOF
+   chmod +x scripts/backup.sh
+   ```
+
+8. Cifrar backup con GPG:
+   ```bash
+   gpg --symmetric --cipher-algo AES256 backup_full.tar.gz
+   ```
+
+9. Simular restauración:
+   ```bash
+   mkdir -p restaurado
+   tar -xzf backup_full.tar.gz -C restaurado/
+   diff -r datos/ restaurado/datos/
+   ```
+
+**Validación**:
+
+| Prueba | Comando | Esperado |
+|--------|---------|----------|
+| Backup creado | `ls -lh backup_full.tar.gz` | Archivo existe |
+| Hash generado | `cat backup_full.tar.gz.sha256` | Hash SHA-256 |
+| Integridad verificada | `sha256sum -c backup_full.tar.gz.sha256` | `OK` |
+| Rsync sincronizado | `diff -r datos/ backup-copia/` | Sin diferencias |
+| Script ejecutable | `bash scripts/backup.sh` | Sin errores |
+| Cifrado exitoso | `gpg --decrypt backup_full.tar.gz.gpg` | Descifra correctamente |
+
+---
+
+## 11.2 📋 Checklist de autoevaluación
+
+Marca cada casilla solo si puedes hacerlo **sin consultar apuntes**:
+
+- [ ] Explicar la regla 3-2-1 de backups
+- [ ] Crear backup completo con `tar`
+- [ ] Extraer backup y verificar contenido
+- [ ] Sincronizar directorios con `rsync`
+- [ ] Generar y verificar hash SHA-256
+- [ ] Cifrar backup con GPG
+- [ ] Crear script de backup automatizado
+- [ ] Configurar cron para backup programado
+- [ ] Calcular RTO y RPO para un sistema
+- [ ] Documentar plan de recuperación básico
+
+**Criterio de aprobación**: 8/10 casillas marcadas.
+
+---
+
+## 11.3 🔑 Puntos clave
+
+- **Backup**: última línea de defensa en ciberseguridad.
+- **Regla 3-2-1**: 3 copias, 2 medios, 1 offsite.
+- **Tipos**: completo, incremental, diferencial.
+- **Herramientas**: `tar` (archivar), `rsync` (sincronizar), `dd` (imagen de disco).
+- **Verificación**: hashes SHA-256 para garantizar integridad.
+- **Cifrado**: GPG para proteger backups en reposo.
+- **Automatización**: cron para backups programados.
+- **RTO/RPO**: métricas de recuperación ante desastres.
+- **DRP**: Plan de Recuperación ante Desastres documentado.
+
+---
+
+## 11.4 🛡️ Proyecto: plan de backup empresarial
+
+**Objetivo**: Diseñar e implementar plan de backup para entorno empresarial simulado.
+
+**Entregable**: Documento `plan-backup-empresa.md` con:
+
+1. **Inventario de sistemas**: 5 sistemas críticos con RTO/RPO definidos.
+2. **Estrategia por sistema**: tipo de backup, frecuencia, retención.
+3. **Herramientas**: `tar`, `rsync`, `gpg`, `cron`.
+4. **Scripts**: 3 scripts funcionales (backup full, backup incremental, verificación).
+5. **Cifrado**: configuración GPG para backups sensibles.
+6. **Pruebas**: procedimiento de restauración documentado.
+7. **Monitoreo**: alerta si backup falla (log + script de verificación).
+
+**Criterios de evaluación**:
+
+| Criterio | Peso |
+|----------|------|
+| Cumplimiento regla 3-2-1 | 25% |
+| Scripts funcionales | 25% |
+| Cifrado implementado | 20% |
+| Documentación RTO/RPO | 15% |
+| Procedimiento de restauración | 15% |
+
+---
+
+*📖 Tiempo estimado: 3-4 h • 🎯 10 retos • 📝 1 proyecto*

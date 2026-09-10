@@ -62,7 +62,17 @@ DOCKERFILE
     touch "$EXERCISES_MARKER"
 fi
 
-# ─── Detectar primer inicio y limpiar progreso anterior ──────────────────────
+# ─── Preparar directorios de nginx para evitar errores de permisos ─────────────
+mkdir -p /tmp/nginx/body /tmp/nginx/proxy /tmp/nginx/fastcgi /tmp/nginx/uwsgi /tmp/nginx/scgi 2>/dev/null || true
+chmod 1777 /tmp/nginx/body /tmp/nginx/proxy /tmp/nginx/fastcgi /tmp/nginx/uwsgi /tmp/nginx/scgi 2>/dev/null || true
+rm -f /var/log/nginx/error.log /var/log/nginx/access.log 2>/dev/null || true
+touch /var/log/nginx/error.log /var/log/nginx/access.log 2>/dev/null || true
+chown root:adm /var/log/nginx 2>/dev/null || true
+chmod 0775 /var/log/nginx 2>/dev/null || true
+chown root:adm /var/log/nginx/error.log /var/log/nginx/access.log 2>/dev/null || true
+chmod 0664 /var/log/nginx/error.log /var/log/nginx/access.log 2>/dev/null || true
+
+# ─── Detectar primer inicio y limpiar progreso anterior ────────────────────────
 MARKER="$HOME/.lab_initialized"
 if [ ! -f "$MARKER" ]; then
     rm -f "$HOME/laboratorio/.reto"_completado 2>/dev/null

@@ -1,6 +1,6 @@
 #!/bin/bash
-# Sistema de menus y navegacion para 18 unidades ABC-CYB-101
-# 175 retos totales: 60 CORE + 115 OPT
+# Sistema de menus y navegacion para 19 unidades ABC-CYB-101
+# 178 retos totales: 63 CORE + 115 OPT
 
 mostrar_menu_principal() {
     clear; echo ""
@@ -90,7 +90,7 @@ ejecutar_unidad() {
     local unit_path; unit_path=$(resolve_unit_path "$unit")
     if [ ! -f "$unit_path/test.sh" ]; then error "Unidad no encontrada: $unit"; return 1; fi
     source "$unit_path/test.sh" 2>/dev/null || true
-    mostrar_menu_retos challenge_names UNIT_ICONOS "$unit"
+    mostrar_menu_retos challenge_names ICONOS "$unit"
 }
 
 jugar_unidad() {
@@ -98,7 +98,7 @@ jugar_unidad() {
     if [ -z "$unit" ]; then
         echo -e "${CYAN}🎮 MODO JUGAR - Selecciona una unidad:${RESET}"
         echo ""
-        for i in {1..18}; do
+        for i in $(seq 1 $UNIT_COUNT); do
             local titulo=$(get_unit_title $i)
             local u=$(get_unit_name $i)
             local completados=$(contar_completados "$u" "$(get_unit_total_retos $i)" 2>/dev/null || echo 0)

@@ -54,18 +54,26 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fail2ban \
     logrotate \
     gpg \
-    netcat-openbsd \
-    socat \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+     netcat-openbsd \
+     socat \
+     tshark \
+     suricata \
+     yara \
+     jq \
+     && apt-get clean \
+     && rm -rf /var/lib/apt/lists/*
 
 # Crear usuario 'estudiante' con permisos sudo limitados
 RUN useradd -m -s /bin/bash estudiante && \
+    echo 'estudiante:lab123' | chpasswd && \
     groupadd -f sudo && \
-    echo "estudiante ALL=(ALL) NOPASSWD: /usr/bin/ufw, /usr/sbin/iptables, /usr/sbin/ufw, /usr/bin/nmap, /usr/sbin/logrotate, /usr/bin/john, /usr/sbin/fail2ban-client, /usr/sbin/ufw-disable, /usr/sbin/ufw-enable" >> /etc/sudoers && \
+    echo "estudiante ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/estudiante && \
     usermod -aG sudo estudiante && \
     groupadd -f docker && \
-    usermod -aG docker estudiante
+    usermod -aG docker estudiante && \
+    usermod -aG adm estudiante && \
+    chown root:adm /var/log/nginx && \
+    chmod 0775 /var/log/nginx
 
 # Preparar directorios de configuración de herramientas de seguridad
 RUN mkdir -p /etc/fail2ban /var/log/fail2ban && \
@@ -77,7 +85,12 @@ RUN mkdir -p /etc/fail2ban /var/log/fail2ban && \
     touch /var/lab-state/progress && \
     chown root:sudo /var/lab-state/progress && \
     chmod 0660 /var/lab-state/progress && \
-    chown -R estudiante:estudiante /home/estudiante
+    chown -R estudiante:estudiante /home/estudiante && \
+    sed -i 's|^user .*;|user root;|' /etc/nginx/nginx.conf && \
+    mkdir -p /tmp/nginx/body /tmp/nginx/proxy /tmp/nginx/fastcgi /tmp/nginx/uwsgi /tmp/nginx/scgi && \
+    chmod 1777 /tmp/nginx/body /tmp/nginx/proxy /tmp/nginx/fastcgi /tmp/nginx/uwsgi /tmp/nginx/scgi && \
+    sed -i '/http {/a \    client_body_temp_path /tmp/nginx/body;\n    proxy_temp_path /tmp/nginx/proxy;\n    fastcgi_temp_path /tmp/nginx/fastcgi;\n    uwsgi_temp_path /tmp/nginx/uwsgi;\n    scgi_temp_path /tmp/nginx/scgi;' /etc/nginx/nginx.conf && \
+    rm -f /var/log/nginx/error.log /var/log/nginx/access.log
 
 # Copiar entrypoint
 COPY entrypoint.sh /entrypoint.sh

@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Diego Saavedra, Mg. Sc. | Abacom">
+
+<title>Módulo 2 — Reconocimiento de Red y Superficie de Ataque</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="modulo-02-reconocimiento-redes_files/libs/clipboard/clipboard.min.js"></script>
+<script src="modulo-02-reconocimiento-redes_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="modulo-02-reconocimiento-redes_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="modulo-02-reconocimiento-redes_files/libs/quarto-html/popper.min.js"></script>
+<script src="modulo-02-reconocimiento-redes_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="modulo-02-reconocimiento-redes_files/libs/quarto-html/anchor.min.js"></script>
+<link href="modulo-02-reconocimiento-redes_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="modulo-02-reconocimiento-redes_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="modulo-02-reconocimiento-redes_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="modulo-02-reconocimiento-redes_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="modulo-02-reconocimiento-redes_files/libs/bootstrap/bootstrap-8ffd5f67044e5306d9846f29df41dda5.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#módulo-2-reconocimiento-de-red-y-superficie-de-ataque" id="toc-módulo-2-reconocimiento-de-red-y-superficie-de-ataque" class="nav-link active" data-scroll-target="#módulo-2-reconocimiento-de-red-y-superficie-de-ataque">Módulo 2 — Reconocimiento de Red y Superficie de Ataque</a>
+  <ul class="collapse">
+  <li><a href="#introducción-reconocer-antes-de-actuar" id="toc-introducción-reconocer-antes-de-actuar" class="nav-link" data-scroll-target="#introducción-reconocer-antes-de-actuar">Introducción: reconocer antes de actuar</a></li>
+  <li><a href="#reconocimiento-en-el-cyber-kill-chain" id="toc-reconocimiento-en-el-cyber-kill-chain" class="nav-link" data-scroll-target="#reconocimiento-en-el-cyber-kill-chain">Reconocimiento en el Cyber Kill Chain</a>
+  <ul class="collapse">
+  <li><a href="#fase-1-reconocimiento-reconnaissance" id="toc-fase-1-reconocimiento-reconnaissance" class="nav-link" data-scroll-target="#fase-1-reconocimiento-reconnaissance">Fase 1: Reconocimiento (Reconnaissance)</a></li>
+  <li><a href="#mitre-attck-t1595-active-scanning" id="toc-mitre-attck-t1595-active-scanning" class="nav-link" data-scroll-target="#mitre-attck-t1595-active-scanning">MITRE ATT&amp;CK: T1595 Active Scanning</a></li>
+  <li><a href="#perspectiva-defensiva-blue-team" id="toc-perspectiva-defensiva-blue-team" class="nav-link" data-scroll-target="#perspectiva-defensiva-blue-team">Perspectiva defensiva: Blue Team</a></li>
+  <li><a href="#threat-intelligence-y-reconocimiento" id="toc-threat-intelligence-y-reconocimiento" class="nav-link" data-scroll-target="#threat-intelligence-y-reconocimiento">Threat Intelligence y reconocimiento</a></li>
+  </ul></li>
+  <li><a href="#nmap-escaneo-de-hosts-y-puertos" id="toc-nmap-escaneo-de-hosts-y-puertos" class="nav-link" data-scroll-target="#nmap-escaneo-de-hosts-y-puertos">nmap: escaneo de hosts y puertos</a>
+  <ul class="collapse">
+  <li><a href="#qué-es-un-escaneo-y-por-qué-es-legal" id="toc-qué-es-un-escaneo-y-por-qué-es-legal" class="nav-link" data-scroll-target="#qué-es-un-escaneo-y-por-qué-es-legal">¿Qué es un escaneo y por qué es legal?</a></li>
+  <li><a href="#flujo-de-trabajo-de-reconocimiento-defensivo" id="toc-flujo-de-trabajo-de-reconocimiento-defensivo" class="nav-link" data-scroll-target="#flujo-de-trabajo-de-reconocimiento-defensivo">Flujo de trabajo de reconocimiento defensivo</a></li>
+  <li><a href="#puertos-y-protocolos-esenciales-desde-la-perspectiva-de-seguridad" id="toc-puertos-y-protocolos-esenciales-desde-la-perspectiva-de-seguridad" class="nav-link" data-scroll-target="#puertos-y-protocolos-esenciales-desde-la-perspectiva-de-seguridad">Puertos y protocolos esenciales desde la perspectiva de seguridad</a></li>
+  <li><a href="#escaneo-defensivo-validar-tu-propia-superficie-de-ataque" id="toc-escaneo-defensivo-validar-tu-propia-superficie-de-ataque" class="nav-link" data-scroll-target="#escaneo-defensivo-validar-tu-propia-superficie-de-ataque">Escaneo defensivo: validar tu propia superficie de ataque</a></li>
+  </ul></li>
+  <li><a href="#tcpdump-análisis-de-capturas-de-red" id="toc-tcpdump-análisis-de-capturas-de-red" class="nav-link" data-scroll-target="#tcpdump-análisis-de-capturas-de-red">tcpdump: análisis de capturas de red</a>
+  <ul class="collapse">
+  <li><a href="#por-qué-capturar-tráfico" id="toc-por-qué-capturar-tráfico" class="nav-link" data-scroll-target="#por-qué-capturar-tráfico">¿Por qué capturar tráfico?</a></li>
+  <li><a href="#uso-defensivo-detectar-reconnaissance-en-tu-propia-red" id="toc-uso-defensivo-detectar-reconnaissance-en-tu-propia-red" class="nav-link" data-scroll-target="#uso-defensivo-detectar-reconnaissance-en-tu-propia-red">Uso defensivo: detectar reconnaissance en tu propia red</a></li>
+  <li><a href="#detección-de-patrones-de-ataque" id="toc-detección-de-patrones-de-ataque" class="nav-link" data-scroll-target="#detección-de-patrones-de-ataque">Detección de patrones de ataque</a></li>
+  <li><a href="#filtros-esenciales-de-tcpdump" id="toc-filtros-esenciales-de-tcpdump" class="nav-link" data-scroll-target="#filtros-esenciales-de-tcpdump">Filtros esenciales de tcpdump</a></li>
+  <li><a href="#leer-una-captura-grabada" id="toc-leer-una-captura-grabada" class="nav-link" data-scroll-target="#leer-una-captura-grabada">Leer una captura grabada</a></li>
+  </ul></li>
+  <li><a href="#scripting-para-automatización-de-reconocimiento" id="toc-scripting-para-automatización-de-reconocimiento" class="nav-link" data-scroll-target="#scripting-para-automatización-de-reconocimiento">Scripting para automatización de reconocimiento</a>
+  <ul class="collapse">
+  <li><a href="#por-qué-automatizar-el-reconocimiento" id="toc-por-qué-automatizar-el-reconocimiento" class="nav-link" data-scroll-target="#por-qué-automatizar-el-reconocimiento">Por qué automatizar el reconocimiento</a></li>
+  <li><a href="#estructura-básica-de-un-script-de-reconocimiento-defensivo" id="toc-estructura-básica-de-un-script-de-reconocimiento-defensivo" class="nav-link" data-scroll-target="#estructura-básica-de-un-script-de-reconocimiento-defensivo">Estructura básica de un script de reconocimiento defensivo</a></li>
+  <li><a href="#script-de-detección-de-reconnaissance-honeypot-simple" id="toc-script-de-detección-de-reconnaissance-honeypot-simple" class="nav-link" data-scroll-target="#script-de-detección-de-reconnaissance-honeypot-simple">Script de detección de reconnaissance (Honeypot simple)</a></li>
+  <li><a href="#auditoría-de-usuarios-con-privilegios" id="toc-auditoría-de-usuarios-con-privilegios" class="nav-link" data-scroll-target="#auditoría-de-usuarios-con-privilegios">Auditoría de usuarios con privilegios</a></li>
+  </ul></li>
+  <li><a href="#ejercicios-prácticos" id="toc-ejercicios-prácticos" class="nav-link" data-scroll-target="#ejercicios-prácticos">Ejercicios prácticos</a>
+  <ul class="collapse">
+  <li><a href="#e1-descubrimiento-de-hosts-con-nmap" id="toc-e1-descubrimiento-de-hosts-con-nmap" class="nav-link" data-scroll-target="#e1-descubrimiento-de-hosts-con-nmap">E1: Descubrimiento de hosts con nmap</a></li>
+  <li><a href="#e2-análisis-de-capturas-con-tcpdump" id="toc-e2-análisis-de-capturas-con-tcpdump" class="nav-link" data-scroll-target="#e2-análisis-de-capturas-con-tcpdump">E2: Análisis de capturas con tcpdump</a></li>
+  <li><a href="#e3-script-de-auditoría-de-usuarios-con-privilegios" id="toc-e3-script-de-auditoría-de-usuarios-con-privilegios" class="nav-link" data-scroll-target="#e3-script-de-auditoría-de-usuarios-con-privilegios">E3: Script de auditoría de usuarios con privilegios</a></li>
+  </ul></li>
+  <li><a href="#notas-de-seguridad-el-reconocimiento-responsable" id="toc-notas-de-seguridad-el-reconocimiento-responsable" class="nav-link" data-scroll-target="#notas-de-seguridad-el-reconocimiento-responsable">Notas de seguridad: el reconocimiento responsable</a>
+  <ul class="collapse">
+  <li><a href="#cuándo-es-legal-hacer-reconocimiento-de-red" id="toc-cuándo-es-legal-hacer-reconocimiento-de-red" class="nav-link" data-scroll-target="#cuándo-es-legal-hacer-reconocimiento-de-red">¿Cuándo es legal hacer reconocimiento de red?</a></li>
+  <li><a href="#kali-linux-referencia-profesional-no-entorno-de-estudio" id="toc-kali-linux-referencia-profesional-no-entorno-de-estudio" class="nav-link" data-scroll-target="#kali-linux-referencia-profesional-no-entorno-de-estudio">Kali Linux: referencia profesional, no entorno de estudio</a></li>
+  <li><a href="#marco-legal-en-latinoamérica" id="toc-marco-legal-en-latinoamérica" class="nav-link" data-scroll-target="#marco-legal-en-latinoamérica">Marco legal en Latinoamérica</a></li>
+  </ul></li>
+  <li><a href="#checklist-de-autoevaluación" id="toc-checklist-de-autoevaluación" class="nav-link" data-scroll-target="#checklist-de-autoevaluación">Checklist de autoevaluación</a></li>
+  <li><a href="#próximo-paso" id="toc-próximo-paso" class="nav-link" data-scroll-target="#próximo-paso">Próximo paso</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Módulo 2 — Reconocimiento de Red y Superficie de Ataque</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Diego Saavedra, Mg. Sc. | Abacom </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="módulo-2-reconocimiento-de-red-y-superficie-de-ataque" class="level1">
+<h1>Módulo 2 — Reconocimiento de Red y Superficie de Ataque</h1>
+<hr>
+<section id="introducción-reconocer-antes-de-actuar" class="level2">
+<h2 class="anchored" data-anchor-id="introducción-reconocer-antes-de-actuar">Introducción: reconocer antes de actuar</h2>
+<p><strong>El mejor ataque es el que nunca necesitas lanzar — porque ya sabes todo sobre tu objetivo.</strong></p>
+<p>En ciberseguridad, la fase de <em>reconocimiento</em> es el primer paso de cualquier evaluación ofensiva o defensiva. Antes de intentar acceder a un sistema, necesitas entender qué está ejecutándose, qué puertos están abiertos, qué servicios responden y cómo se comunican. Esta fase no implica atacar — implica <strong>observar</strong> sistemáticamente para construir un mapa de la superficie de ataque.</p>
+<p>La superficie de ataque es el conjunto de todos los puntos donde un atacante podría interactuar con tu sistema: puertos abiertos, servicios expuestos, configuraciones débiles, credenciales expuestas. Mapearla es el primer paso para defenderla.</p>
+<p>En este curso trabajamos sobre <strong>Ubuntu 24.04 LTS</strong>, no sobre Kali Linux. Ubuntu es el sistema operativo de escritorio y servidor más usado en el mundo profesional: servidores de producción, máquinas de desarrollo y entornos empresariales. Aprender a hacer reconocimiento desde Ubuntu te prepara para operar en un entorno real, no en un laboratorio aislado.</p>
+<p>El reconocimiento se divide en dos fases complementarias:</p>
+<ol type="1">
+<li><strong>Descubrimiento de hosts</strong> — ¿quiénes están conectados a la red?</li>
+<li><strong>Escaneo de puertos y servicios</strong> — ¿qué puertos están abiertos y qué servicios responden?</li>
+<li><strong>Análisis de superficie de ataque</strong> — ¿cuáles son los vectores de acceso más probables?</li>
+</ol>
+<div class="note">
+<p><strong>Nota del instructor:</strong> No subestimes el poder de empezar con pocos comandos bien ejecutados. <code>nmap</code> y <code>tcpdump</code> son herramientas que puedes dominar en una sola sesión. Lo importante no es cuántas herramientas conoces, sino cuántas usas con inteligencia para mapear la superficie de ataque.</p>
+</div>
+<hr>
+</section>
+<section id="reconocimiento-en-el-cyber-kill-chain" class="level2">
+<h2 class="anchored" data-anchor-id="reconocimiento-en-el-cyber-kill-chain">Reconocimiento en el Cyber Kill Chain</h2>
+<section id="fase-1-reconocimiento-reconnaissance" class="level3">
+<h3 class="anchored" data-anchor-id="fase-1-reconocimiento-reconnaissance">Fase 1: Reconocimiento (Reconnaissance)</h3>
+<p>En el modelo de <strong>Cyber Kill Chain</strong> de Lockheed Martin, el reconocimiento es la <strong>Fase 1</strong> — el punto de partida de todo ataque. Los atacantes profesionales realizan reconocimiento exhaustivo antes de lanzar cualquier exploit:</p>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│              CYBER KILL CHAIN (Fases 1-2)               │
+│                                                          │
+│   1. RECONOCIMIENTO (Reconnaissance)                      │
+│      → Identificar objetivos, mapear superficie de ataque │
+│      → Herramientas: nmap, shodan, google dorks          │
+│                                                          │
+│   2. ARMAMENTO (Weaponization)                            │
+│      → Crear exploit personalizado para el objetivo      │
+│      → Requiere conocimiento detallado del paso 1        │
+│                                                          │
+│   3. ENTREGA (Delivery)                                   │
+│      → Phishing, USB, exploit remoto                     │
+│                                                          │
+│   4. EXPLOTACIÓN (Exploitation)                           │
+│      → Ejecutar código malicioso                         │
+│                                                          │
+│   5. INSTALACIÓN (Installation)                           │
+│      → Implantar backdoor, persistencia                  │
+│                                                          │
+│   6. COMANDO Y CONTROL (C2)                               │
+│      → Establecer canal de comunicación                  │
+│                                                          │
+│   7. ACCIÓN DE OBJETIVO (Actions on Objectives)           │
+│      → Exfiltrar datos, cifrar archivos, sabotear        │
+└─────────────────────────────────────────────────────────┘</code></pre>
+</section>
+<section id="mitre-attck-t1595-active-scanning" class="level3">
+<h3 class="anchored" data-anchor-id="mitre-attck-t1595-active-scanning">MITRE ATT&amp;CK: T1595 Active Scanning</h3>
+<p>El framework <strong>MITRE ATT&amp;CK</strong> mapea esta fase como <strong>T1595 - Active Scanning</strong>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 29%">
+<col style="width: 41%">
+<col style="width: 29%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Técnica</th>
+<th>Descripción</th>
+<th>Ejemplo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>T1595.001</strong></td>
+<td>Scanning IP blocks</td>
+<td><code>nmap -sn 192.168.1.0/24</code></td>
+</tr>
+<tr class="even">
+<td><strong>T1595.002</strong></td>
+<td>Vulnerability Scanning</td>
+<td><code>nmap --script vuln</code></td>
+</tr>
+<tr class="odd">
+<td><strong>T1595.003</strong></td>
+<td>Scanning for Vulnerable Software</td>
+<td>Buscar versiones específicas de servicios</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="perspectiva-defensiva-blue-team" class="level3">
+<h3 class="anchored" data-anchor-id="perspectiva-defensiva-blue-team">Perspectiva defensiva: Blue Team</h3>
+<p>El reconocimiento no es solo para atacantes. Como <strong>defensor (Blue Team)</strong>:</p>
+<ol type="1">
+<li><p><strong>Reconocimiento propio</strong> — escanea tu propia red periódicamente para encontrar:</p>
+<ul>
+<li>Puertos abiertos que deberían estar cerrados</li>
+<li>Servicios desactualizados con vulnerabilidades conocidas</li>
+<li>Dispositivos no autorizados en la red</li>
+</ul></li>
+<li><p><strong>Detección de reconocimiento</strong> — monitoriza para identificar cuando alguien escanea tu red:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Detectar escaneo SYN en tiempo real</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tcpdump <span class="at">-nn</span> <span class="at">-i</span> eth0 <span class="st">"tcp[tcpflags] &amp; (tcp-syn) != 0 and tcp[tcpflags] &amp; (tcp-ack) = 0"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><strong>Honeypots</strong> — sistemas señuelo que detectan reconnaissance:</p>
+<ul>
+<li>Un puerto abierto que no debería existir</li>
+<li>Un servicio falso que registra quién se conecta</li>
+<li>Alerta inmediata cuando alguien interactúa con él</li>
+</ul></li>
+</ol>
+</section>
+<section id="threat-intelligence-y-reconocimiento" class="level3">
+<h3 class="anchored" data-anchor-id="threat-intelligence-y-reconocimiento">Threat Intelligence y reconocimiento</h3>
+<p>La <strong>inteligencia de amenazas (Threat Intelligence)</strong> enriquece el reconocimiento con contexto sobre actores maliciosos:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 52%">
+<col style="width: 47%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Fuente de inteligencia</th>
+<th>Uso en reconocimiento</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Shodan / Censys</strong></td>
+<td>Identificar servidores expuestos a internet</td>
+</tr>
+<tr class="even">
+<td><strong>VirusTotal</strong></td>
+<td>Analizar IPs/dominios maliciosos conocidos</td>
+</tr>
+<tr class="odd">
+<td><strong>MITRE ATT&amp;CK</strong></td>
+<td>Entender TTPs de actores contra tu sector</td>
+</tr>
+<tr class="even">
+<td><strong>AbuseIPDB</strong></td>
+<td>Verificar si una IP tiene historial de abuso</td>
+</tr>
+<tr class="odd">
+<td><strong>Passive DNS</strong></td>
+<td>Mapear infraestructura de atacantes sin contacto directo</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="nmap-escaneo-de-hosts-y-puertos" class="level2">
+<h2 class="anchored" data-anchor-id="nmap-escaneo-de-hosts-y-puertos">nmap: escaneo de hosts y puertos</h2>
+<section id="qué-es-un-escaneo-y-por-qué-es-legal" class="level3">
+<h3 class="anchored" data-anchor-id="qué-es-un-escaneo-y-por-qué-es-legal">¿Qué es un escaneo y por qué es legal?</h3>
+<p><strong>nmap</strong> (Network Mapper) es una herramienta de escaneo de red que envía paquetes a objetivos y analiza las respuestas para determinar qué hosts están activos, qué puertos están abiertos y qué servicios se ejecutan.</p>
+<p>Un escaneo activo no modifica los sistemas objetivo — solo envía y recibe paquetes. Es legal siempre que tengas autorización explícita del propietario de la red. En este laboratorio, todos los objetivos son locales o de tu propiedad.</p>
+</section>
+<section id="flujo-de-trabajo-de-reconocimiento-defensivo" class="level3">
+<h3 class="anchored" data-anchor-id="flujo-de-trabajo-de-reconocimiento-defensivo">Flujo de trabajo de reconocimiento defensivo</h3>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│           RECONOCIMIENTO DEFENSIVO (Blue Team)           │
+│                                                          │
+│   1. INVENTARIO                                          │
+│      → ¿Qué tengo en mi red?                             │
+│      → nmap -sn para descubrir hosts propios             │
+│                                                          │
+│   2. MAPEO DE SUPERFICIE                                  │
+│      → ¿Qué puertos están abiertos?                       │
+│      → nmap -sV para identificar servicios                │
+│                                                          │
+│   3. ANÁLISIS DE VULNERABILIDADES                         │
+│      → ¿Hay versiones desactualizadas?                    │
+│      → nmap --script vuln para detectar CVEs              │
+│                                                          │
+│   4. CAPTURA Y ANÁLISIS                                   │
+│      → ¿Hay tráfico sospechoso?                           │
+│      → tcpdump para registrar y analizar                  │
+│                                                          │
+│   5. COMPARACIÓN CON BASELINE                              │
+│      → ¿Hay cambios no autorizados?                       │
+│      → Comparar con escaneo anterior                      │
+└─────────────────────────────────────────────────────────┘</code></pre>
+</section>
+<section id="puertos-y-protocolos-esenciales-desde-la-perspectiva-de-seguridad" class="level3">
+<h3 class="anchored" data-anchor-id="puertos-y-protocolos-esenciales-desde-la-perspectiva-de-seguridad">Puertos y protocolos esenciales desde la perspectiva de seguridad</h3>
+<p>Antes de escanear, debes entender qué puertos son comunes y qué servicios suelen correr en ellos. El archivo <code>/etc/services</code> en Ubuntu mantiene el mapeo oficial puerto ↔︎ servicio.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 14%">
+<col style="width: 19%">
+<col style="width: 29%">
+<col style="width: 36%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Puerto</th>
+<th>Protocolo</th>
+<th>Servicio típico</th>
+<th>Riesgo de seguridad</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>22</td>
+<td>TCP</td>
+<td>SSH</td>
+<td>Seguro si está actualizado; riesgo si permite password authentication</td>
+</tr>
+<tr class="even">
+<td>80</td>
+<td>TCP</td>
+<td>HTTP</td>
+<td><strong>Riesgo alto</strong> — tráfico sin cifrar, susceptible a MITM</td>
+</tr>
+<tr class="odd">
+<td>443</td>
+<td>TCP</td>
+<td>HTTPS</td>
+<td>Cifrado; verificar certificado y configuración TLS</td>
+</tr>
+<tr class="even">
+<td>53</td>
+<td>UDP/TCP</td>
+<td>DNS</td>
+<td>Vector de exfiltración DNS tunneling</td>
+</tr>
+<tr class="odd">
+<td>25</td>
+<td>TCP</td>
+<td>SMTP</td>
+<td><strong>Riesgo</strong> — relay abierto, spam, spear-phishing</td>
+</tr>
+<tr class="even">
+<td>21</td>
+<td>TCP</td>
+<td>FTP</td>
+<td><strong>Inseguro</strong> — credenciales en texto plano</td>
+</tr>
+<tr class="odd">
+<td>23</td>
+<td>TCP</td>
+<td>Telnet</td>
+<td><strong>Crítico</strong> — nunca usar, todo en texto plano</td>
+</tr>
+<tr class="even">
+<td>3306</td>
+<td>TCP</td>
+<td>MySQL</td>
+<td><strong>Riesgo</strong> — exposición directa sin firewall</td>
+</tr>
+<tr class="odd">
+<td>5432</td>
+<td>TCP</td>
+<td>PostgreSQL</td>
+<td><strong>Riesgo</strong> — exposición directa sin firewall</td>
+</tr>
+<tr class="even">
+<td>3389</td>
+<td>TCP</td>
+<td>RDP</td>
+<td><strong>Alto riesgo</strong> — objetivo frecuente de fuerza bruta</td>
+</tr>
+<tr class="odd">
+<td>6379</td>
+<td>TCP</td>
+<td>Redis</td>
+<td><strong>Crítico</strong> — sin autenticación por defecto</td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar qué puerto está asociado a un servicio</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">"^https"</span> /etc/services</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">"^domain"</span> /etc/services</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">"^ssh"</span> /etc/services</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="note">
+<p><strong>Nota del laboratorio:</strong> En la unidad <em>ii-firewalls-redes</em> (retos 2 y 4) practicas la identificación de puertos en <code>/etc/services</code>. En la unidad <em>ii</em> (reto 8) practicas <code>dpkg -S</code> para identificar qué paquete instaló un binario. Estos conocimientos complementan tu fase de reconocimiento.</p>
+</div>
+</section>
+<section id="escaneo-defensivo-validar-tu-propia-superficie-de-ataque" class="level3">
+<h3 class="anchored" data-anchor-id="escaneo-defensivo-validar-tu-propia-superficie-de-ataque">Escaneo defensivo: validar tu propia superficie de ataque</h3>
+<p>Como profesional de seguridad, debes escanear tus propios sistemas periódicamente:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Descubrir hosts activos en tu red</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">nmap</span> <span class="at">-sn</span> 192.168.1.0/24</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Escaneo rápido de puertos comunes</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">nmap</span> <span class="at">-F</span> 192.168.1.1</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Detección de servicios y versiones</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">nmap</span> <span class="at">-sV</span> 192.168.1.1</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Escaneo de vulnerabilidades (requiere autorización)</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="fu">nmap</span> <span class="at">--script</span> vuln 192.168.1.1</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Generar reporte en formatos útiles</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="fu">nmap</span> <span class="at">-sV</span> <span class="at">-oX</span> scan_resultado.xml 192.168.1.1</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="fu">nmap</span> <span class="at">-sV</span> <span class="at">-oN</span> scan_resultado.txt 192.168.1.1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="tcpdump-análisis-de-capturas-de-red" class="level2">
+<h2 class="anchored" data-anchor-id="tcpdump-análisis-de-capturas-de-red">tcpdump: análisis de capturas de red</h2>
+<section id="por-qué-capturar-tráfico" class="level3">
+<h3 class="anchored" data-anchor-id="por-qué-capturar-tráfico">¿Por qué capturar tráfico?</h3>
+<p><strong>tcpdump</strong> es una herramienta de captura y análisis de paquetes en la línea de comandos. Mientras <code>nmap</code> te dice qué puertos están abiertos, <code>tcpdump</code> te permite ver <strong>el tráfico real</strong> que fluye por la red — el protocolo exacto, los encabezados y hasta fragmentos de los datos que se transmiten.</p>
+<p>La combinación <code>nmap</code> + <code>tcpdump</code> es poderosa: nmap descubre el objetivo, tcpdump registra y analiza el tráfico para entender el comportamiento real de los servicios.</p>
+</section>
+<section id="uso-defensivo-detectar-reconnaissance-en-tu-propia-red" class="level3">
+<h3 class="anchored" data-anchor-id="uso-defensivo-detectar-reconnaissance-en-tu-propia-red">Uso defensivo: detectar reconnaissance en tu propia red</h3>
+<p>Como defensor, <code>tcpdump</code> te permite identificar cuando alguien está escaneando tu red:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Detectar escaneo SYN (SYN scan) — técnica más común de nmap</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tcpdump <span class="at">-nn</span> <span class="at">-i</span> eth0 <span class="st">"tcp[tcpflags] &amp; (tcp-syn) != 0 and tcp[tcpflags] &amp; (tcp-ack) = 0"</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Detectar múltiples intentos de conexión desde una IP</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tcpdump <span class="at">-nn</span> <span class="at">-i</span> eth0 <span class="kw">|</span> <span class="fu">grep</span> <span class="st">"SYN"</span> <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{print $3}'</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-nr</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Detectar escaneo de puertos completos (muchos puertos en poco tiempo)</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tcpdump <span class="at">-nn</span> <span class="at">-i</span> eth0 <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-c</span> <span class="st">"SIN"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="detección-de-patrones-de-ataque" class="level3">
+<h3 class="anchored" data-anchor-id="detección-de-patrones-de-ataque">Detección de patrones de ataque</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Detectar posible DNS tunneling (consultas DNS muy largas)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tcpdump <span class="at">-nn</span> <span class="at">-i</span> eth0 port 53 <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{print length($0)}'</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-nr</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Detectar escaneo de puertos horizontales (misma IP, muchos puertos)</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tcpdump <span class="at">-nn</span> <span class="at">-i</span> eth0 <span class="kw">|</span> <span class="fu">grep</span> <span class="st">"SIN"</span> <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-d</span><span class="st">' '</span> <span class="at">-f5</span> <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-d</span><span class="st">'.'</span> <span class="at">-f1-4</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-nr</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="filtros-esenciales-de-tcpdump" class="level3">
+<h3 class="anchored" data-anchor-id="filtros-esenciales-de-tcpdump">Filtros esenciales de tcpdump</h3>
+<pre><code>┌──────────────────────────────────────────────────────┐
+│              SINTAXIS DE FILTROS tcpdump              │
+│                                                      │
+│  host 192.168.1.1       → tráfico hacia/Desde IP      │
+│  src 10.0.0.5           → tráfico ORIGINALMENTE desde │
+│  dst 10.0.0.5           → tráfico DESTINADO a          │
+│  port 80                → tráfico en puerto 80        │
+│  port 22 and tcp        → SSH sobre TCP               │
+│  icmp                   → mensajes ICMP (ping)         │
+│  not arp                → excluir ARP                 │
+│  -nn                    → no resolver nombres          │
+│  -r archivo.pcap        → leer captura grabada         │
+│  -c 10                  → capturar 10 paquetes y salir │
+└──────────────────────────────────────────────────────┘</code></pre>
+</section>
+<section id="leer-una-captura-grabada" class="level3">
+<h3 class="anchored" data-anchor-id="leer-una-captura-grabada">Leer una captura grabada</h3>
+<p>Una captura <code>.pcapng</code> o <code>.pcap</code> es un archivo binario que contiene paquetes grabados. Puedes analizarlo con <code>tcpdump -r</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Listar todos los paquetes de una captura</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">tcpdump</span> <span class="at">-nn</span> <span class="at">-r</span> captura.pcapng</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Buscar tráfico HTTP (puerto 80)</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">tcpdump</span> <span class="at">-nn</span> <span class="at">-r</span> captura.pcapng port 80</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Buscar tráfico SSH (puerto 22)</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="ex">tcpdump</span> <span class="at">-nn</span> <span class="at">-r</span> captura.pcapng port 22</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Contar cuántos paquetes SYN existen (indica escaneo de puertos)</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="ex">tcpdump</span> <span class="at">-nn</span> <span class="at">-r</span> captura.pcapng <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-c</span> <span class="st">"SYN"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="note">
+<p><strong>Nota del laboratorio:</strong> En la unidad <em>ii-firewalls-redes</em> (retos 1-4) practicas la identificación de protocolos (HTTP, HTTPS, SSH, DNS) en capturas de red. Los archivos <code>captura_http.pcapng</code>, <code>captura_ssh.pcapng</code>, <code>captura_dns.pcapng</code> y <code>captura_scan.pcapng</code> están en <code>~/laboratorio/redes/</code>. El reto 10 detecta escaneos de puertos buscando paquetes <code>SYN</code> — exactamente lo que aprendes aquí.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="scripting-para-automatización-de-reconocimiento" class="level2">
+<h2 class="anchored" data-anchor-id="scripting-para-automatización-de-reconocimiento">Scripting para automatización de reconocimiento</h2>
+<section id="por-qué-automatizar-el-reconocimiento" class="level3">
+<h3 class="anchored" data-anchor-id="por-qué-automatizar-el-reconocimiento">Por qué automatizar el reconocimiento</h3>
+<p>Ejecutar el mismo escaneo cada semana contra tus servidores no es tarea de robot — es <strong>tarea de analista con script</strong>. Un script de bash puede:</p>
+<ul>
+<li>Escanear una lista de hosts con nmap y guardar resultados</li>
+<li>Analizar capturas con tcpdump y reportar protocolos</li>
+<li>Auditar permisos de usuarios con privilegios y alertar</li>
+</ul>
+<p>Aprender a automatizar te libera de tareas repetitivas y te permite enfocarte en los hallazgos reales.</p>
+</section>
+<section id="estructura-básica-de-un-script-de-reconocimiento-defensivo" class="level3">
+<h3 class="anchored" data-anchor-id="estructura-básica-de-un-script-de-reconocimiento-defensivo">Estructura básica de un script de reconocimiento defensivo</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># recon_automatico.sh — Escaneo automatizado de hosts (Blue Team)</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Configuración</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="va">HOSTS</span><span class="op">=</span><span class="va">(</span><span class="st">"192.168.1.1"</span> <span class="st">"192.168.1.10"</span> <span class="st">"192.168.1.15"</span><span class="va">)</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="va">OUTPUT_DIR</span><span class="op">=</span><span class="st">"</span><span class="va">$HOME</span><span class="st">/laboratorio/redes"</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="va">BASELINE_DIR</span><span class="op">=</span><span class="st">"</span><span class="va">$HOME</span><span class="st">/laboratorio/baseline"</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="va">FECHA</span><span class="op">=</span><span class="va">$(</span><span class="fu">date</span> +%Y%m%d_%H%M%S<span class="va">)</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">"</span><span class="va">$OUTPUT_DIR</span><span class="st">"</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Escanear cada host</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> host <span class="kw">in</span> <span class="st">"</span><span class="va">${HOSTS</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"Escaneando </span><span class="va">$host</span><span class="st">..."</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">nmap</span> <span class="at">-sn</span> <span class="st">"</span><span class="va">$host</span><span class="st">"</span> <span class="at">-oA</span> <span class="st">"</span><span class="va">$OUTPUT_DIR</span><span class="st">/recon_</span><span class="va">$host_$FECHA</span><span class="st">"</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Comparar con baseline (si existe)</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">-d</span> <span class="st">"</span><span class="va">$BASELINE_DIR</span><span class="st">"</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"Comparando con baseline..."</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">diff</span> <span class="st">"</span><span class="va">$BASELINE_DIR</span><span class="st">/ultimo_escaneo.xml"</span> <span class="st">"</span><span class="va">$OUTPUT_DIR</span><span class="st">/recon_192.168.1.1_</span><span class="va">$FECECHA</span><span class="st">.xml"</span> <span class="kw">||</span> <span class="dt">\</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"⚠️  Cambios detectados en el escaneo!"</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Escaneo completado. Resultados en </span><span class="va">$OUTPUT_DIR</span><span class="st">/"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="script-de-detección-de-reconnaissance-honeypot-simple" class="level3">
+<h3 class="anchored" data-anchor-id="script-de-detección-de-reconnaissance-honeypot-simple">Script de detección de reconnaissance (Honeypot simple)</h3>
+<p>Un script simple puede detectar cuando alguien está escaneando tu red:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># detectar_scanner.sh — Detectar actividad de escaneo</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="va">INTERFAZ</span><span class="op">=</span><span class="st">"eth0"</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="va">UMBRAL_SYN</span><span class="op">=</span>10  <span class="co"># Más de 10 SYN por segundo = posible escaneo</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Contar SYN por origen</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tcpdump <span class="at">-nn</span> <span class="at">-i</span> <span class="st">"</span><span class="va">$INTERFAZ</span><span class="st">"</span> <span class="st">"tcp[tcpflags] &amp; (tcp-syn) != 0 and tcp[tcpflags] &amp; (tcp-ack) = 0"</span> <span class="at">-c</span> 100 <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">|</span> <span class="dt">\</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'{print $3}'</span> <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-d.</span> <span class="at">-f1-4</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-nr</span> <span class="kw">|</span> <span class="cf">while</span> <span class="bu">read</span> <span class="va">count</span> <span class="va">ip</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">[</span> <span class="st">"</span><span class="va">$count</span><span class="st">"</span> <span class="ot">-gt</span> <span class="st">"</span><span class="va">$UMBRAL_SYN</span><span class="st">"</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>        <span class="bu">echo</span> <span class="st">"🚨 ALERTA: </span><span class="va">$count</span><span class="st"> SYN desde </span><span class="va">$ip</span><span class="st"> en 100 paquetes — posible escaneo"</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">fi</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="auditoría-de-usuarios-con-privilegios" class="level3">
+<h3 class="anchored" data-anchor-id="auditoría-de-usuarios-con-privilegios">Auditoría de usuarios con privilegios</h3>
+<p>Un script de auditoría revisa quiénes tienen privilegios de root o pertenecen a grupos administrativos. Esto es fundamental para detectar accesos innecesarios.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># audit_privileged.sh — Auditar usuarios con privilegios</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Usuarios con UID 0 (root) ==="</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F:</span> <span class="st">'$3 == 0 {print $1}'</span> /etc/passwd</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">""</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Miembros del grupo sudo ==="</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="fu">getent</span> group sudo</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">""</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Archivos sudoers ==="</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="ex">visudo</span> <span class="at">-c</span> <span class="at">-f</span> /etc/sudoers</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="note">
+<p><strong>Nota del laboratorio:</strong> La unidad <em>iii-iam-mfa</em> (reto 5) te pide crear un script <code>audit_privileged.sh</code> en <code>~/laboratorio/iam/</code> que liste usuarios con UID 0 o permisos sudo. El script debe ser ejecutable y completarse exitosamente. Aquí tienes el punto de partida; en la unidad profundizas con políticas sudoers y configuración de MFA.</p>
+</div>
+<div class="warning">
+<p><strong>Advertencia de seguridad:</strong> Nunca ejecutes scripts de auditoría que descargues de fuentes no confiables. Un script malicioso puede usar <code>sudo</code>, <code>rm</code> o <code>iptables</code> con intenciones dañinas. Siempre revisa el contenido antes de ejecutar, y preferiblemente usa <code>sudo -n</code> (sin contraseña) solo para comandos específicos como indica el sudoers del laboratorio.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="ejercicios-prácticos" class="level2">
+<h2 class="anchored" data-anchor-id="ejercicios-prácticos">Ejercicios prácticos</h2>
+<div class="note">
+<p><strong>Modo nativo (sin Docker):</strong> En el contenedor Docker, <code>nmap</code> y <code>tcpdump</code> vienen preinstalados y <code>estudiante</code> tiene permisos NOPASSWD. En modo nativo, instala las herramientas con <code>sudo apt-get install -y nmap tcpdump</code>. Ten en cuenta también que el nombre de la interfaz de red varía: en el contenedor es <code>eth0</code>, pero en tu máquina nativa puede ser <code>enp0s3</code>, <code>wlan0</code>, <code>ens33</code>, etc. Usa <code>ip link</code> para identificar tu interfaz principal.</p>
+</div>
+<section id="e1-descubrimiento-de-hosts-con-nmap" class="level3">
+<h3 class="anchored" data-anchor-id="e1-descubrimiento-de-hosts-con-nmap">E1: Descubrimiento de hosts con nmap</h3>
+<p><strong>Conexión a la unidad <em>ii-firewalls-redes</em> (reto 10) y <em>ii</em> (reto 2)</strong></p>
+<p>En este ejercicio practicas el descubrimiento de hosts activos y la identificación de servicios por puerto. El objetivo es determinar qué dispositivos responden en tu red local y qué puertos tienen abiertos.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 0. Verificar que nmap está instalado (ver unidad ii — gestión de paquetes)</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">which</span> nmap <span class="kw">||</span> <span class="bu">echo</span> <span class="st">"Instalar con: sudo apt-get install -y nmap"</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Descubrir hosts activos en tu red local (solo ping, sin escanear puertos)</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">nmap</span> <span class="at">-sn</span> 192.168.1.0/24</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Escanear los puertos más comunes en un host objetivo</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="fu">nmap</span> <span class="at">-F</span> 192.168.1.1</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Identificar servicios en los puertos descubiertos</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="fu">nmap</span> <span class="at">-sV</span> 192.168.1.1</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Verificar qué servicio corresponde al puerto 443 en /etc/services</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">"^https"</span> /etc/services</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada del paso 1:</p>
+<pre><code>Nmap scan report for 192.168.1.1
+Host is up (0.0030s latency).
+Nmap scan report for 192.168.1.10
+Host is up (0.0042s latency).
+Nmap done: 24 IP addresses (2 hosts up) scanned in 0.32 seconds</code></pre>
+<div class="note">
+<p><strong>Nota del laboratorio:</strong> En la unidad <em>ii-firewalls-redes</em> (reto 10) detectas escaneos de puertos analizando capturas con <code>tcpdump -nn -r captura_scan.pcapng | grep -c "SYN"</code>. Un escaneo SYN típico de nmap genera múltiples paquetes SYN a distintos puertos.</p>
+</div>
+</section>
+<section id="e2-análisis-de-capturas-con-tcpdump" class="level3">
+<h3 class="anchored" data-anchor-id="e2-análisis-de-capturas-con-tcpdump">E2: Análisis de capturas con tcpdump</h3>
+<p><strong>Conexión a la unidad <em>ii-firewalls-redes</em> (retos 1-4)</strong></p>
+<p>En este ejercicio practicas el análisis de capturas de red para identificar protocolos. Trabajas con las capturas que generaste o que proporciona el laboratorio en <code>~/laboratorio/redes/</code>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Navegar al directorio de capturas</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/laboratorio/redes/</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Analizar una captura HTTP</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Busca el banner "GET / HTTP/1.1" que identifica tráfico web sin cifrar</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-i</span> <span class="st">"GET"</span> captura_http.pcapng</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-qi</span> <span class="st">"HTTP"</span> captura_http.pcapng <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">"Protocolo HTTP detectado"</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Analizar una captura SSH</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co"># El banner SSH típico es: "SSH-2.0-OpenSSH_..."</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-i</span> <span class="st">"SSH"</span> captura_ssh.pcapng</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Verificar puerto HTTPS en /etc/services</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">"^https"</span> /etc/services</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada del paso 2:</p>
+<pre><code>GET / HTTP/1.1
+Protocolo HTTP detectado</code></pre>
+<p>Salida esperada del paso 3:</p>
+<pre><code>SSH-2.0-OpenSSH_8.4p1 Ubuntu-5+ubuntu20.04</code></pre>
+<div class="note">
+<p><strong>Nota del laboratorio:</strong> Los retos 1-4 de la unidad <em>ii-firewalls-redes</em> validan que identifiques correctamente HTTP (puerto 80), HTTPS (puerto 443), SSH (puerto 22) y DNS (puerto 53) en las capturas. Usa <code>grep -i</code> para búsquedas sin distinción de mayúsculas.</p>
+</div>
+</section>
+<section id="e3-script-de-auditoría-de-usuarios-con-privilegios" class="level3">
+<h3 class="anchored" data-anchor-id="e3-script-de-auditoría-de-usuarios-con-privilegios">E3: Script de auditoría de usuarios con privilegios</h3>
+<p><strong>Conexión a la unidad <em>iii-iam-mfa</em> (reto 5)</strong></p>
+<p>En este ejercicio escribes un script que audita usuarios con privilegios elevados. Este es el reto 5 de la unidad <em>iii-iam-mfa</em>: debes crear <code>~/laboratorio/iam/audit_privileged.sh</code> que liste usuarios con UID 0 o pertenecientes al grupo sudo.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Crear el directorio de trabajo</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/laboratorio/iam/</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Escribir el script de auditoría</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> ~/laboratorio/iam/audit_privileged.sh <span class="op">&lt;&lt; 'SCRIPT'</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="st">#!/bin/bash</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="st"># audit_privileged.sh — Auditoría de usuarios privilegiados</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="st">echo "=== REPORTE DE AUDITORÍA DE PRIVILEGIOS ==="</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="st">echo "Fecha: $(date)"</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="st">echo ""</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="st">echo "--- Usuarios con UID 0 (equivalentes a root) ---"</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="st">awk -F: '$3 == 0 {print $1, "(UID: " $3 ")"}' /etc/passwd</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="st">echo ""</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="st">echo "--- Usuarios en grupos privilegiados ---"</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="st">for grupo in sudo adm wheel; do</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a><span class="st">    miembros=$(getent group "$grupo" 2&gt;/dev/null | cut -d: -f4)</span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a><span class="st">    if [ -n "$miembros" ]; then</span></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a><span class="st">        echo "$grupo: $miembros"</span></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a><span class="st">    fi</span></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a><span class="st">done</span></span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a><span class="st">echo ""</span></span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a><span class="st">echo "--- Archivos sudoers personalizados ---"</span></span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a><span class="st">if [ -d /etc/sudoers.d ]; then</span></span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a><span class="st">    ls -la /etc/sudoers.d/ 2&gt;/dev/null</span></span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a><span class="st">fi</span></span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a><span class="st">echo ""</span></span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a><span class="st">echo "Auditoría completada."</span></span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a><span class="op">SCRIPT</span></span>
+<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Hacer el script ejecutable</span></span>
+<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x ~/laboratorio/iam/audit_privileged.sh</span>
+<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Ejecutar la auditoría</span></span>
+<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> ~/laboratorio/iam/audit_privileged.sh</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada:</p>
+<pre><code>=== REPORTE DE AUDITORÍA DE PRIVILEGIOS ===
+Fecha: lun sep  1 23:57:00 UTC 2025
+
+--- Usuarios con UID 0 (equivalentes a root) ---
+root (UID: 0)
+
+--- Usuarios en grupos privilegiados ---
+sudo: estudiante
+
+--- Archivos sudoers personalizados ---
+(total de archivos en /etc/sudoers.d/ si existen)
+
+Auditoría completada.</code></pre>
+<div class="note">
+<p><strong>Nota del laboratorio:</strong> El reto 5 de <em>iii-iam-mfa</em> requiere que el script exista, sea ejecutable (<code>-x</code>) y se ejecute exitosamente (<code>"script" &gt; /dev/null 2&gt;&amp;1</code>). Usa <code>awk -F: '$3 == 0 {print $1}' /etc/passwd</code> o <code>getent group sudo</code> para identificar usuarios con privilegios.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="notas-de-seguridad-el-reconocimiento-responsable" class="level2">
+<h2 class="anchored" data-anchor-id="notas-de-seguridad-el-reconocimiento-responsable">Notas de seguridad: el reconocimiento responsable</h2>
+<section id="cuándo-es-legal-hacer-reconocimiento-de-red" class="level3">
+<h3 class="anchored" data-anchor-id="cuándo-es-legal-hacer-reconocimiento-de-red">¿Cuándo es legal hacer reconocimiento de red?</h3>
+<pre><code>┌──────────────────────────────────────────────────────┐
+│           ESCALA DE LEGALIDAD DEL RECON               │
+│                                                      │
+│   ✅ TÚ ERES EL PROPIETARIO                            │
+│      → Escanea tu propia red doméstica                 │
+│                                                      │
+│   ✅ Tienes PERMISO POR ESCRITO                          │
+│      → Contrato de consultoría, autorización explícita │
+│                                                      │
+│   ⚠️  Dominio público (.com, .org sin permiso           │
+│      → Solo descubrimiento de hosts, no escaneo        │
+│                                                      │
+│   ❌ Sin permiso, red ajenos                          │
+│      → DELITO en casi todos los países                 │
+└──────────────────────────────────────────────────────┘</code></pre>
+</section>
+<section id="kali-linux-referencia-profesional-no-entorno-de-estudio" class="level3">
+<h3 class="anchored" data-anchor-id="kali-linux-referencia-profesional-no-entorno-de-estudio">Kali Linux: referencia profesional, no entorno de estudio</h3>
+<p>Kali Linux es una distribución especializada con cientos de herramientas preinstaladas. Es útil <strong>como referencia profesional</strong>: cuando un cliente pide una auditoría completa, Kali tiene todo lo necesario en un solo lugar.</p>
+<p><strong>Sin embargo, en este curso usamos Ubuntu 24.04 porque:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 28%">
+<col style="width: 31%">
+<col style="width: 40%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Criterio</th>
+<th>Kali Linux</th>
+<th>Ubuntu 24.04</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Uso profesional real</td>
+<td>5% de los servidores</td>
+<td>43% de los servidores web</td>
+</tr>
+<tr class="even">
+<td>Permisos de root</td>
+<td>Root por defecto</td>
+<td>sudo para tareas específicas</td>
+</tr>
+<tr class="odd">
+<td>Curva de aprendizaje</td>
+<td>Aprender herramientas primero</td>
+<td>Aprender conceptos primero</td>
+</tr>
+<tr class="even">
+<td>Reproducibilidad</td>
+<td>Difícil de replicar</td>
+<td>Fácil de instalar en cualquier lugar</td>
+</tr>
+<tr class="odd">
+<td>Actualizaciones</td>
+<td>Rolling release (puede romperse)</td>
+<td>LTS con 5 años de soporte</td>
+</tr>
+</tbody>
+</table>
+<div class="warning">
+<p><strong>Advertencia de seguridad:</strong> El reconocimiento de red no es un delito siempre que tengas autorización. Sin embargo, muchos proveedores de servicios consideran el escaneo activo como abuso de términos de servicio. Siempre obtén permiso por escrito antes de escanear cualquier red que no sea tuya.</p>
+</div>
+</section>
+<section id="marco-legal-en-latinoamérica" class="level3">
+<h3 class="anchored" data-anchor-id="marco-legal-en-latinoamérica">Marco legal en Latinoamérica</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 21%">
+<col style="width: 70%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>País</th>
+<th>Ley aplicable</th>
+<th>Consecuencia para reconocimiento no autorizado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Ecuador</td>
+<td>Código Integral Penal</td>
+<td>1-3 años de prisión por acceso no autorizado</td>
+</tr>
+<tr class="even">
+<td>México</td>
+<td>Código Penal Federal</td>
+<td>6 meses-2 años por delitos informáticos</td>
+</tr>
+<tr class="odd">
+<td>Colombia</td>
+<td>Ley 1273 de 2009</td>
+<td>4-8 años por acceso abusivo a sistema informático</td>
+</tr>
+<tr class="even">
+<td>España</td>
+<td>Ley 40/2015</td>
+<td>Multas y responsabilidad civil por vulneración de sistemas</td>
+</tr>
+</tbody>
+</table>
+<div class="warning">
+<p><strong>Advertencia ética:</strong> El conocimiento es neutral, pero su uso no. Aprender a escanear redes te hace un profesional mas preparado, pero usar ese conocimiento sin autorización convierte a un profesional en un delincuente. La diferencia entre un pentester y un atacante es el <strong>documento firmado</strong> que autoriza el trabajo.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="checklist-de-autoevaluación" class="level2">
+<h2 class="anchored" data-anchor-id="checklist-de-autoevaluación">Checklist de autoevaluación</h2>
+<p>Antes de avanzar al Módulo 3, verifica que puedes:</p>
+<ul class="task-list">
+<li><label><input type="checkbox">Explicar qué es el reconocimiento de red y por qué se hace primero</label></li>
+<li><label><input type="checkbox">Distinguir entre descubrimiento de hosts y escaneo de puertos</label></li>
+<li><label><input type="checkbox">Ejecutar <code>nmap -sn</code> para descubrir hosts activos en una red</label></li>
+<li><label><input type="checkbox">Usar <code>nmap -F</code> y <code>nmap -sV</code> para escanear puertos y servicios</label></li>
+<li><label><input type="checkbox">Consultar <code>/etc/services</code> para mapear puertos a servicios</label></li>
+<li><label><input type="checkbox">Usar <code>tcpdump -nn -r</code> para leer capturas de red grabadas</label></li>
+<li><label><input type="checkbox">Aplicar filtros de tcpdump (host, port, proto) para aislar tráfico</label></li>
+<li><label><input type="checkbox">Identificar tráfico HTTP, SSH y DNS en una captura</label></li>
+<li><label><input type="checkbox">Escribir un script bash con <code>for</code>, <code>awk</code> y <code>getent</code> para automatizar tareas</label></li>
+<li><label><input type="checkbox">Crear un script de auditoría que liste usuarios con UID 0 y miembros de sudo</label></li>
+<li><label><input type="checkbox">Comprender que Kali Linux es referencia profesional, no entorno de estudio</label></li>
+<li><label><input type="checkbox">Reconocer que el reconocimiento requiere autorización explícita</label></li>
+<li><label><input type="checkbox">Conocer las consecuencias legales del escaneo no autorizado</label></li>
+<li><label><input type="checkbox">Entender el reconocimiento como Fase 1 del Cyber Kill Chain</label></li>
+<li><label><input type="checkbox">Mapear reconocimiento a MITRE ATT&amp;CK T1595</label></li>
+<li><label><input type="checkbox">Aplicar reconocimiento desde perspectiva defensiva (Blue Team)</label></li>
+<li><label><input type="checkbox">Usar tcpdump para detectar escaneos en tu propia red</label></li>
+<li><label><input type="checkbox">Entender el concepto de superficie de ataque</label></li>
+<li><label><input type="checkbox">Integrar threat intelligence en el proceso de reconocimiento</label></li>
+</ul>
+<div class="note">
+<p><strong>Nota del instructor:</strong> El reconocimiento de red es como la fase de “ojo de águila” en tu entrenamiento. Las mejores herramientas no son las que escanean más rápido, sino las que te ayudan a entender el objetivo. Domina nmap y tcpdump, y el resto vendrá naturalmente. Como defensor, el reconocimiento te permite conocer tu propia superficie de ataque antes que los atacantes.</p>
+</div>
+</section>
+<section id="próximo-paso" class="level2">
+<h2 class="anchored" data-anchor-id="próximo-paso">Próximo paso</h2>
+<p>En el <strong><a href="modulo-03-git.qmd">Módulo 3 — Scripting y Control de Acceso</a></strong> aprenderás a automatizar tareas de seguridad y gestionar privilegios en el sistema. Los scripts de reconocimiento que desarrollaste aquí se expanden hacia la automatización de defensa.</p>
+<p><a href="./index.qmd">← Volver al índice de la guía</a></p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

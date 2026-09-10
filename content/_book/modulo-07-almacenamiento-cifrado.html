@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Diego Saavedra, Mg. Sc. | Abacom">
+
+<title>Módulo 7 — Almacenamiento y Cifrado</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="modulo-07-almacenamiento-cifrado_files/libs/clipboard/clipboard.min.js"></script>
+<script src="modulo-07-almacenamiento-cifrado_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="modulo-07-almacenamiento-cifrado_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="modulo-07-almacenamiento-cifrado_files/libs/quarto-html/popper.min.js"></script>
+<script src="modulo-07-almacenamiento-cifrado_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="modulo-07-almacenamiento-cifrado_files/libs/quarto-html/anchor.min.js"></script>
+<link href="modulo-07-almacenamiento-cifrado_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="modulo-07-almacenamiento-cifrado_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="modulo-07-almacenamiento-cifrado_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="modulo-07-almacenamiento-cifrado_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="modulo-07-almacenamiento-cifrado_files/libs/bootstrap/bootstrap-8ffd5f67044e5306d9846f29df41dda5.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#módulo-7-almacenamiento-y-cifrado" id="toc-módulo-7-almacenamiento-y-cifrado" class="nav-link active" data-scroll-target="#módulo-7-almacenamiento-y-cifrado">Módulo 7 — Almacenamiento y Cifrado</a>
+  <ul class="collapse">
+  <li><a href="#introducción-el-almacenamiento-como-superficie-de-ataque" id="toc-introducción-el-almacenamiento-como-superficie-de-ataque" class="nav-link" data-scroll-target="#introducción-el-almacenamiento-como-superficie-de-ataque">Introducción: el almacenamiento como superficie de ataque</a></li>
+  <li><a href="#arquitectura-de-almacenamiento-en-linux" id="toc-arquitectura-de-almacenamiento-en-linux" class="nav-link" data-scroll-target="#arquitectura-de-almacenamiento-en-linux">Arquitectura de almacenamiento en Linux</a>
+  <ul class="collapse">
+  <li><a href="#del-hardware-al-filesystem-la-pila-completa" id="toc-del-hardware-al-filesystem-la-pila-completa" class="nav-link" data-scroll-target="#del-hardware-al-filesystem-la-pila-completa">Del hardware al filesystem: la pila completa</a></li>
+  <li><a href="#dispositivos-de-bloque-en-linux" id="toc-dispositivos-de-bloque-en-linux" class="nav-link" data-scroll-target="#dispositivos-de-bloque-en-linux">Dispositivos de bloque en Linux</a></li>
+  <li><a href="#el-comando-lsblk-tu-radar-de-discos" id="toc-el-comando-lsblk-tu-radar-de-discos" class="nav-link" data-scroll-target="#el-comando-lsblk-tu-radar-de-discos">El comando <code>lsblk</code>: tu radar de discos</a></li>
+  <li><a href="#la-tabla-de-particiones-fdisk-y-parted" id="toc-la-tabla-de-particiones-fdisk-y-parted" class="nav-link" data-scroll-target="#la-tabla-de-particiones-fdisk-y-parted">La tabla de particiones: <code>fdisk</code> y <code>parted</code></a></li>
+  </ul></li>
+  <li><a href="#sistemas-de-archivos-formatos-y-características" id="toc-sistemas-de-archivos-formatos-y-características" class="nav-link" data-scroll-target="#sistemas-de-archivos-formatos-y-características">Sistemas de archivos: formatos y características</a>
+  <ul class="collapse">
+  <li><a href="#qué-es-un-filesystem" id="toc-qué-es-un-filesystem" class="nav-link" data-scroll-target="#qué-es-un-filesystem">¿Qué es un filesystem?</a></li>
+  <li><a href="#comparativa-de-filesystems" id="toc-comparativa-de-filesystems" class="nav-link" data-scroll-target="#comparativa-de-filesystems">Comparativa de filesystems</a></li>
+  <li><a href="#crear-un-filesystem-mkfs" id="toc-crear-un-filesystem-mkfs" class="nav-link" data-scroll-target="#crear-un-filesystem-mkfs">Crear un filesystem: <code>mkfs</code></a></li>
+  </ul></li>
+  <li><a href="#dispositivos-de-bucle-loop-devices" id="toc-dispositivos-de-bucle-loop-devices" class="nav-link" data-scroll-target="#dispositivos-de-bucle-loop-devices">Dispositivos de bucle (loop devices)</a>
+  <ul class="collapse">
+  <li><a href="#qué-es-un-loop-device" id="toc-qué-es-un-loop-device" class="nav-link" data-scroll-target="#qué-es-un-loop-device">¿Qué es un loop device?</a></li>
+  <li><a href="#crear-un-disco-virtual-paso-a-paso" id="toc-crear-un-disco-virtual-paso-a-paso" class="nav-link" data-scroll-target="#crear-un-disco-virtual-paso-a-paso">Crear un disco virtual paso a paso</a></li>
+  <li><a href="#el-comando-dd-copiar-y-convertir" id="toc-el-comando-dd-copiar-y-convertir" class="nav-link" data-scroll-target="#el-comando-dd-copiar-y-convertir">El comando <code>dd</code>: copiar y convertir</a></li>
+  </ul></li>
+  <li><a href="#montaje-y-desmontaje" id="toc-montaje-y-desmontaje" class="nav-link" data-scroll-target="#montaje-y-desmontaje">Montaje y desmontaje</a>
+  <ul class="collapse">
+  <li><a href="#montar-sistemas-de-archivos" id="toc-montar-sistemas-de-archivos" class="nav-link" data-scroll-target="#montar-sistemas-de-archivos">Montar sistemas de archivos</a></li>
+  <li><a href="#desmontar-sistemas-de-archivos" id="toc-desmontar-sistemas-de-archivos" class="nav-link" data-scroll-target="#desmontar-sistemas-de-archivos">Desmontar sistemas de archivos</a></li>
+  <li><a href="#el-archivo-etcfstab" id="toc-el-archivo-etcfstab" class="nav-link" data-scroll-target="#el-archivo-etcfstab">El archivo <code>/etc/fstab</code></a></li>
+  </ul></li>
+  <li><a href="#espacio-en-disco-y-uso" id="toc-espacio-en-disco-y-uso" class="nav-link" data-scroll-target="#espacio-en-disco-y-uso">Espacio en disco y uso</a>
+  <ul class="collapse">
+  <li><a href="#df-espacio-por-filesystem" id="toc-df-espacio-por-filesystem" class="nav-link" data-scroll-target="#df-espacio-por-filesystem"><code>df</code>: espacio por filesystem</a></li>
+  <li><a href="#du-uso-por-directorio" id="toc-du-uso-por-directorio" class="nav-link" data-scroll-target="#du-uso-por-directorio"><code>du</code>: uso por directorio</a></li>
+  </ul></li>
+  <li><a href="#seguridad-en-almacenamiento" id="toc-seguridad-en-almacenamiento" class="nav-link" data-scroll-target="#seguridad-en-almacenamiento">Seguridad en almacenamiento</a>
+  <ul class="collapse">
+  <li><a href="#permisos-y-propiedad" id="toc-permisos-y-propiedad" class="nav-link" data-scroll-target="#permisos-y-propiedad">Permisos y propiedad</a></li>
+  <li><a href="#opciones-de-montaje-seguras" id="toc-opciones-de-montaje-seguras" class="nav-link" data-scroll-target="#opciones-de-montaje-seguras">Opciones de montaje seguras</a></li>
+  <li><a href="#cifrado-de-discos-con-luks" id="toc-cifrado-de-discos-con-luks" class="nav-link" data-scroll-target="#cifrado-de-discos-con-luks">Cifrado de discos con LUKS</a></li>
+  <li><a href="#eliminación-segura-de-datos" id="toc-eliminación-segura-de-datos" class="nav-link" data-scroll-target="#eliminación-segura-de-datos">Eliminación segura de datos</a></li>
+  <li><a href="#verificación-de-integridad" id="toc-verificación-de-integridad" class="nav-link" data-scroll-target="#verificación-de-integridad">Verificación de integridad</a></li>
+  </ul></li>
+  <li><a href="#ejercicio-práctico-disco-virtual-cifrado-con-luks" id="toc-ejercicio-práctico-disco-virtual-cifrado-con-luks" class="nav-link" data-scroll-target="#ejercicio-práctico-disco-virtual-cifrado-con-luks">7.1 🎯 Ejercicio práctico: disco virtual cifrado con LUKS</a></li>
+  <li><a href="#checklist-de-autoevaluación" id="toc-checklist-de-autoevaluación" class="nav-link" data-scroll-target="#checklist-de-autoevaluación">7.2 📋 Checklist de autoevaluación</a></li>
+  <li><a href="#puntos-clave" id="toc-puntos-clave" class="nav-link" data-scroll-target="#puntos-clave">7.3 🔑 Puntos clave</a></li>
+  <li><a href="#proyecto-servidor-con-almacenamiento-cifrado" id="toc-proyecto-servidor-con-almacenamiento-cifrado" class="nav-link" data-scroll-target="#proyecto-servidor-con-almacenamiento-cifrado">7.4 🛡️ Proyecto: servidor con almacenamiento cifrado</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Módulo 7 — Almacenamiento y Cifrado</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Diego Saavedra, Mg. Sc. | Abacom </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="módulo-7-almacenamiento-y-cifrado" class="level1">
+<h1>Módulo 7 — Almacenamiento y Cifrado</h1>
+<hr>
+<section id="introducción-el-almacenamiento-como-superficie-de-ataque" class="level2">
+<h2 class="anchored" data-anchor-id="introducción-el-almacenamiento-como-superficie-de-ataque">Introducción: el almacenamiento como superficie de ataque</h2>
+<p><strong>El almacenamiento es el repositorio permanente de tu sistema.</strong> Aquí residen los datos sensibles: bases de datos, claves privadas, contraseñas hasheadas, logs de auditoría, configuraciones de seguridad. Un atacante que accede a tu disco no solo roba archivos: puede modificar binarios, plantar puertas traseras y persistir en el sistema incluso después de un reinicio.</p>
+<p>En ciberseguridad, el almacenamiento se protege en tres capas: 1. <strong>Cifrado en reposo</strong>: LUKS, dm-crypt — protege contra robo físico del disco. 2. <strong>Control de acceso</strong>: permisos, propietarios, opciones de montaje — protege contra acceso no autorizado. 3. <strong>Integridad</strong>: hashes, verificación — protege contra manipulación.</p>
+<p>En este módulo aprenderás a gestionar discos, particiones y sistemas de archivos en Linux, con especial énfasis en el <strong>cifrado de almacenamiento</strong> y la <strong>protección de datos sensibles</strong>.</p>
+<div class="note">
+<p><strong>Nota del instructor:</strong> Este módulo usa dispositivos de bucle (loop devices) para crear discos virtuales a partir de archivos. Es la misma técnica que usan las máquinas virtuales y los contenedores para gestionar almacenamiento: un archivo se comporta como un disco físico. Dominar esta técnica te da control total sobre el almacenamiento sin riesgo de perder datos reales.</p>
+</div>
+<hr>
+</section>
+<section id="arquitectura-de-almacenamiento-en-linux" class="level2">
+<h2 class="anchored" data-anchor-id="arquitectura-de-almacenamiento-en-linux">Arquitectura de almacenamiento en Linux</h2>
+<section id="del-hardware-al-filesystem-la-pila-completa" class="level3">
+<h3 class="anchored" data-anchor-id="del-hardware-al-filesystem-la-pila-completa">Del hardware al filesystem: la pila completa</h3>
+<p>Linux organiza el almacenamiento en capas:</p>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                   PILA DE ALMACENAMIENTO                     │
+│                                                             │
+│  Aplicación (archivos, bases de datos)                      │
+│       │                                                    │
+│       ▼                                                    │
+│  ┌──────────────┐                                           │
+│  │  Filesystem  │  ext4, xfs, btrfs, ntfs                  │
+│  └──────┬───────┘                                           │
+│         │                                                   │
+│         ▼                                                   │
+│  ┌──────────────┐                                           │
+│  │   Block      │  Asigna bloques a inodos                  │
+│  │   Layer      │                                           │
+│  └──────┬───────┘                                           │
+│         │                                                   │
+│         ▼                                                   │
+│  ┌──────────────┐                                           │
+│  │   Driver     │  Controlador de disco (SATA, NVMe, USB)  │
+│  └──────┬───────┘                                           │
+│         │                                                   │
+│         ▼                                                   │
+│  ┌──────────────┐                                           │
+│  │   Disco      │  /dev/sda, /dev/nvme0n1                  │
+│  │   Físico     │                                           │
+│  └──────────────┘                                           │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+</section>
+<section id="dispositivos-de-bloque-en-linux" class="level3">
+<h3 class="anchored" data-anchor-id="dispositivos-de-bloque-en-linux">Dispositivos de bloque en Linux</h3>
+<p>Linux representa todo disco como un archivo en <code>/dev/</code>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Dispositivo</th>
+<th>Tipo</th>
+<th>Uso</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>/dev/sda</code></td>
+<td>SATA/SCSI</td>
+<td>Disco completo</td>
+</tr>
+<tr class="even">
+<td><code>/dev/sda1</code></td>
+<td>Partición</td>
+<td>Primera partición de sda</td>
+</tr>
+<tr class="odd">
+<td><code>/dev/nvme0n1</code></td>
+<td>NVMe</td>
+<td>Disco SSD NVMe</td>
+</tr>
+<tr class="even">
+<td><code>/dev/loop0</code></td>
+<td>Loop</td>
+<td>Archivo como disco virtual</td>
+</tr>
+<tr class="odd">
+<td><code>/dev/dm-0</code></td>
+<td>Device Mapper</td>
+<td>LVM, cifrado LUKS</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="el-comando-lsblk-tu-radar-de-discos" class="level3">
+<h3 class="anchored" data-anchor-id="el-comando-lsblk-tu-radar-de-discos">El comando <code>lsblk</code>: tu radar de discos</h3>
+<p><code>lsblk</code> es el comando básico para visualizar la estructura de discos:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver todos los dispositivos de bloque</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">lsblk</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver con tipo de filesystem</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">lsblk</span> <span class="at">-f</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver árbol completo</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="ex">lsblk</span> <span class="at">-t</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida típica:</p>
+<pre><code>NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda      8:0    0  512G  0 disk 
+├─sda1   8:1    0  512M  0 part /boot/efi
+├─sda2   8:2    0    1T  0 part /
+└─sda3   8:3    0  511G  0 part /home</code></pre>
+</section>
+<section id="la-tabla-de-particiones-fdisk-y-parted" class="level3">
+<h3 class="anchored" data-anchor-id="la-tabla-de-particiones-fdisk-y-parted">La tabla de particiones: <code>fdisk</code> y <code>parted</code></h3>
+<p>Cada disco puede dividirse en particiones. <code>fdisk</code> es la herramienta clásica:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver tabla de particiones de todos los discos</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> fdisk <span class="at">-l</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver solo un disco específico</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> fdisk <span class="at">-l</span> /dev/sda</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Modo interactivo (crear/eliminar particiones)</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> fdisk /dev/sdb</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Comandos en modo interactivo <code>fdisk</code>: - <code>n</code> → nueva partición - <code>d</code> → eliminar partición - <code>p</code> → imprimir tabla - <code>w</code> → escribir cambios y salir</p>
+<div class="warning">
+<p><strong>Advertencia:</strong> <code>fdisk</code> modifica la tabla de particiones en memoria. Los cambios no son permanentes hasta que ejecutas <code>w</code> (write). Si sales con <code>q</code> (quit), se descartan. Nunca ejecutes <code>w</code> sin estar seguro: puedes destruir datos de un disco real.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="sistemas-de-archivos-formatos-y-características" class="level2">
+<h2 class="anchored" data-anchor-id="sistemas-de-archivos-formatos-y-características">Sistemas de archivos: formatos y características</h2>
+<section id="qué-es-un-filesystem" class="level3">
+<h3 class="anchored" data-anchor-id="qué-es-un-filesystem">¿Qué es un filesystem?</h3>
+<p>Un <strong>sistema de archivos</strong> es la estructura que organiza datos en bloques en el disco. Define: - Cómo se asignan bloques a archivos - Cómo se almacenan nombres y permisos - Cómo se manejan directorios - Cómo se implementa el journaling (recuperación ante fallos)</p>
+</section>
+<section id="comparativa-de-filesystems" class="level3">
+<h3 class="anchored" data-anchor-id="comparativa-de-filesystems">Comparativa de filesystems</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Filesystem</th>
+<th>Características</th>
+<th>Uso recomendado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>ext4</strong></td>
+<td>Estable, journaling, amplio soporte</td>
+<td>Servidores, desktop</td>
+</tr>
+<tr class="even">
+<td><strong>xfs</strong></td>
+<td>Alto rendimiento, escalable</td>
+<td>Big data, bases de datos</td>
+</tr>
+<tr class="odd">
+<td><strong>btrfs</strong></td>
+<td>Snapshots, compresión, RAID</td>
+<td>Backup, sistemas complejos</td>
+</tr>
+<tr class="even">
+<td><strong>vfat</strong></td>
+<td>Compatible con Windows</td>
+<td>USB, compartir datos</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="crear-un-filesystem-mkfs" class="level3">
+<h3 class="anchored" data-anchor-id="crear-un-filesystem-mkfs">Crear un filesystem: <code>mkfs</code></h3>
+<p><code>mkfs</code> (make filesystem) formatea una partición o archivo con un filesystem específico:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Formatear con ext4</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkfs.ext4 /dev/sdb1</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Formatear con xfs</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkfs.xfs /dev/sdb1</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Formatear archivo como disco virtual (loop device)</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkfs.ext4 disco_virtual.img</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="dispositivos-de-bucle-loop-devices" class="level2">
+<h2 class="anchored" data-anchor-id="dispositivos-de-bucle-loop-devices">Dispositivos de bucle (loop devices)</h2>
+<section id="qué-es-un-loop-device" class="level3">
+<h3 class="anchored" data-anchor-id="qué-es-un-loop-device">¿Qué es un loop device?</h3>
+<p>Un <strong>dispositivo de bucle</strong> permite tratar un archivo regular como si fuera un disco físico. Es la base de: - Discos virtuales en máquinas virtuales - Imágenes ISO montadas - Contenedores Docker (storage drivers) - Entornos de laboratorio como este curso</p>
+</section>
+<section id="crear-un-disco-virtual-paso-a-paso" class="level3">
+<h3 class="anchored" data-anchor-id="crear-un-disco-virtual-paso-a-paso">Crear un disco virtual paso a paso</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Crear archivo vacío de 10MB</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dd</span> if=/dev/zero of=disco.img bs=1M count=10</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Formatear con ext4</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkfs.ext4 disco.img</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Crear punto de montaje</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> montaje</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Montar el disco virtual</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mount disco.img montaje</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Verificar</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="fu">df</span> <span class="at">-h</span> montaje</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="el-comando-dd-copiar-y-convertir" class="level3">
+<h3 class="anchored" data-anchor-id="el-comando-dd-copiar-y-convertir">El comando <code>dd</code>: copiar y convertir</h3>
+<p><code>dd</code> es una herramienta de bajo nivel para copiar datos byte a byte:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear disco de 10MB lleno de ceros</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dd</span> if=/dev/zero of=disco.img bs=1M count=10</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear disco de 100MB</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dd</span> if=/dev/zero of=disco.img bs=1M count=100</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver progreso (en sistemas modernos usar status=progress)</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="fu">dd</span> if=/dev/zero of=disco.img bs=1M count=10 status=progress</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Parámetros clave: - <code>if=</code> = input file (origen) - <code>of=</code> = output file (destino) - <code>bs=</code> = block size (tamaño de bloque) - <code>count=</code> = número de bloques a copiar</p>
+<hr>
+</section>
+</section>
+<section id="montaje-y-desmontaje" class="level2">
+<h2 class="anchored" data-anchor-id="montaje-y-desmontaje">Montaje y desmontaje</h2>
+<section id="montar-sistemas-de-archivos" class="level3">
+<h3 class="anchored" data-anchor-id="montar-sistemas-de-archivos">Montar sistemas de archivos</h3>
+<p>El comando <code>mount</code> conecta un filesystem a un punto del árbol de directorios:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Montar disco virtual</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mount disco.img /mnt/punto</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Montar con opciones específicas</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mount <span class="at">-o</span> ro,noexec disco.img /mnt/punto</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Montar automáticamente al boot (/etc/fstab)</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"/dev/sdb1 /mnt/datos ext4 defaults 0 0"</span> <span class="kw">|</span> <span class="fu">sudo</span> tee <span class="at">-a</span> /etc/fstab</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="desmontar-sistemas-de-archivos" class="level3">
+<h3 class="anchored" data-anchor-id="desmontar-sistemas-de-archivos">Desmontar sistemas de archivos</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Desmontar</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> umount /mnt/punto</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Desmontar forzado (si está ocupado)</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> umount <span class="at">-f</span> /mnt/punto</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver todos los montajes activos</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">mount</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="st">' on / '</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="el-archivo-etcfstab" class="level3">
+<h3 class="anchored" data-anchor-id="el-archivo-etcfstab">El archivo <code>/etc/fstab</code></h3>
+<p><code>/etc/fstab</code> define los montajes permanentes del sistema:</p>
+<pre><code># &lt;dispositivo&gt;  &lt;punto_montaje&gt;  &lt;tipo&gt;  &lt;opciones&gt;  &lt;dump&gt;  &lt;pass&gt;
+/dev/sda1       /boot/efi        vfat    defaults    0       2
+/dev/sda2       /                ext4    defaults    0       1
+/dev/sdb1       /mnt/datos       xfs     defaults    0       2</code></pre>
+<hr>
+</section>
+</section>
+<section id="espacio-en-disco-y-uso" class="level2">
+<h2 class="anchored" data-anchor-id="espacio-en-disco-y-uso">Espacio en disco y uso</h2>
+<section id="df-espacio-por-filesystem" class="level3">
+<h3 class="anchored" data-anchor-id="df-espacio-por-filesystem"><code>df</code>: espacio por filesystem</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver espacio en disco</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">df</span> <span class="at">-h</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver inodos disponibles</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">df</span> <span class="at">-i</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida típica:</p>
+<pre><code>Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda2       50G   30G   20G  60% /
+/dev/sda1      512M  200M  312M  40% /boot/efi</code></pre>
+</section>
+<section id="du-uso-por-directorio" class="level3">
+<h3 class="anchored" data-anchor-id="du-uso-por-directorio"><code>du</code>: uso por directorio</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver tamaño de un directorio</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">du</span> <span class="at">-sh</span> /home/estudiante/</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver los 10 directorios más grandes</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">du</span> <span class="at">-sh</span> /home/<span class="pp">*</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-rh</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver tamaño de archivos individuales</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="fu">du</span> <span class="at">-h</span> archivo.iso</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="seguridad-en-almacenamiento" class="level2">
+<h2 class="anchored" data-anchor-id="seguridad-en-almacenamiento">Seguridad en almacenamiento</h2>
+<section id="permisos-y-propiedad" class="level3">
+<h3 class="anchored" data-anchor-id="permisos-y-propiedad">Permisos y propiedad</h3>
+<p>El almacenamiento no es solo espacio: es <strong>control de acceso</strong>. Cada filesystem hereda el modelo de permisos de Linux:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver permisos de un punto de montaje</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-ld</span> /mnt/punto</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Cambiar propietario</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown usuario:grupo /mnt/punto</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Cambiar permisos</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 700 /mnt/punto</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="opciones-de-montaje-seguras" class="level3">
+<h3 class="anchored" data-anchor-id="opciones-de-montaje-seguras">Opciones de montaje seguras</h3>
+<p>Las opciones de montaje pueden endurecer la seguridad:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Opción</th>
+<th>Efecto</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>noexec</code></td>
+<td>No permite ejecutar binarios</td>
+</tr>
+<tr class="even">
+<td><code>nosuid</code></td>
+<td>Ignora bits SUID/SGID</td>
+</tr>
+<tr class="odd">
+<td><code>nodev</code></td>
+<td>No interpreta dispositivos</td>
+</tr>
+<tr class="even">
+<td><code>ro</code></td>
+<td>Monta solo lectura</td>
+</tr>
+<tr class="odd">
+<td><code>user</code></td>
+<td>Permite montar a usuarios normales</td>
+</tr>
+</tbody>
+</table>
+<p>Ejemplo de montaje seguro para <code>/tmp</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mount <span class="at">-o</span> noexec,nosuid,nodev /dev/sda1 /tmp</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="cifrado-de-discos-con-luks" class="level3">
+<h3 class="anchored" data-anchor-id="cifrado-de-discos-con-luks">Cifrado de discos con LUKS</h3>
+<p><strong>LUKS (Linux Unified Key Setup)</strong> es el estándar de cifrado de discos en Linux. Protege datos en reposo: si el disco es robado, los datos son ilegibles sin la clave.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Crear disco virtual de 20MB</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dd</span> if=/dev/zero of=disco_cifrado.img bs=1M count=20</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Inicializar LUKS</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cryptsetup luksFormat disco_cifrado.img</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Abrir contenedor LUKS (crea /dev/mapper/disco_seguro)</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cryptsetup open disco_cifrado.img disco_seguro</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Formatear el dispositivo mapeado</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkfs.ext4 /dev/mapper/disco_seguro</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Montar</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /mnt/seguro</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mount /dev/mapper/disco_seguro /mnt/seguro</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Escribir datos sensibles</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Datos protegidos"</span> <span class="op">&gt;</span> /mnt/seguro/confidencial.txt</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a><span class="co"># 7. Desmontar y cerrar</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> umount /mnt/seguro</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cryptsetup close disco_seguro</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Verificar que el archivo está cifrado:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Sin la clave LUKS, el contenido es ilegible</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">xxd</span> disco_cifrado.img <span class="kw">|</span> <span class="fu">head</span> <span class="at">-5</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="eliminación-segura-de-datos" class="level3">
+<h3 class="anchored" data-anchor-id="eliminación-segura-de-datos">Eliminación segura de datos</h3>
+<p>Borrar un archivo no elimina los datos del disco. Para proteger datos sensivos:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Sobrescribir archivo con ceros (1 pasada)</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">shred</span> <span class="at">-n</span> 1 <span class="at">-z</span> archivo_sensible.txt</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Sobrescribir dispositivo completo</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> shred <span class="at">-n</span> 3 /dev/sdb</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Limpiar firma de filesystem</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> wipefs <span class="at">-a</span> disco_virtual.img</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="warning">
+<p><strong>Advertencia:</strong> <code>shred</code> y <code>wipefs</code> destruyen datos irreversiblemente. Úsalos solo cuando estés seguro de que no necesitas recuperar el contenido.</p>
+</div>
+</section>
+<section id="verificación-de-integridad" class="level3">
+<h3 class="anchored" data-anchor-id="verificación-de-integridad">Verificación de integridad</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar integridad de archivo</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sha256sum</span> disco.img</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Comparar con hash conocido</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sha256sum</span> <span class="at">-c</span> disco.img.sha256</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="ejercicio-práctico-disco-virtual-cifrado-con-luks" class="level2">
+<h2 class="anchored" data-anchor-id="ejercicio-práctico-disco-virtual-cifrado-con-luks">7.1 🎯 Ejercicio práctico: disco virtual cifrado con LUKS</h2>
+<p><strong>Objetivo</strong>: Crear un disco virtual, cifrarlo con LUKS y demostrar que protege datos sensibles.</p>
+<p><strong>Requisitos previos</strong>: - Terminal con bash - Permisos de sudo configurados - Directorio <code>~/laboratorio/storage</code> creado</p>
+<p><strong>Pasos</strong>:</p>
+<ol type="1">
+<li><p>Crear el directorio de trabajo:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/laboratorio/storage</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/laboratorio/storage</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p>Crear disco virtual de 20MB:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dd</span> if=/dev/zero of=disco_cifrado.img bs=1M count=20</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p>Inicializar LUKS:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cryptsetup luksFormat disco_cifrado.img</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p>Abrir contenedor LUKS:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cryptsetup open disco_cifrado.img disco_seguro</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p>Formatear el dispositivo mapeado:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkfs.ext4 /dev/mapper/disco_seguro</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p>Montar y escribir datos sensibles:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /mnt/seguro</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mount /dev/mapper/disco_seguro /mnt/seguro</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Datos confidenciales"</span> <span class="op">&gt;</span> /mnt/seguro/privado.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p>Verificar que el archivo está protegido:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /mnt/seguro/privado.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p>Desmontar y cerrar:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> umount /mnt/seguro</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cryptsetup close disco_seguro</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p>Verificar que el contenido es ilegible sin clave:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="ex">xxd</span> disco_cifrado.img <span class="kw">|</span> <span class="fu">head</span> <span class="at">-5</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ol>
+<p><strong>Troubleshooting</strong>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Problema</th>
+<th>Solución</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Device is busy</code></td>
+<td>Usar <code>sudo umount -f /mnt/seguro</code> o cerrar procesos</td>
+</tr>
+<tr class="even">
+<td><code>No key available</code></td>
+<td>Volver a abrir con <code>cryptsetup open</code></td>
+</tr>
+<tr class="odd">
+<td><code>Invalid argument</code></td>
+<td>Verificar que el archivo existe y tiene tamaño</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="checklist-de-autoevaluación" class="level2">
+<h2 class="anchored" data-anchor-id="checklist-de-autoevaluación">7.2 📋 Checklist de autoevaluación</h2>
+<p>Marca cada casilla solo si puedes hacerlo <strong>sin consultar apuntes</strong>:</p>
+<ul class="task-list">
+<li><label><input type="checkbox">Listar dispositivos de bloque con <code>lsblk</code></label></li>
+<li><label><input type="checkbox">Ver tabla de particiones con <code>sudo fdisk -l</code></label></li>
+<li><label><input type="checkbox">Crear un archivo de disco virtual con <code>dd</code></label></li>
+<li><label><input type="checkbox">Formatear con <code>mkfs.ext4</code></label></li>
+<li><label><input type="checkbox">Montar y desmontar con <code>mount</code>/<code>umount</code></label></li>
+<li><label><input type="checkbox">Ver espacio con <code>df -h</code> y <code>du -sh</code></label></li>
+<li><label><input type="checkbox">Entender la diferencia entre disco, partición y filesystem</label></li>
+<li><label><input type="checkbox">Inicializar y abrir un volumen LUKS</label></li>
+<li><label><input type="checkbox">Aplicar opciones de montaje seguras (<code>noexec</code>, <code>nosuid</code>, <code>nodev</code>)</label></li>
+<li><label><input type="checkbox">Explicar por qué el cifrado protege datos en reposo</label></li>
+</ul>
+<p><strong>Criterio de aprobación</strong>: 8/10 casillas marcadas.</p>
+<hr>
+</section>
+<section id="puntos-clave" class="level2">
+<h2 class="anchored" data-anchor-id="puntos-clave">7.3 🔑 Puntos clave</h2>
+<ul>
+<li><strong>Disco</strong>: dispositivo físico o virtual que almacena datos en bloques.</li>
+<li><strong>Partición</strong>: división lógica de un disco para separar sistemas de archivos.</li>
+<li><strong>Filesystem</strong>: estructura que organiza archivos en bloques (ext4, xfs, btrfs).</li>
+<li><strong>Loop device</strong>: archivo tratado como disco virtual (<code>/dev/loop0</code>).</li>
+<li><strong>Montaje</strong>: conexión de un filesystem a un punto del árbol (<code>mount</code>/<code>umount</code>).</li>
+<li><strong><code>/etc/fstab</code></strong>: configuración de montajes permanentes del sistema.</li>
+<li><strong><code>df</code></strong> vs <strong><code>du</code></strong>: <code>df</code> ve espacio por filesystem; <code>du</code> ve uso por directorio.</li>
+<li><strong>LUKS</strong>: cifrado de discos estándar en Linux. Protege datos en reposo.</li>
+<li><strong>Opciones seguras</strong>: <code>noexec</code>, <code>nosuid</code>, <code>nodev</code> reducen superficie de ataque.</li>
+<li><strong>Eliminación segura</strong>: <code>shred</code> sobrescribe datos para prevenir recuperación.</li>
+</ul>
+<hr>
+</section>
+<section id="proyecto-servidor-con-almacenamiento-cifrado" class="level2">
+<h2 class="anchored" data-anchor-id="proyecto-servidor-con-almacenamiento-cifrado">7.4 🛡️ Proyecto: servidor con almacenamiento cifrado</h2>
+<p><strong>Objetivo</strong>: Diseñar e implementar esquema de almacenamiento cifrado para servidor.</p>
+<p><strong>Entregable</strong>: Documento <code>storage-security.md</code> con:</p>
+<ol type="1">
+<li><strong>Esquema de particiones</strong>: diagrama de discos y puntos de montaje.</li>
+<li><strong>Configuración LUKS</strong>: paso a paso de cifrado de volumen sensible.</li>
+<li><strong>Opciones de montaje</strong>: tabla con opciones seguras por punto de montaje.</li>
+<li><strong>Política de backups</strong>: estrategia 3-2-1 aplicada al servidor.</li>
+<li><strong>Verificación</strong>: procedimiento de comprobación de integridad.</li>
+</ol>
+<p><strong>Criterios de evaluación</strong>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Criterio</th>
+<th>Peso</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Esquema de particiones</td>
+<td>20%</td>
+</tr>
+<tr class="even">
+<td>Configuración LUKS funcional</td>
+<td>30%</td>
+</tr>
+<tr class="odd">
+<td>Opciones de montaje seguras</td>
+<td>25%</td>
+</tr>
+<tr class="even">
+<td>Política de backups</td>
+<td>15%</td>
+</tr>
+<tr class="odd">
+<td>Verificación de integridad</td>
+<td>10%</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><em>📖 Tiempo estimado: 3-4 h • 🎯 10 retos • 📝 1 proyecto</em></p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

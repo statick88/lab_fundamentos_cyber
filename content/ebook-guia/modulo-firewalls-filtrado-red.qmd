@@ -1,0 +1,234 @@
+---
+title: "Módulo — Firewalls y Filtrado de Red"
+author: "Diego Saavedra, Mg. Sc. | Abacom"
+format:
+  html:
+    toc: true
+    toc-location: left
+    code-fold: false
+    theme: cosmo
+---
+
+# Módulo — Firewalls y Filtrado de Red
+
+---
+
+## Introducción: el control de tráfico como primera barrera
+
+**Un firewall es la primera barrera entre tu red y el mundo exterior.** Su función es simple pero crítica: decidir qué tráfico pasa y qué se bloquea, basándose en reglas predefinidas.
+
+En ciberseguridad, un firewall mal configurado puede dejar expuestos servicios sensibles, permitir escaneos de puertos sin detección, o bloquear tráfico legítimo. Dominar el filtrado de red es esencial para cualquier profesional de seguridad.
+
+En este módulo aprenderás a configurar firewalls en Linux (ufw, iptables, nftables), analizar capturas de red, detectar escaneos de puertos y aplicar reglas de filtrado robustas.
+
+::: {.warning}
+**Contexto profesional:** Un firewall sin reglas específicas es inútil. La regla por defecto debe ser DENEGAR todo y luego permitir solo lo necesario. Este es el principio de "default deny".
+:::
+
+---
+
+## Protocolos y puertos estándar
+
+| Protocolo | Puerto | Descripción | Seguridad |
+|-----------|--------|-------------|-----------|
+| **SSH** | 22/tcp | Administración remota | ⚠️ Cambiar puerto por hardening |
+| **HTTP** | 80/tcp | Web sin cifrar | ⚠️ Sin cifrado |
+| **HTTPS** | 443/tcp | Web cifrada (TLS) | ✅ Seguro |
+| **DNS** | 53/udp | Resolución de nombres | ⚠️ Sin autenticación |
+| **Telnet** | 23/tcp | Terminal remota | ❌ INSEGURO (no usar) |
+| **FTP** | 21/tcp | Transferencia archivos | ❌ Datos sin cifrar |
+| **SMTP** | 25/tcp | Correo electrónico | ⚠️ Requiere configuración |
+
+---
+
+## UFW: Uncomplicated Firewall
+
+UFW es la interfaz simplificada de iptables, ideal para administradores que necesitan reglas claras sin complejidad.
+
+### Comandos esenciales
+
+```bash
+# Ver estado
+sudo ufw status verbose
+
+# Permitir puerto
+sudo ufw allow 22/tcp      # SSH
+sudo ufw allow 80,443/tcp  # HTTP/HTTPS
+
+# Denegar puerto
+sudo ufw deny 23/tcp       # Telnet (inseguro)
+
+# Denegar por IP
+sudo ufw deny from 192.168.1.100
+
+# Permitir desde IP específica
+sudo ufw allow from 192.168.1.0/24 to any port 22
+
+# Activar/desactivar
+sudo ufw enable
+sudo ufw disable
+
+# Eliminar regla
+sudo ufw delete deny 23/tcp
+```
+
+### Reglas por defecto
+
+```bash
+# Denegar todo entrante, permitir todo saliente
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+
+# O más restrictivo: denegar también saliente
+sudo ufw default deny outgoing
+sudo ufw default deny incoming
+```
+
+---
+
+## iptables: firewall a nivel kernel
+
+iptables es la herramienta de filtrado de paquetes a nivel kernel en Linux. Más potente que ufw, pero más complejo.
+
+### Estructura de reglas
+
+```
+Tablas → Cadenas → Reglas
+```
+
+| Tabla | Cadena | Propósito |
+|-------|--------|-----------|
+| `filter` | INPUT | Tráfico entrante |
+| `filter` | OUTPUT | Tráfico saliente |
+| `filter` | FORWARD | Tráfico enrutado |
+| `nat` | PREROUTING | NAT entrante |
+| `nat` | POSTROUTING | NAT saliente |
+
+### Comandos esenciales
+
+```bash
+# Listar reglas con números
+sudo iptables -L -n -v --line-numbers
+
+# Permitir SSH
+sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+
+# Denegar IP sospechosa
+sudo iptables -A INPUT -s 192.168.1.100 -j DROP
+
+# Permitir tráfico establecido
+sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Bloquear todo entrante por defecto
+sudo iptables -P INPUT DROP
+
+# Guardar reglas
+sudo iptables-save > /etc/iptables/rules.v4
+```
+
+---
+
+## Análisis de red: detección de ataques
+
+### tcpdump: captura de paquetes
+
+```bash
+# Capturar todo el tráfico
+sudo tcpdump -i eth0
+
+# Capturar solo puerto 22
+sudo tcpdump -i eth0 port 22
+
+# Capturar desde IP específica
+sudo tcpdump -i eth0 host 192.168.1.100
+
+# Guardar captura a archivo
+sudo tcpdump -i eth0 -w captura.pcapng
+
+# Leer captura
+tcpdump -r captura.pcapng
+```
+
+### nmap: escaneo de puertos
+
+```bash
+# Escaneo TCP básico
+nmap -sT 192.168.1.50
+
+# Escaneo SYN (sigiloso)
+sudo nmap -sS 192.168.1.50
+
+# Detección de versión
+sudo nmap -sV 192.168.1.50
+```
+
+---
+
+## 2.1 🎯 Ejercicio práctico: firewall hardened
+
+**Objetivo**: Configurar ufw con reglas específicas y verificar filtrado.
+
+**Pasos**:
+
+1. Configurar políticas por defecto:
+   ```bash
+   sudo ufw default deny incoming
+   sudo ufw default allow outgoing
+   ```
+
+2. Permitir servicios necesarios:
+   ```bash
+   sudo ufw allow 22/tcp
+   sudo ufw allow 80/tcp
+   sudo ufw allow 443/tcp
+   ```
+
+3. Denegar servicios inseguros:
+   ```bash
+   sudo ufw deny 23/tcp      # Telnet
+   sudo ufw deny 21/tcp      # FTP
+   ```
+
+4. Limitar SSH (rate limiting):
+   ```bash
+   sudo ufw limit 22/tcp
+   ```
+
+5. Activar firewall:
+   ```bash
+   sudo ufw enable
+   ```
+
+6. Verificar reglas:
+   ```bash
+   sudo ufw status verbose
+   ```
+
+**Validación**:
+
+| Prueba | Comando | Esperado |
+|--------|---------|----------|
+| SSH permitido | `nc -zv localhost 22` | Conexión abierta |
+| Telnet bloqueado | `nc -zv localhost 23` | Conexión rechazada |
+| Reglas activas | `sudo ufw status` | Solo puertos permitidos |
+
+---
+
+## 2.2 📋 Checklist de autoevaluación
+
+- [ ] Explicar función de firewall y principio default deny
+- [ ] Listar protocolos/ puertos estándar y su riesgo
+- [ ] Configurar ufw con reglas específicas
+- [ ] Configurar iptables básico
+- [ ] Usar tcpdump para capturar tráfico
+- [ ] Usar nmap para escanear puertos
+- [ ] Detectar escaneo de puertos en logs
+- [ ] Aplicar rate limiting
+- [ ] Interpretar salida de `iptables -L -n -v`
+- [ ] Explicar diferencia entre stateful y stateless
+
+**Criterio de aprobación**: 8/10 casillas marcadas.
+
+---
+
+*📖 Tiempo estimado: 2-3 h • 🎯 5 retos • 📝 1 proyecto*

@@ -8,7 +8,7 @@ source /shared/common.sh
 if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
     if [ $# -eq 0 ]; then
         echo -e "${CYAN}Uso: unidad <número>${RESET}"
-        echo -e "${CYAN}Unidades disponibles: 1-18${RESET}"
+        echo -e "${CYAN}Unidades disponibles: 1-${UNIT_COUNT}${RESET}"
         echo ""
         for i in $(seq 1 $UNIT_COUNT); do
             echo -e "  ${VERDE}${i}${RESET}  $(get_unit_title $i)"

@@ -25,44 +25,24 @@ reto4() {
 }
 
 reto5() {
-    if command -v sudo >/dev/null 2>&1 && sudo -n ufw status >/dev/null 2>&1; then
-        sudo ufw status | grep -q "22/tcp"
-    else
-        [ -f "$HOME/laboratorio/redes/ufw_ssh.sh" ] && [ -x "$HOME/laboratorio/redes/ufw_ssh.sh" ]
-    fi
+    [ -f "$HOME/laboratorio/redes/ufw_ssh.sh" ] && [ -x "$HOME/laboratorio/redes/ufw_ssh.sh" ]
 }
 
 reto6() {
-    if command -v sudo >/dev/null 2>&1 && sudo -n ufw status >/dev/null 2>&1; then
-        sudo ufw status | grep -q "23/tcp"
-    else
-        [ -f "$HOME/laboratorio/redes/ufw_telnet.sh" ] && [ -x "$HOME/laboratorio/redes/ufw_telnet.sh" ]
-    fi
+    [ -f "$HOME/laboratorio/redes/ufw_telnet.sh" ] && [ -x "$HOME/laboratorio/redes/ufw_telnet.sh" ]
 }
 
 reto7() {
-    if command -v sudo >/dev/null 2>&1 && sudo -n ufw status >/dev/null 2>&1; then
-        sudo ufw status | grep -qE "80/tcp|443/tcp"
-    else
-        [ -f "$HOME/laboratorio/redes/ufw_web.sh" ] && [ -x "$HOME/laboratorio/redes/ufw_web.sh" ]
-    fi
+    [ -f "$HOME/laboratorio/redes/ufw_web.sh" ] && [ -x "$HOME/laboratorio/redes/ufw_web.sh" ]
 }
 
 reto8() {
-    if command -v sudo >/dev/null 2>&1 && sudo -n iptables -L INPUT -n -v >/dev/null 2>&1; then
-        sudo iptables -L INPUT -n -v | grep -q "DROP"
-    else
-        [ -f "$HOME/laboratorio/redes/iptables_block.sh" ] && [ -x "$HOME/laboratorio/redes/iptables_block.sh" ]
-    fi
+    [ -f "$HOME/laboratorio/redes/iptables_block.sh" ] && [ -x "$HOME/laboratorio/redes/iptables_block.sh" ]
 }
 
 reto9() {
-    if command -v sudo >/dev/null 2>&1 && sudo -n iptables -L >/dev/null 2>&1; then
-        sudo iptables -L >/dev/null 2>&1
-    else
-        command -v iptables >/dev/null 2>&1
-        [ -f "$HOME/laboratorio/redes/iptables_list.sh" ] && [ -x "$HOME/laboratorio/redes/iptables_list.sh" ]
-    fi
+    command -v iptables >/dev/null 2>&1
+    [ -f "$HOME/laboratorio/redes/iptables_list.sh" ] && [ -x "$HOME/laboratorio/redes/iptables_list.sh" ]
 }
 
 reto10() {

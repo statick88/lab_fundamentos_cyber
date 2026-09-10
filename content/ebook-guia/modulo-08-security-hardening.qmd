@@ -1,0 +1,523 @@
+---
+title: "Módulo 8 — Security Hardening y CIS Benchmarks"
+author: "Diego Saavedra, Mg. Sc. | Abacom"
+format:
+  html:
+    toc: true
+    toc-location: left
+    code-fold: false
+    theme: cosmo
+---
+
+# Módulo 8 — Security Hardening y CIS Benchmarks
+
+---
+
+## Introducción: endurecer no es opcional
+
+**Un sistema sin hardening es como una casa con puertas abiertas y ventanas sin cerradura.** No importa qué tan buena sea tu alarma si el atacante puede entrar por la puerta principal sin resistencia.
+
+El **hardening** es el proceso de reducir la superficie de ataque de un sistema: eliminar servicios innecesarios, cerrar puertos, endurecer permisos, configurar firewalls y aplicar controles de acceso estrictos. En Linux, el hardening no es un producto — es una **filosofía de mínimos privilegios**.
+
+En este módulo aprenderás a aplicar controles de seguridad críticos en Linux: gestión de usuarios root, análisis de permisos, configuración de sudoers, firewall con UFW/iptables, endurecimiento de SSH, detección de archivos SUID/SGID y verificación de **CIS Benchmarks** (Center for Internet Security).
+
+::: {.note}
+**Nota del instructor:** Este módulo cubre controles de nivel sistema. Muchos requieren privilegios de root. En tu laboratorio Docker tienes `sudo` sin contraseña; en un entorno real, estos cambios deben aplicarse con planificación, respaldo y prueba en staging antes de producción.
+:::
+
+---
+
+## Los 4 pilares de la seguridad en Linux
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│              CUATRO PILARES DE SEGURIDAD                      │
+│                                                             │
+│   1. AUTENTICACIÓN — ¿Quién eres?                           │
+│      • Contraseñas, claves SSH, MFA                         │
+│      • /etc/passwd, /etc/shadow                             │
+│                                                             │
+│   2. AUTORIZACIÓN — ¿Qué puedes hacer?                      │
+│      • Permisos (rwx), grupos, sudoers                      │
+│      • /etc/sudoers, ACLs, capabilities                    │
+│                                                             │
+│   3. AUDITORÍA — ¿Qué hiciste?                              │
+│      • Logs de sistema, autenticación, acceso               │
+│      • /var/log/auth.log, journalctl, lastb                 │
+│                                                             │
+│   4. ENDURECIMIENTO — ¿Qué redujiste?                       │
+│      • Firewall, servicios innecesarios, CIS Benchmarks     │
+│      • UFW/iptables, systemctl disable, find SUID           │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Gestión de identidades y usuarios root
+
+### El archivo `/etc/passwd`
+
+Cada usuario del sistema tiene una entrada en `/etc/passwd`:
+
+```bash
+root:x:0:0:root:/root:/bin/bash
+estudiante:x:1000:1000:Estudiante:/home/estudiante:/bin/bash
+```
+
+Campos separados por `:`:
+1. **Usuario** — nombre de login
+2. **Contraseña** — `x` significa que está en `/etc/shadow`
+3. **UID** — User ID (0 = root)
+4. **GID** — Group ID principal
+5. **GECOS** — descripción/comentario
+6. **Home** — directorio personal
+7. **Shell** — intérprete de comandos
+
+### El archivo `/etc/shadow`
+
+Contiene hashes de contraseña y políticas de envejecimiento:
+
+```bash
+root:$6$xyz...:19000:0:99999:7:::
+estudiante:$6$abc...:19000:0:99999:7:::
+```
+
+Campos clave:
+1. **Usuario**
+2. **Hash de contraseña** — `$6$` = SHA-512
+3. **Último cambio** — días desde epoch
+4. **Mínimo** — días mínimos entre cambios
+5. **Máximo** — días máximos antes de expirar
+6. **Advertencia** — días antes de expirar para avisar
+7. **Inactividad** — días después de expirar para deshabilitar
+8. **Expiración** — fecha absoluta de expiración
+
+### Buscar usuarios con privilegios
+
+```bash
+# Ver todos los usuarios con UID 0 (privilegio root)
+awk -F: '$3 == 0 {print $1}' /etc/passwd
+
+# Ver usuarios con shell válido (no sistema)
+grep -v nologin /etc/passwd | awk -F: '$7 ~ /bash|sh/ {print $1}'
+```
+
+::: {.warning}
+**Riesgo de seguridad:** Solo `root` debe tener UID 0. Si otro usuario tiene UID 0, tiene privilegios de superusuario completos. Esto es una técnica común de persistencia de atacantes.
+:::
+
+### Contraseñas vacías o bloqueadas
+
+```bash
+# Buscar usuarios sin contraseña (campo vacío o "!")
+awk -F: '($2 == "" || $2 == "!") {print $1}' /etc/shadow
+
+# Bloquear cuenta de usuario
+sudo usermod -L usuario
+
+# Desbloquear
+sudo usermod -U usuario
+```
+
+---
+
+## Permisos y bits especiales
+
+### Permisos básicos: rwx
+
+Cada archivo tiene permisos para tres categorías:
+
+| Categoría | Símbolo | Octal | Significado |
+|-----------|---------|-------|-------------|
+| Owner | `rwx` | 7 | Lectura, escritura, ejecución |
+| Group | `r-x` | 5 | Lectura, ejecución |
+| Others | `r--` | 4 | Solo lectura |
+
+Ejemplo: `chmod 750 archivo` → `rwxr-x---`
+
+### Bits especiales: SUID, SGID, Sticky
+
+| Bit | Octal | Efecto | Riesgo |
+|-----|-------|--------|--------|
+| SUID | 4000 | Ejecuta con permisos del owner | Alto — escalación de privilegios |
+| SGID | 2000 | Ejecuta con permisos del grupo | Medio |
+| Sticky | 1000 | Solo owner puede borrar en directorio | Bajo — usado en `/tmp` |
+
+### Buscar archivos SUID/SGID
+
+```bash
+# Archivos SUID (ejecutan como root)
+find / -perm -4000 -type f 2>/dev/null | head -20
+
+# Archivos SGID (ejecutan con grupo owner)
+find / -perm -2000 -type f 2>/dev/null | head -20
+
+# Ambos
+find / -perm -6000 -type f 2>/dev/null | head -20
+```
+
+::: {.warning}
+**Análisis de riesgo:** Archivos SUID como `/usr/bin/passwd` son normales. Un SUID en `/tmp` o en un binario sin firma es sospechoso. Investiga cualquier SUID que no pertenezca al paquete oficial del sistema.
+:::
+
+---
+
+## Sudo y el archivo sudoers
+
+### ¿Qué es sudo?
+
+`sudo` (superuser do) permite ejecutar comandos como otro usuario, típicamente root. A diferencia de `su`, no requiere conocer la contraseña de root.
+
+### El archivo `/etc/sudoers`
+
+Define quién puede usar `sudo` y con qué permisos:
+
+```bash
+# Permitir sudo sin contraseña a usuario del grupo sudo
+%sudo   ALL=(ALL:ALL) NOPASSWD: ALL
+
+# Permitir comandos específicos sin contraseña
+estudiante ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart nginx
+```
+
+### Buenas prácticas en sudoers
+
+| Práctica | Razón |
+|----------|-------|
+| Usar `visudo` para editar | Valida sintaxis antes de guardar |
+| Otorgar comandos específicos, no `ALL` | Principio de mínimo privilegio |
+| Evitar `NOPASSWD` salvo scripts automatizados | Reduce riesgo de uso malicioso |
+| Usar `Defaults !authenticate` con cuidado | Puede debilitar seguridad |
+
+```bash
+# Verificar sintaxis de sudoers
+sudo visudo -c
+
+# Ver qué comandos puede ejecutar un usuario
+sudo -l
+```
+
+---
+
+## Firewall: UFW e iptables
+
+### Concepto: ¿qué es un firewall?
+
+Un **firewall** es un filtro de tráfico de red. Decide qué paquetes entran y salen del sistema basándose en reglas.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    FIREWALL                                  │
+│                                                             │
+│   Red externa                                               │
+│       │                                                     │
+│       ▼                                                     │
+│   ┌──────────┐                                              │
+│   │  PACKET  │  ¿Puerto 22 abierto?                         │
+│   │  FILTER  │  ¿Protocolo permitido?                       │
+│   └────┬─────┘  ¿IP confiable?                              │
+│        │                                                   │
+│        ▼                                                   │
+│   ┌──────────┐                                              │
+│   │  Linux   │  Solo tráfico autorizado pasa                │
+│   │  System  │                                              │
+│   └──────────┘                                              │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### UFW: firewall simplificado
+
+UFW (Uncomplicated Firewall) es la interfaz simplificada de iptables:
+
+```bash
+# Ver estado
+sudo ufw status verbose
+
+# Activar
+sudo ufw enable
+
+# Permitir puerto
+sudo ufw allow 22/tcp
+sudo ufw allow 80/tcp
+
+# Denegar puerto
+sudo ufw deny 3306
+
+# Eliminar regla
+sudo ufw delete allow 80/tcp
+
+# Regla con origen específico
+sudo ufw allow from 192.168.1.0/24 to any port 22
+```
+
+### iptables: firewall avanzado
+
+`iptables` es la herramienta nativa de filtrado en Linux:
+
+```bash
+# Ver reglas actuales
+sudo iptables -L -n -v
+
+# Crear regla DROP por defecto
+sudo iptables -P INPUT DROP
+sudo iptables -P FORWARD DROP
+sudo iptables -P OUTPUT ACCEPT
+
+# Permitir loopback
+sudo iptables -A INPUT -i lo -j ACCEPT
+
+# Permitir conexiones establecidas
+sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Permitir SSH
+sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+
+# Guardar reglas
+sudo iptables-save > /etc/iptables/rules.v4
+```
+
+---
+
+## Endurecimiento de SSH
+
+### Configuración de `/etc/ssh/sshd_config`
+
+SSH es el vector de acceso más común. Endurecerlo es crítico:
+
+```bash
+# Deshabilitar login root
+PermitRootLogin no
+
+# Usar solo Protocolo 2
+Protocol 2
+
+# Autenticación por claves únicamente
+PubkeyAuthentication yes
+PasswordAuthentication no
+
+# Limitar usuarios permitidos
+AllowUsers estudiante admin
+
+# Cambiar puerto por defecto (opcional)
+Port 2222
+```
+
+### Claves SSH: autenticación sin contraseña
+
+```bash
+# Generar par de claves RSA 4096
+ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa
+
+# Copiar clave pública a servidor
+ssh-copy-id usuario@servidor
+
+# Conectar con clave
+ssh -i ~/.ssh/id_rsa usuario@servidor
+```
+
+### Permisos correctos de `~/.ssh`
+
+```bash
+# Directorio .ssh debe ser 700
+chmod 700 ~/.ssh
+
+# Clave privada debe ser 600
+chmod 600 ~/.ssh/id_rsa
+
+# Clave pública puede ser 644
+chmod 644 ~/.ssh/id_rsa.pub
+```
+
+---
+
+## CIS Benchmarks: estándar de endurecimiento
+
+### ¿Qué son los CIS Benchmarks?
+
+Los **CIS Benchmarks** (Center for Internet Security) son guías de configuración segura para sistemas operativos, aplicaciones y dispositivos de red. Son el estándar de facto para hardening.
+
+### Benchmarks relevantes para Linux
+
+| Benchmark | Enfoque | Ejemplo de control |
+|-----------|---------|---------------------|
+| CIS Ubuntu Linux | Sistema operativo | 1.1.1.1 Asegurar /tmp con noexec,nosuid,nodev |
+| CIS SSH | Servidor SSH | 3.4.1.1 Deshabilitar PermitRootLogin |
+| CIS Nginx | Servidor web | 4.2.3 Deshabilitar server_tokens |
+| CIS Docker | Contenedores | 5.1 Ejecutar como usuario no root |
+
+### Verificar cumplimiento CIS
+
+```bash
+# Verificar montajes de /tmp, /var, /var/log
+mount | grep -E '/tmp|/var'
+
+# Verificar configuración SSH
+grep -E 'PermitRootLogin|Protocol' /etc/ssh/sshd_config
+
+# Verificar archivos SUID
+find / -perm -4000 -type f 2>/dev/null | head -20
+```
+
+---
+
+## Monitoreo y detección de intrusiones
+
+### Logs de autenticación
+
+Los logs de autenticación registran cada intento de login:
+
+```bash
+# Últimos logins exitosos
+last
+
+# Últimos logins fallidos
+lastb
+
+# Logs de SSH
+sudo journalctl -u ssh
+sudo tail -f /var/log/auth.log
+
+# Buscar intentos fallidos recientes
+sudo grep "Failed password" /var/log/auth.log | tail -20
+```
+
+### Detectar actividad sospechosa
+
+```bash
+# Usuarios conectados ahora
+who
+
+# Historial de comandos de un usuario
+sudo cat /home/usuario/.bash_history
+
+# Procesos ejecutándose como root
+ps aux | grep root
+```
+
+---
+
+## 8.1 🎯 Ejercicio práctico: hardening de servidor Linux
+
+**Objetivo**: Aplicar 5 controles de hardening en un servidor Linux de laboratorio.
+
+**Requisitos previos**:
+- Acceso sudo configurado
+- SSH instalado y corriendo
+- Directorio `~/laboratorio/security`
+
+**Controles a aplicar**:
+
+1. **Usuarios root**: Verificar que solo `root` tiene UID 0.
+2. **Permisos críticos**: Verificar `/etc/passwd` y `/etc/shadow`.
+3. **Sudoers**: Analizar `/etc/sudoers` para configuraciones peligrosas.
+4. **Firewall**: Activar UFW y permitir solo SSH.
+5. **SSH hardening**: Deshabilitar `PermitRootLogin` en `/etc/ssh/sshd_config`.
+6. **Archivos SUID**: Buscar SUID sospechosos en `/tmp`.
+7. **Logs**: Revisar intentos de login fallidos.
+8. **Montajes seguros**: Verificar que `/tmp` tiene opciones `noexec,nosuid,nodev`.
+
+**Pasos**:
+
+```bash
+# 1. Verificar usuarios root
+awk -F: '$3 == 0 {print $1}' /etc/passwd
+
+# 2. Verificar permisos de archivos críticos
+ls -la /etc/passwd /etc/shadow
+
+# 3. Analizar sudoers
+sudo cat /etc/sudoers | grep -v "^#" | grep -v "^$"
+
+# 4. Activar firewall
+sudo ufw enable
+sudo ufw allow 22/tcp
+sudo ufw status
+
+# 5. Endurecer SSH
+sudo sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+sudo systemctl reload ssh
+
+# 6. Buscar SUID sospechosos
+find /tmp -perm -4000 -type f 2>/dev/null
+
+# 7. Revisar logs de autenticación
+sudo tail -20 /var/log/auth.log
+
+# 8. Verificar montajes seguros
+mount | grep -E '/tmp|/var'
+```
+
+**Troubleshooting**:
+
+| Problema | Solución |
+|----------|----------|
+| `ufw: command not found` | Instalar: `sudo apt install ufw` |
+| `sshd_config: permission denied` | Usar `sudo visudo -c` para validar antes de recargar |
+| `mount: permission denied` | Verificar que el punto de montaje existe |
+| No hay intentos de login fallidos | Normal en sistema recién instalado; simular con `sudo lastb` |
+
+---
+
+## 8.2 📋 Checklist de autoevaluación
+
+Marca cada casilla solo si puedes hacerlo **sin consultar apuntes**:
+
+- [ ] Identificar usuarios con UID 0 y explicar el riesgo
+- [ ] Explicar la diferencia entre `/etc/passwd` y `/etc/shadow`
+- [ ] Buscar archivos SUID/SGID y clasificar riesgo
+- [ ] Configurar regla básica en UFW (allow/deny)
+- [ ] Modificar `/etc/sudoers` con `visudo`
+- [ ] Deshabilitar `PermitRootLogin` en `sshd_config`
+- [ ] Generar par de claves SSH con `ssh-keygen`
+- [ ] Configurar permisos correctos en `~/.ssh` (700)
+- [ ] Interpretar logs de autenticación (`auth.log`, `journalctl`)
+- [ ] Verificar opciones de montaje seguras (`noexec`, `nosuid`, `nodev`)
+
+**Criterio de aprobación**: 8/10 casillas marcadas.
+
+---
+
+## 8.3 🔑 Puntos clave
+
+- **Hardening**: reducir superficie de ataque eliminando servicios innecesarios y endureciendo configuraciones.
+- **UID 0**: solo `root` debe tenerlo; cualquier otro usuario con UID 0 es una amenaza.
+- **SUID/SGID**: bits que elevan privilegios; deben auditarse regularmente.
+- **Sudoers**: principio de mínimo privilegio; usar `visudo` para editar.
+- **UFW**: interfaz simplificada de iptables para firewall básico.
+- **SSH hardening**: `PermitRootLogin no`, claves en lugar de contraseñas, `Protocol 2`.
+- **CIS Benchmarks**: estándar de endurecimiento; cubren montajes, SSH, servicios.
+- **Logs**: `/var/log/auth.log` y `journalctl` son evidencia de intentos de acceso.
+
+---
+
+## 8.4 🛡️ Proyecto: informe de hardening
+
+**Objetivo**: Generar un informe de hardening para el servidor de laboratorio.
+
+**Entregable**: Archivo `hardening-report.md` con:
+
+1. **Usuarios y privilegios**: lista de usuarios con UID 0, cuentas sin contraseña.
+2. **Permisos críticos**: estado de `/etc/passwd`, `/etc/shadow`, `/etc/sudoers`.
+3. **Servicios abiertos**: puertos escuchando, servicios innecesarios identificados.
+4. **Firewall**: estado de UFW/iptables, reglas activas.
+5. **SSH**: configuración de `sshd_config`, existencia de claves.
+6. **SUID/SGID**: lista de archivos con bits especiales, clasificación de riesgo.
+7. **Logs**: resumen de intentos de login fallidos.
+8. **CIS Check**: verificación de 3 controles CIS aplicables.
+9. **Plan de remediación**: 5 acciones priorizadas con impacto y esfuerzo.
+
+**Criterios de evaluación**:
+
+| Criterio | Peso |
+|----------|------|
+| Completitud del inventario | 25% |
+| Clasificación de riesgo SUID | 25% |
+| Configuración SSH | 20% |
+| Estado del firewall | 15% |
+| Plan de remediación accionable | 15% |
+
+---
+
+*📖 Tiempo estimado: 4-5 h • 🎯 15 retos • 📝 1 proyecto*

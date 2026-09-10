@@ -1,0 +1,533 @@
+---
+title: "Módulo 9 — Nginx: Servidor Web y Proxy Inverso"
+author: "Diego Saavedra, Mg. Sc. | Abacom"
+format:
+  html:
+    toc: true
+    toc-location: left
+    code-fold: false
+    theme: cosmo
+---
+
+# Módulo 9 — Nginx: Hardening de Servidores Web
+
+---
+
+## Introducción: el servidor como primera línea de defensa
+
+**Nginx (engine-x) es el servidor web más utilizado en Internet.** Según W3Techs, más del 35% de los sitios web del mundo corren sobre nginx. No es casualidad: está diseñado para alto rendimiento, bajo consumo de memoria y concurrencia masiva.
+
+En ciberseguridad, nginx no es solo un servidor web — es el **primer punto de entrada a tu aplicación**. Un servidor mal configurado puede exponer directorios sensibles, filtrar headers de seguridad, permitir listado de directorios, o ser el vector de ataques como **path traversal, XSS, o denegación de servicio**. Endurecer nginx es aplicar hardening a la capa de presentación.
+
+En este módulo aprenderás a instalar, configurar y **endurecer** nginx, con énfasis en virtual hosts, cabeceras de seguridad, proxies inversos y análisis de logs para detección de ataques.
+
+::: {.note}
+**Nota del instructor:** Nginx se despliega típicamente como reverse proxy delante de aplicaciones backend (Node.js, Python, PHP). Entender esta arquitectura es fundamental: el servidor web es la fachada; la aplicación es el motor. Ambos deben endurecerse, pero nginx es tu primera línea de defensa.
+:::
+
+---
+
+## Arquitectura de nginx
+
+### Procesos y modelo de ejecución
+
+Nginx usa un modelo **master-worker**:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    ARQUITECTURA NGINX                        │
+│                                                             │
+│   Cliente HTTP/HTTPS                                       │
+│       │                                                     │
+│       ▼                                                     │
+│   ┌──────────────┐                                          │
+│   │   Master     │  Proceso principal                       │
+│   │   Process    │  Lee configuración, gestiona workers     │
+│   └──────┬───────┘                                          │
+│          │                                                  │
+│    ┌─────┴─────┐                                           │
+│    │           │                                           │
+│    ▼           ▼                                           │
+│ ┌───────┐  ┌───────┐                                       │
+│ │Worker │  │Worker │  Procesos hijos                       │
+│ │  1    │  │  2    │  Manejan conexiones reales            │
+│ └───────┘  └───────┘                                       │
+│                                                             │
+│   Cada worker es single-threaded, event-driven (epoll/kqueue)│
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Flujo de una solicitud HTTP
+
+```
+Cliente → nginx (puerto 80/443) → ¿archivo estático?
+    ├─ Sí → Servir archivo directamente
+    └─ No → Proxy a backend (127.0.0.1:3000, uvicorn, etc.)
+            → Recibir respuesta → Devolver al cliente
+```
+
+---
+
+## Instalación y verificación
+
+### Instalar nginx
+
+```bash
+# Ubuntu/Debian
+sudo apt update && sudo apt install -y nginx
+
+# Verificar instalación
+nginx -v
+which nginx
+```
+
+### Iniciar y gestionar el servicio
+
+```bash
+# Iniciar
+sudo nginx
+sudo systemctl start nginx
+sudo service nginx start
+
+# Detener
+sudo nginx -s stop
+sudo systemctl stop nginx
+
+# Recargar configuración (sin perder conexiones)
+sudo nginx -s reload
+sudo systemctl reload nginx
+
+# Verificar configuración
+sudo nginx -t
+```
+
+Salida esperada:
+```
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+
+### Verificar respuesta HTTP
+
+```bash
+# Headers de respuesta
+curl -I http://localhost
+
+# Contenido de la página
+curl http://localhost
+
+# Ver puertos escuchando
+ss -tuln | grep ':80'
+```
+
+---
+
+## Configuración básica
+
+### Estructura de archivos
+
+| Ruta | Propósito |
+|------|-----------|
+| `/etc/nginx/nginx.conf` | Configuración principal |
+| `/etc/nginx/sites-available/` | Definiciones de virtual hosts |
+| `/etc/nginx/sites-enabled/` | Symlinks a sitios activos |
+| `/etc/nginx/conf.d/` | Configuraciones adicionales |
+| `/var/www/html/` | Document root por defecto |
+| `/var/log/nginx/access.log` | Log de acceso |
+| `/var/log/nginx/error.log` | Log de errores |
+
+### Configuración principal (`nginx.conf`)
+
+```nginx
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+
+events {
+    worker_connections 768;
+}
+
+http {
+    # MIME types
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # Logging
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+
+    # Optimizaciones
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+
+    # Compresión gzip
+    gzip on;
+    gzip_types text/plain text/css application/json;
+
+    # Incluir sitios
+    include /etc/nginx/sites-enabled/*;
+}
+```
+
+### Virtual host básico
+
+```nginx
+server {
+    listen 80;
+    server_name midominio.com;
+    root /var/www/misitio;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+
+---
+
+## Proxy inverso
+
+### ¿Qué es un reverse proxy?
+
+Un **reverse proxy** recibe solicitudes en nombre de servidores backend. El cliente habla con nginx; nginx habla con la aplicación.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    REVERSE PROXY                             │
+│                                                             │
+│   Cliente                                                   │
+│       │                                                     │
+│       ▼ HTTP://midominio.com                                │
+│   ┌──────────────┐                                          │
+│   │    nginx     │  reverse proxy                           │
+│   │  (puerto 80) │                                          │
+│   └──────┬───────┘                                          │
+│          │  proxy_pass                                      │
+│          ▼                                                 │
+│   ┌──────────────┐                                          │
+│   │  Aplicación  │  Node.js :3000                           │
+│   │   backend    │  Python :8000                            │
+│   └──────────────┘                                          │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Configuración de proxy inverso
+
+```nginx
+server {
+    listen 80;
+    server_name api.midominio.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+### Proxy con balanceo de carga
+
+```nginx
+upstream backend {
+    server 127.0.0.1:3000;
+    server 127.0.0.1:3001;
+    server 127.0.0.1:3002;
+}
+
+server {
+    listen 80;
+    location / {
+        proxy_pass http://backend;
+    }
+}
+```
+
+---
+
+## Logs y monitoreo
+
+### Log de acceso (`access.log`)
+
+Cada solicitud genera una línea en el access log:
+
+```
+192.168.1.10 - - [10/Sep/2026:14:30:00 +0000] "GET / HTTP/1.1" 200 1234 "-" "Mozilla/5.0"
+```
+
+Campos:
+1. **IP remota** — cliente que hace la solicitud
+2. **Identidad** —通常 `-` (no usada)
+3. **Usuario** — autenticación HTTP básica
+4. **Fecha** — timestamp de la solicitud
+5. **Request** — método, ruta, protocolo
+6. **Status** — código HTTP (200, 404, 500)
+7. **Tamaño** — bytes enviados
+8. **Referer** — página de origen
+9. **User-Agent** — navegador/cliente
+
+### Log de errores (`error.log`)
+
+```bash
+# Ver errores recientes
+sudo tail -f /var/log/nginx/error.log
+
+# Filtrar por nivel
+grep -i "error\|warn\|crit" /var/log/nginx/error.log
+```
+
+### Monitoreo en tiempo real
+
+```bash
+# Accesos en tiempo real
+sudo tail -f /var/log/nginx/access.log
+
+# Ver líneas por minuto
+awk '{print $4}' /var/log/nginx/access.log | cut -d: -f1-3 | uniq -c
+
+# IPs más activas
+awk '{print $1}' /var/log/nginx/access.log | sort | uniq -c | sort -rn | head -10
+```
+
+### Análisis de logs para detección de ataques
+
+Los logs de nginx son una fuente primaria de detección de intrusos:
+
+```bash
+# Detectar escaneo de directorios (path traversal)
+grep -E "(\.\.\/|\.\.\\\)" /var/log/nginx/access.log
+
+# Detectar intentos de inyección SQL
+grep -iE "(union|select|insert|drop|script)" /var/log/nginx/access.log
+
+# Detectar scanners de vulnerabilidades
+grep -E "(nikto|sqlmap|nmap|scanner)" /var/log/nginx/access.log
+
+# Detectar errores 404 masivos (posible enumeración)
+awk '$9 == 404 {print $1}' /var/log/nginx/access.log | sort | uniq -c | sort -rn
+
+# Detectar User-Agents sospechosos
+grep -E "(bot|scanner|exploit|shell)" /var/log/nginx/access.log
+```
+
+---
+
+## Seguridad en nginx
+
+### Cabeceras de seguridad
+
+Nginx puede enviar cabeceras HTTP que endurecen la seguridad del navegador:
+
+```nginx
+# En el bloque http o server
+add_header X-Frame-Options "SAMEORIGIN";
+add_header X-XSS-Protection "1; mode=block";
+add_header X-Content-Type-Options "nosniff";
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
+add_header Content-Security-Policy "default-src 'self'";
+add_header Referrer-Policy "strict-origin-when-cross-origin";
+```
+
+### Deshabilitar características innecesarias
+
+```nginx
+# No mostrar versión de nginx
+server_tokens off;
+
+# Deshabilitar métodos HTTP peligrosos
+if ($request_method !~ ^(GET|HEAD|POST)$ ) {
+    return 405;
+}
+
+# Limitar tamaño de request (prevenir DoS)
+client_max_body_size 10M;
+
+# Timeout de conexión
+client_body_timeout 10s;
+client_header_timeout 10s;
+```
+
+### Prevenir listado de directorios
+
+```nginx
+location /static/ {
+    autoindex off;
+}
+```
+
+### Rate limiting (limitar solicitudes)
+
+```nginx
+# Definir zona de límite
+limit_req_zone $binary_remote_addr zone=login:10m rate=5r/m;
+
+# Aplicar en location
+location /login {
+    limit_req zone=login burst=2 nodelay;
+    proxy_pass http://backend;
+}
+```
+
+---
+
+## 9.1 🎯 Ejercicio práctico: servidor web endurecido con análisis de logs
+
+**Objetivo**: Configurar un virtual host en nginx con hardening completo y analizar logs para detectar ataques.
+
+**Requisitos previos**:
+- nginx instalado
+- Acceso sudo
+- Directorio `~/laboratorio/web`
+
+**Pasos**:
+
+1. Crear directorio del sitio:
+   ```bash
+   sudo mkdir -p /var/www/misitio
+   ```
+
+2. Crear página HTML personalizada:
+   ```bash
+   sudo tee /var/www/misitio/index.html > /dev/null << 'HTML'
+   <!DOCTYPE html>
+   <html>
+   <head><title>Mi Servidor</title></head>
+   <body><h1>Hola desde nginx</h1><p>Servidor endurecido.</p></body>
+   </html>
+   HTML
+   ```
+
+3. Crear configuración de virtual host con hardening:
+   ```bash
+   sudo tee /etc/nginx/sites-available/misitio > /dev/null << 'NGINX'
+   server {
+       listen 8080;
+       server_name localhost;
+       root /var/www/misitio;
+       index index.html;
+
+       # Cabeceras de seguridad
+       add_header X-Frame-Options "SAMEORIGIN";
+       add_header X-XSS-Protection "1; mode=block";
+       add_header X-Content-Type-Options "nosniff";
+
+       # Ocultar versión de nginx
+       server_tokens off;
+
+       # Prevenir listado de directorios
+       autoindex off;
+
+       location / {
+           try_files $uri $uri/ =404;
+       }
+   }
+   NGINX
+   ```
+
+4. Habilitar el sitio:
+   ```bash
+   sudo ln -sf /etc/nginx/sites-available/misitio /etc/nginx/sites-enabled/
+   ```
+
+5. Verificar configuración:
+   ```bash
+   sudo nginx -t
+   ```
+
+6. Recargar nginx:
+   ```bash
+   sudo nginx -s reload
+   ```
+
+7. Probar respuesta y verificar cabeceras:
+   ```bash
+   curl -I http://localhost:8080
+   ```
+
+8. Analizar logs para detectar patrones de ataque:
+   ```bash
+   # Generar tráfico de prueba
+   curl "http://localhost:8080/../../../etc/passwd" 2>/dev/null
+   curl "http://localhost:8080/?id=1' OR '1'='1" 2>/dev/null
+   
+   # Analizar logs
+   grep -E "(\.\.\/|union|select|drop)" /var/log/nginx/access.log
+   ```
+
+**Troubleshooting**:
+
+| Problema | Solución |
+|----------|----------|
+| `bind() failed` | Puerto ocupado; usar `sudo ss -tulpn \| grep :8080` |
+| `site not found` | Verificar symlink en `sites-enabled/` |
+| `403 Forbidden` | Verificar permisos de `/var/www/misitio` |
+| `404 Not Found` | Verificar `root` y `index` en config |
+
+---
+
+## 9.2 📋 Checklist de autoevaluación
+
+Marca cada casilla solo si puedes hacerlo **sin consultar apuntes**:
+
+- [ ] Iniciar/detener nginx y verificar estado
+- [ ] Interpretar `nginx -t` y corregir errores
+- [ ] Crear un virtual host en `sites-available`
+- [ ] Habilitar sitio con symlink en `sites-enabled`
+- [ ] Configurar cabeceras de seguridad (`X-Frame-Options`, `HSTS`, `CSP`)
+- [ ] Deshabilitar `server_tokens` y listado de directorios
+- [ ] Configurar proxy inverso a backend
+- [ ] Leer y filtrar `access.log` y `error.log`
+- [ ] Detectar path traversal y SQL injection en logs
+- [ ] Aplicar rate limiting básico
+
+**Criterio de aprobación**: 8/10 casillas marcadas.
+
+---
+
+## 9.3 🔑 Puntos clave
+
+- **Nginx**: servidor web event-driven, alto rendimiento, bajo consumo.
+- **Master-worker**: proceso principal gestiona workers que manejan conexiones.
+- **Virtual host**: múltiples sitios en un solo servidor (`server {}` blocks).
+- **Reverse proxy**: nginx fronta aplicaciones backend (`proxy_pass`).
+- **Sites-available vs sites-enabled**: configuración disponible vs activa (symlinks).
+- **Logs**: `access.log` (tráfico), `error.log` (errores).
+- **Cabeceras de seguridad**: `X-Frame-Options`, `HSTS`, `CSP`, `server_tokens off`.
+- **Rate limiting**: `limit_req_zone` para prevenir abuso.
+
+---
+
+## 9.4 🛡️ Proyecto: servidor web endurecido
+
+**Objetivo**: Desplegar un servidor nginx con hardening completo.
+
+**Entregable**: Archivo `nginx-hardening.md` con:
+
+1. **Configuración nginx.conf**: con `server_tokens off`, `gzip`, timeouts.
+2. **Virtual host**: sitio activo en puerto 8080 con página personalizada.
+3. **Cabeceras de seguridad**: las 5 cabeceras esenciales aplicadas.
+4. **Proxy inverso**: configuración que redirige `/api` a `127.0.0.1:3000`.
+5. **Logs**: extracción de 5 patrones de ataque desde `access.log`.
+6. **Rate limit**: configuración de límite de solicitudes por IP.
+7. **Checklist CIS**: 3 controles CIS aplicables a nginx.
+
+**Criterios de evaluación**:
+
+| Criterio | Peso |
+|----------|------|
+| Configuración funcional | 25% |
+| Cabeceras de seguridad | 25% |
+| Proxy inverso operativo | 20% |
+| Análisis de logs | 15% |
+| Rate limiting | 15% |
+
+---
+
+*📖 Tiempo estimado: 3-4 h • 🎯 10 retos • 📝 1 proyecto*

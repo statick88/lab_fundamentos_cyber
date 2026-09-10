@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Diego Saavedra, Mg. Sc. | Abacom">
+
+<title>Módulo — IAM, MFA y Control de Acceso</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="modulo-iam-mfa-control-acceso_files/libs/clipboard/clipboard.min.js"></script>
+<script src="modulo-iam-mfa-control-acceso_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="modulo-iam-mfa-control-acceso_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="modulo-iam-mfa-control-acceso_files/libs/quarto-html/popper.min.js"></script>
+<script src="modulo-iam-mfa-control-acceso_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="modulo-iam-mfa-control-acceso_files/libs/quarto-html/anchor.min.js"></script>
+<link href="modulo-iam-mfa-control-acceso_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="modulo-iam-mfa-control-acceso_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="modulo-iam-mfa-control-acceso_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="modulo-iam-mfa-control-acceso_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="modulo-iam-mfa-control-acceso_files/libs/bootstrap/bootstrap-8ffd5f67044e5306d9846f29df41dda5.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#módulo-iam-mfa-y-control-de-acceso" id="toc-módulo-iam-mfa-y-control-de-acceso" class="nav-link active" data-scroll-target="#módulo-iam-mfa-y-control-de-acceso">Módulo — IAM, MFA y Control de Acceso</a>
+  <ul class="collapse">
+  <li><a href="#introducción-la-identidad-es-el-nuevo-perímetro" id="toc-introducción-la-identidad-es-el-nuevo-perímetro" class="nav-link" data-scroll-target="#introducción-la-identidad-es-el-nuevo-perímetro">Introducción: la identidad es el nuevo perímetro</a></li>
+  <li><a href="#iam-identity-and-access-management" id="toc-iam-identity-and-access-management" class="nav-link" data-scroll-target="#iam-identity-and-access-management">IAM: Identity and Access Management</a>
+  <ul class="collapse">
+  <li><a href="#componentes-de-iam" id="toc-componentes-de-iam" class="nav-link" data-scroll-target="#componentes-de-iam">Componentes de IAM</a></li>
+  <li><a href="#principio-de-menor-privilegio" id="toc-principio-de-menor-privilegio" class="nav-link" data-scroll-target="#principio-de-menor-privilegio">Principio de menor privilegio</a></li>
+  </ul></li>
+  <li><a href="#mfa-multi-factor-authentication" id="toc-mfa-multi-factor-authentication" class="nav-link" data-scroll-target="#mfa-multi-factor-authentication">MFA: Multi-Factor Authentication</a>
+  <ul class="collapse">
+  <li><a href="#factores-de-autenticación" id="toc-factores-de-autenticación" class="nav-link" data-scroll-target="#factores-de-autenticación">Factores de autenticación</a></li>
+  <li><a href="#implementación-de-mfa-en-linux" id="toc-implementación-de-mfa-en-linux" class="nav-link" data-scroll-target="#implementación-de-mfa-en-linux">Implementación de MFA en Linux</a></li>
+  </ul></li>
+  <li><a href="#sudoers-control-de-privilegios" id="toc-sudoers-control-de-privilegios" class="nav-link" data-scroll-target="#sudoers-control-de-privilegios">sudoers: control de privilegios</a>
+  <ul class="collapse">
+  <li><a href="#el-archivo-etcsudoers" id="toc-el-archivo-etcsudoers" class="nav-link" data-scroll-target="#el-archivo-etcsudoers">El archivo <code>/etc/sudoers</code></a></li>
+  <li><a href="#buenas-prácticas" id="toc-buenas-prácticas" class="nav-link" data-scroll-target="#buenas-prácticas">Buenas prácticas</a></li>
+  </ul></li>
+  <li><a href="#pam-pluggable-authentication-modules" id="toc-pam-pluggable-authentication-modules" class="nav-link" data-scroll-target="#pam-pluggable-authentication-modules">PAM: Pluggable Authentication Modules</a>
+  <ul class="collapse">
+  <li><a href="#qué-es-pam" id="toc-qué-es-pam" class="nav-link" data-scroll-target="#qué-es-pam">¿Qué es PAM?</a></li>
+  <li><a href="#políticas-de-contraseñas" id="toc-políticas-de-contraseñas" class="nav-link" data-scroll-target="#políticas-de-contraseñas">Políticas de contraseñas</a></li>
+  </ul></li>
+  <li><a href="#auditoría-de-accesos" id="toc-auditoría-de-accesos" class="nav-link" data-scroll-target="#auditoría-de-accesos">Auditoría de accesos</a>
+  <ul class="collapse">
+  <li><a href="#comandos-esenciales" id="toc-comandos-esenciales" class="nav-link" data-scroll-target="#comandos-esenciales">Comandos esenciales</a></li>
+  <li><a href="#detectar-usuarios-con-privilegios" id="toc-detectar-usuarios-con-privilegios" class="nav-link" data-scroll-target="#detectar-usuarios-con-privilegios">Detectar usuarios con privilegios</a></li>
+  </ul></li>
+  <li><a href="#ejercicio-práctico-hardening-de-identidades" id="toc-ejercicio-práctico-hardening-de-identidades" class="nav-link" data-scroll-target="#ejercicio-práctico-hardening-de-identidades">3.1 🎯 Ejercicio práctico: hardening de identidades</a></li>
+  <li><a href="#checklist-de-autoevaluación" id="toc-checklist-de-autoevaluación" class="nav-link" data-scroll-target="#checklist-de-autoevaluación">3.2 📋 Checklist de autoevaluación</a></li>
+  <li><a href="#puntos-clave" id="toc-puntos-clave" class="nav-link" data-scroll-target="#puntos-clave">3.3 🔑 Puntos clave</a></li>
+  <li><a href="#proyecto-sistema-de-gestión-de-identidades" id="toc-proyecto-sistema-de-gestión-de-identidades" class="nav-link" data-scroll-target="#proyecto-sistema-de-gestión-de-identidades">3.4 🛡️ Proyecto: sistema de gestión de identidades</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Módulo — IAM, MFA y Control de Acceso</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Diego Saavedra, Mg. Sc. | Abacom </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="módulo-iam-mfa-y-control-de-acceso" class="level1">
+<h1>Módulo — IAM, MFA y Control de Acceso</h1>
+<hr>
+<section id="introducción-la-identidad-es-el-nuevo-perímetro" class="level2">
+<h2 class="anchored" data-anchor-id="introducción-la-identidad-es-el-nuevo-perímetro">Introducción: la identidad es el nuevo perímetro</h2>
+<p><strong>En ciberseguridad, la identidad es el nuevo perímetro.</strong> Ya no alcanza con un firewall: si un atacante roba credenciales válidas, puede entrar sin disparar ninguna alarma. Por eso el control de acceso es uno de los pilares fundamentales de la defensa moderna.</p>
+<p>IAM (Identity and Access Management) es el conjunto de políticas, procesos y tecnologías que garantizan que <strong>la persona correcta accede a los recursos correctos en el momento correcto</strong>.</p>
+<p>En este módulo aprenderás a gestionar identidades, configurar MFA, aplicar el principio de menor privilegio y auditar accesos en sistemas Linux.</p>
+<div class="note">
+<p><strong>Contexto profesional:</strong> El 80% de las filtraciones de datos involucran credenciales robadas o débiles. MFA reduce este riesgo en más del 99%. Configurar MFA no es opcional en entornos profesionales.</p>
+</div>
+<hr>
+</section>
+<section id="iam-identity-and-access-management" class="level2">
+<h2 class="anchored" data-anchor-id="iam-identity-and-access-management">IAM: Identity and Access Management</h2>
+<section id="componentes-de-iam" class="level3">
+<h3 class="anchored" data-anchor-id="componentes-de-iam">Componentes de IAM</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Componente</th>
+<th>Descripción</th>
+<th>Ejemplo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Usuarios</strong></td>
+<td>Identidades individuales</td>
+<td><code>juan</code>, <code>maria</code></td>
+</tr>
+<tr class="even">
+<td><strong>Grupos</strong></td>
+<td>Colección de usuarios</td>
+<td><code>sysadmins</code>, <code>desarrolladores</code></td>
+</tr>
+<tr class="odd">
+<td><strong>Roles</strong></td>
+<td>Conjunto de permisos</td>
+<td><code>dba</code>, <code>auditor</code></td>
+</tr>
+<tr class="even">
+<td><strong>Permisos</strong></td>
+<td>Acciones permitidas</td>
+<td>leer, escribir, ejecutar</td>
+</tr>
+<tr class="odd">
+<td><strong>Políticas</strong></td>
+<td>Reglas de acceso</td>
+<td>“solo desde IPs corporativas”</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="principio-de-menor-privilegio" class="level3">
+<h3 class="anchored" data-anchor-id="principio-de-menor-privilegio">Principio de menor privilegio</h3>
+<p><strong>Un usuario debe tener solo los permisos necesarios para hacer su trabajo, ni uno más.</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ❌ Mal: usuario con acceso root permanente</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ✅ Bien: usuario con permisos específicos via sudoers</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ops_admin</span> ALL=<span class="er">(</span><span class="ex">ALL</span><span class="kw">)</span> <span class="ex">NOPASSWD:</span> /usr/bin/systemctl restart nginx</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="mfa-multi-factor-authentication" class="level2">
+<h2 class="anchored" data-anchor-id="mfa-multi-factor-authentication">MFA: Multi-Factor Authentication</h2>
+<section id="factores-de-autenticación" class="level3">
+<h3 class="anchored" data-anchor-id="factores-de-autenticación">Factores de autenticación</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Factor</th>
+<th>Descripción</th>
+<th>Ejemplo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Algo que sabes</strong></td>
+<td>Conocimiento</td>
+<td>Contraseña, PIN</td>
+</tr>
+<tr class="even">
+<td><strong>Algo que tienes</strong></td>
+<td>Posesión</td>
+<td>Token, smartphone, YubiKey</td>
+</tr>
+<tr class="odd">
+<td><strong>Algo que eres</strong></td>
+<td>Biometría</td>
+<td>Huella, rostro, voz</td>
+</tr>
+</tbody>
+</table>
+<p>MFA combina 2+ factores. Si uno se roba, el segundo protege el acceso.</p>
+</section>
+<section id="implementación-de-mfa-en-linux" class="level3">
+<h3 class="anchored" data-anchor-id="implementación-de-mfa-en-linux">Implementación de MFA en Linux</h3>
+<section id="google-authenticator-totp" class="level4">
+<h4 class="anchored" data-anchor-id="google-authenticator-totp">Google Authenticator (TOTP)</h4>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Instalar PAM y Google Authenticator</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install <span class="at">-y</span> libpam-google-authenticator</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Configurar para el usuario</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">google-authenticator</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Configurar PAM para SSH</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"auth required pam_google_authenticator.so"</span> <span class="kw">|</span> <span class="fu">sudo</span> tee <span class="at">-a</span> /etc/pam.d/sshd</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Configurar SSH para requerir MFA</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"ChallengeResponseAuthentication yes"</span> <span class="kw">|</span> <span class="fu">sudo</span> tee <span class="at">-a</span> /etc/ssh/sshd_config</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"AuthenticationMethods publickey,password publickey,keyboard-interactive"</span> <span class="kw">|</span> <span class="fu">sudo</span> tee <span class="at">-a</span> /etc/ssh/sshd_config</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Reiniciar SSH</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl restart sshd</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="yubikey-hardware-token" class="level4">
+<h4 class="anchored" data-anchor-id="yubikey-hardware-token">YubiKey (hardware token)</h4>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Configurar YubiKey para SSH</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Generar clave en YubiKey</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ykman</span> oath keys list</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Configurar SSH para usar clave física</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> <span class="at">-I</span> /usr/lib/x86_64-linux-gnu/libykcs11.so usuario@servidor</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+</section>
+<section id="sudoers-control-de-privilegios" class="level2">
+<h2 class="anchored" data-anchor-id="sudoers-control-de-privilegios">sudoers: control de privilegios</h2>
+<section id="el-archivo-etcsudoers" class="level3">
+<h3 class="anchored" data-anchor-id="el-archivo-etcsudoers">El archivo <code>/etc/sudoers</code></h3>
+<p>Controla quién puede ejecutar qué como root:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Formato: usuario HOST=(runas) COMANDOS</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ops_admin</span> ALL=<span class="er">(</span><span class="ex">ALL</span><span class="kw">)</span> <span class="ex">NOPASSWD:</span> /usr/bin/systemctl restart nginx</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">dev_user</span> ALL=<span class="er">(</span><span class="ex">ALL</span><span class="kw">)</span> <span class="ex">NOPASSWD:</span> /usr/bin/docker</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ex">auditor</span> ALL=<span class="er">(</span><span class="ex">ALL</span><span class="kw">)</span> <span class="ex">NOPASSWD:</span> /usr/bin/journalctl</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="buenas-prácticas" class="level3">
+<h3 class="anchored" data-anchor-id="buenas-prácticas">Buenas prácticas</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 58%">
+<col style="width: 41%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Práctica</th>
+<th>Razón</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>NOPASSWD solo para comandos específicos</strong></td>
+<td>No dar shell root completo</td>
+</tr>
+<tr class="even">
+<td><strong>Grupos en vez de usuarios individuales</strong></td>
+<td>Escalable</td>
+</tr>
+<tr class="odd">
+<td><strong>Alias para conjuntos de comandos</strong></td>
+<td>Mantenible</td>
+</tr>
+<tr class="even">
+<td><strong>visudo para editar</strong></td>
+<td>Validación de sintaxis</td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Usar visudo (nunca editar directamente)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> visudo</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejemplo con alias</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="ex">Cmnd_Alias</span> WEB_CMDS = /usr/bin/systemctl restart nginx, /usr/bin/systemctl reload nginx</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="ex">ops_admin</span> ALL=<span class="er">(</span><span class="ex">ALL</span><span class="kw">)</span> <span class="ex">NOPASSWD:</span> WEB_CMDS</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="pam-pluggable-authentication-modules" class="level2">
+<h2 class="anchored" data-anchor-id="pam-pluggable-authentication-modules">PAM: Pluggable Authentication Modules</h2>
+<section id="qué-es-pam" class="level3">
+<h3 class="anchored" data-anchor-id="qué-es-pam">¿Qué es PAM?</h3>
+<p>PAM permite configurar autenticación modularmente. Cada servicio (SSH, login, sudo) puede tener reglas diferentes.</p>
+<pre><code>/etc/pam.d/
+├── sshd      # Configuración SSH
+├── login     # Login en consola
+├── sudo      # Ejecución con sudo
+├── su        # Cambio de usuario
+└── common-auth  # Auth común</code></pre>
+</section>
+<section id="políticas-de-contraseñas" class="level3">
+<h3 class="anchored" data-anchor-id="políticas-de-contraseñas">Políticas de contraseñas</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/login.defs</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">PASS_MAX_DAYS</span> 90      <span class="co"># Expiración de contraseña</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">PASS_MIN_DAYS</span> 1       <span class="co"># Mínimo entre cambios</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">PASS_WARN_AGE</span> 14      <span class="co"># Advertencia antes de expirar</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="auditoría-de-accesos" class="level2">
+<h2 class="anchored" data-anchor-id="auditoría-de-accesos">Auditoría de accesos</h2>
+<section id="comandos-esenciales" class="level3">
+<h3 class="anchored" data-anchor-id="comandos-esenciales">Comandos esenciales</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver últimos logins</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">last</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver logins fallidos</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">lastb</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver quién está conectado</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="fu">who</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver historial de sudo</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cat /var/log/auth.log <span class="kw">|</span> <span class="fu">grep</span> sudo</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver intentos de autenticación fallidos</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cat /var/log/auth.log <span class="kw">|</span> <span class="fu">grep</span> <span class="st">"Failed password"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="detectar-usuarios-con-privilegios" class="level3">
+<h3 class="anchored" data-anchor-id="detectar-usuarios-con-privilegios">Detectar usuarios con privilegios</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver usuarios root</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F:</span> <span class="st">'$3 == 0 {print $1}'</span> /etc/passwd</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver usuarios con sudo</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-E</span> <span class="st">"^[^#].*sudo"</span> /etc/group</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver sudoers activos</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cat /etc/sudoers <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-v</span> <span class="st">"^#"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="ejercicio-práctico-hardening-de-identidades" class="level2">
+<h2 class="anchored" data-anchor-id="ejercicio-práctico-hardening-de-identidades">3.1 🎯 Ejercicio práctico: hardening de identidades</h2>
+<p><strong>Objetivo</strong>: Crear grupo de operadores, configurar sudoers limitado y auditar accesos.</p>
+<p><strong>Pasos</strong>:</p>
+<ol type="1">
+<li><p>Crear grupo y usuario:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> groupadd sysadmins</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> useradd <span class="at">-m</span> <span class="at">-s</span> /bin/bash ops_admin</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> usermod <span class="at">-aG</span> sysadmins ops_admin</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p>Configurar sudoers con privilegios limitados:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tee /etc/sudoers.d/ops_admin <span class="op">&lt;&lt; 'EOF'</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="st">ops_admin ALL=(ALL) NOPASSWD: /usr/bin/systemctl status nginx</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 440 /etc/sudoers.d/ops_admin</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p>Verificar política de contraseñas:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chage <span class="at">-l</span> ops_admin</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p>Auditar accesos:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">last</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cat /var/log/auth.log <span class="kw">|</span> <span class="fu">grep</span> <span class="st">"Failed password"</span> <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-5</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ol>
+<p><strong>Validación</strong>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 29%">
+<col style="width: 33%">
+<col style="width: 37%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Prueba</th>
+<th>Comando</th>
+<th>Esperado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Grupo creado</td>
+<td><code>getent group sysadmins</code></td>
+<td><code>sysadmins:x:1001:ops_admin</code></td>
+</tr>
+<tr class="even">
+<td>Sudoers aplicado</td>
+<td><code>sudo -l -U ops_admin</code></td>
+<td>Solo comandos permitidos</td>
+</tr>
+<tr class="odd">
+<td>Política activa</td>
+<td><code>sudo chage -l ops_admin</code></td>
+<td>90 días máximo</td>
+</tr>
+<tr class="even">
+<td>Logs de acceso</td>
+<td><code>last | grep ops_admin</code></td>
+<td>Entradas registradas</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="checklist-de-autoevaluación" class="level2">
+<h2 class="anchored" data-anchor-id="checklist-de-autoevaluación">3.2 📋 Checklist de autoevaluación</h2>
+<p>Marca cada casilla solo si puedes hacerlo <strong>sin consultar apuntes</strong>:</p>
+<ul class="task-list">
+<li><label><input type="checkbox">Explicar componentes de IAM (usuarios, grupos, roles, permisos)</label></li>
+<li><label><input type="checkbox">Aplicar principio de menor privilegio</label></li>
+<li><label><input type="checkbox">Configurar Google Authenticator para MFA</label></li>
+<li><label><input type="checkbox">Editar sudoers con <code>visudo</code></label></li>
+<li><label><input type="checkbox">Crear alias de comandos en sudoers</label></li>
+<li><label><input type="checkbox">Configurar políticas de contraseñas en <code>/etc/login.defs</code></label></li>
+<li><label><input type="checkbox">Auditar logins con <code>last</code> y <code>lastb</code></label></li>
+<li><label><input type="checkbox">Detectar usuarios con privilegios excesivos</label></li>
+<li><label><input type="checkbox">Configurar PAM para servicio específico</label></li>
+<li><label><input type="checkbox">Explicar diferencias entre factores de autenticación</label></li>
+</ul>
+<p><strong>Criterio de aprobación</strong>: 8/10 casillas marcadas.</p>
+<hr>
+</section>
+<section id="puntos-clave" class="level2">
+<h2 class="anchored" data-anchor-id="puntos-clave">3.3 🔑 Puntos clave</h2>
+<ul>
+<li><strong>IAM</strong>: gestión de identidades y accesos. Base de la seguridad moderna.</li>
+<li><strong>MFA</strong>: combina 2+ factores. Reduce riesgo de robo de credenciales en 99%.</li>
+<li><strong>Principio de menor privilegio</strong>: solo permisos necesarios.</li>
+<li><strong>sudoers</strong>: control fino de privilegios. Usar <code>visudo</code>.</li>
+<li><strong>PAM</strong>: módulos de autenticación configurables por servicio.</li>
+<li><strong>Políticas de contraseñas</strong>: <code>/etc/login.defs</code> define expiración, advertencia.</li>
+<li><strong>Auditoría</strong>: <code>last</code>, <code>lastb</code>, <code>auth.log</code> para rastrear accesos.</li>
+<li><strong>Hardening de identidades</strong>: primera línea de defensa.</li>
+</ul>
+<hr>
+</section>
+<section id="proyecto-sistema-de-gestión-de-identidades" class="level2">
+<h2 class="anchored" data-anchor-id="proyecto-sistema-de-gestión-de-identidades">3.4 🛡️ Proyecto: sistema de gestión de identidades</h2>
+<p><strong>Objetivo</strong>: Implementar IAM completo para entorno empresarial simulado.</p>
+<p><strong>Entregable</strong>: Documento <code>iam-setup.md</code> con:</p>
+<ol type="1">
+<li><strong>Grupos y usuarios</strong>: 3 grupos (sysadmins, devs, auditors) con usuarios asignados.</li>
+<li><strong>sudoers</strong>: configuración con privilegios específicos por grupo.</li>
+<li><strong>MFA</strong>: Google Authenticator configurado para usuarios privilegiados.</li>
+<li><strong>Políticas</strong>: expiración de contraseñas, complejidad, historial.</li>
+<li><strong>Auditoría</strong>: script que genera reporte de accesos del mes.</li>
+<li><strong>PAM</strong>: configuración para SSH con MFA obligatorio.</li>
+</ol>
+<p><strong>Criterios de evaluación</strong>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Criterio</th>
+<th>Peso</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Estructura IAM (grupos/roles)</td>
+<td>25%</td>
+</tr>
+<tr class="even">
+<td>sudoers con menor privilegio</td>
+<td>25%</td>
+</tr>
+<tr class="odd">
+<td>MFA implementado</td>
+<td>25%</td>
+</tr>
+<tr class="even">
+<td>Políticas de contraseñas</td>
+<td>15%</td>
+</tr>
+<tr class="odd">
+<td>Script de auditoría</td>
+<td>10%</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><em>📖 Tiempo estimado: 3-4 h • 🎯 5 retos • 📝 1 proyecto</em></p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

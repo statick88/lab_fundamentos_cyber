@@ -71,7 +71,14 @@
 | 14 | `openssl verify -CAfile ca/ca.crt servidor.crt` |
 | 15 | Verificar subject del certificado y existencia de archivos |
 
-## Troubleshooting común
+## Acceso al laboratorio
+
+| Campo | Valor |
+|-------|-------|
+| Usuario | `estudiante` |
+| Contraseña | `lab123` |
+
+El usuario `estudiante` pertenece al grupo `sudo` con NOPASSWD para herramientas del lab.
 
 | Problema | Causa | Solución |
 |----------|-------|----------|

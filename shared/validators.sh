@@ -42,3 +42,9 @@ assert_openssl_subject_matches() {
     echo "FAIL: Subject no coincide con '$pattern' en $cert" >&2
     return 1
 }
+
+assert_file_not_exists() {
+    [ ! -f "$1" ] && return 0
+    echo "FAIL: Archivo no esperado encontrado: $1" >&2
+    return 1
+}

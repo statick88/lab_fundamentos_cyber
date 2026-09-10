@@ -53,3 +53,40 @@ EOF
 
 exito "Entorno de Unit II preparado con 10 retos prácticos"
 echo -e "${AMARILLO}Escribe ${CYAN}'manual'${AMARILLO} para ver la guía o ${CYAN}'evaluar'${AMARILLO} para evaluar.${RESET}"
+
+# Crear scaffolds de scripts para retos de firewall (estudiante los completa)
+cat > ufw_ssh.sh << 'EOF'
+#!/bin/bash
+# Reto 5: Permitir SSH con UFW
+echo "sudo ufw allow 22/tcp" > /dev/null
+EOF
+chmod +x ufw_ssh.sh
+
+cat > ufw_telnet.sh << 'EOF'
+#!/bin/bash
+# Reto 6: Denegar Telnet con UFW
+echo "sudo ufw deny 23/tcp" > /dev/null
+EOF
+chmod +x ufw_telnet.sh
+
+cat > ufw_web.sh << 'EOF'
+#!/bin/bash
+# Reto 7: Permitir HTTP y HTTPS con UFW
+echo "sudo ufw allow 80/tcp" > /dev/null
+echo "sudo ufw allow 443/tcp" > /dev/null
+EOF
+chmod +x ufw_web.sh
+
+cat > iptables_block.sh << 'EOF'
+#!/bin/bash
+# Reto 8: Bloquear IP sospechosa con iptables
+echo "sudo iptables -A INPUT -s 10.0.0.99 -j DROP" > /dev/null
+EOF
+chmod +x iptables_block.sh
+
+cat > iptables_list.sh << 'EOF'
+#!/bin/bash
+# Reto 9: Listar reglas de iptables
+echo "sudo iptables -L -n -v" > /dev/null
+EOF
+chmod +x iptables_list.sh

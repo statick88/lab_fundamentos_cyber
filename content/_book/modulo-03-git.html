@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Diego Saavedra, Mg. Sc. | Abacom">
+
+<title>Módulo 3 — Scripting y Control de Acceso</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="modulo-03-git_files/libs/clipboard/clipboard.min.js"></script>
+<script src="modulo-03-git_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="modulo-03-git_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="modulo-03-git_files/libs/quarto-html/popper.min.js"></script>
+<script src="modulo-03-git_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="modulo-03-git_files/libs/quarto-html/anchor.min.js"></script>
+<link href="modulo-03-git_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="modulo-03-git_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="modulo-03-git_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="modulo-03-git_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="modulo-03-git_files/libs/bootstrap/bootstrap-8ffd5f67044e5306d9846f29df41dda5.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#módulo-3-scripting-y-control-de-acceso" id="toc-módulo-3-scripting-y-control-de-acceso" class="nav-link active" data-scroll-target="#módulo-3-scripting-y-control-de-acceso">Módulo 3 — Scripting y Control de Acceso</a>
+  <ul class="collapse">
+  <li><a href="#introducción-automatizar-la-defensa" id="toc-introducción-automatizar-la-defensa" class="nav-link" data-scroll-target="#introducción-automatizar-la-defensa">Introducción: automatizar la defensa</a>
+  <ul class="collapse">
+  <li><a href="#el-flujo-de-trabajo-de-git" id="toc-el-flujo-de-trabajo-de-git" class="nav-link" data-scroll-target="#el-flujo-de-trabajo-de-git">El flujo de trabajo de Git</a></li>
+  <li><a href="#commit-snapshot-no-diferencia" id="toc-commit-snapshot-no-diferencia" class="nav-link" data-scroll-target="#commit-snapshot-no-diferencia">Commit: snapshot, no diferencia</a></li>
+  <li><a href="#push-pull-sincronización-remota" id="toc-push-pull-sincronización-remota" class="nav-link" data-scroll-target="#push-pull-sincronización-remota">Push / Pull: sincronización remota</a></li>
+  </ul></li>
+  <li><a href="#comandos-esenciales-con-ejemplos" id="toc-comandos-esenciales-con-ejemplos" class="nav-link" data-scroll-target="#comandos-esenciales-con-ejemplos">Comandos esenciales con ejemplos</a>
+  <ul class="collapse">
+  <li><a href="#git-init-crear-un-repositorio" id="toc-git-init-crear-un-repositorio" class="nav-link" data-scroll-target="#git-init-crear-un-repositorio">git init — crear un repositorio</a></li>
+  <li><a href="#git-clone-clonar-un-repositorio-existente" id="toc-git-clone-clonar-un-repositorio-existente" class="nav-link" data-scroll-target="#git-clone-clonar-un-repositorio-existente">git clone — clonar un repositorio existente</a></li>
+  <li><a href="#git-add-y-git-status-preparar-cambios" id="toc-git-add-y-git-status-preparar-cambios" class="nav-link" data-scroll-target="#git-add-y-git-status-preparar-cambios">git add y git status — preparar cambios</a></li>
+  <li><a href="#git-commit-guardar-snapshot" id="toc-git-commit-guardar-snapshot" class="nav-link" data-scroll-target="#git-commit-guardar-snapshot">git commit — guardar snapshot</a></li>
+  <li><a href="#git-push-y-git-pull-sincronizar-con-remoto" id="toc-git-push-y-git-pull-sincronizar-con-remoto" class="nav-link" data-scroll-target="#git-push-y-git-pull-sincronizar-con-remoto">git push y git pull — sincronizar con remoto</a></li>
+  <li><a href="#git-log-ver-historial" id="toc-git-log-ver-historial" class="nav-link" data-scroll-target="#git-log-ver-historial">git log — ver historial</a></li>
+  <li><a href="#git-diff-ver-diferencias" id="toc-git-diff-ver-diferencias" class="nav-link" data-scroll-target="#git-diff-ver-diferencias">git diff — ver diferencias</a></li>
+  </ul></li>
+  <li><a href="#gitignore-correcto" id="toc-gitignore-correcto" class="nav-link" data-scroll-target="#gitignore-correcto">.gitignore correcto</a>
+  <ul class="collapse">
+  <li><a href="#qué-ignorar" id="toc-qué-ignorar" class="nav-link" data-scroll-target="#qué-ignorar">Qué ignorar</a></li>
+  <li><a href="#qué-no-ignorar" id="toc-qué-no-ignorar" class="nav-link" data-scroll-target="#qué-no-ignorar">Qué NO ignorar</a></li>
+  </ul></li>
+  <li><a href="#estrategia-de-ramas-git-flow-simplificado" id="toc-estrategia-de-ramas-git-flow-simplificado" class="nav-link" data-scroll-target="#estrategia-de-ramas-git-flow-simplificado">Estrategia de ramas: Git Flow simplificado</a>
+  <ul class="collapse">
+  <li><a href="#convenciones-de-ramas" id="toc-convenciones-de-ramas" class="nav-link" data-scroll-target="#convenciones-de-ramas">Convenciones de ramas</a></li>
+  <li><a href="#conventional-commits" id="toc-conventional-commits" class="nav-link" data-scroll-target="#conventional-commits">Conventional Commits</a></li>
+  <li><a href="#commits-atómicos" id="toc-commits-atómicos" class="nav-link" data-scroll-target="#commits-atómicos">Commits atómicos</a></li>
+  </ul></li>
+  <li><a href="#minipasos-guiados" id="toc-minipasos-guiados" class="nav-link" data-scroll-target="#minipasos-guiados">Minipasos guiados</a>
+  <ul class="collapse">
+  <li><a href="#paso-1-crear-repositorio-local" id="toc-paso-1-crear-repositorio-local" class="nav-link" data-scroll-target="#paso-1-crear-repositorio-local">Paso 1: Crear repositorio local</a></li>
+  <li><a href="#paso-2-primer-commit-con-notas-de-laboratorio" id="toc-paso-2-primer-commit-con-notas-de-laboratorio" class="nav-link" data-scroll-target="#paso-2-primer-commit-con-notas-de-laboratorio">Paso 2: Primer commit con notas de laboratorio</a></li>
+  <li><a href="#paso-3-push-a-repositorio-remoto" id="toc-paso-3-push-a-repositorio-remoto" class="nav-link" data-scroll-target="#paso-3-push-a-repositorio-remoto">Paso 3: Push a repositorio remoto</a></li>
+  <li><a href="#paso-4-clonar-en-otra-máquina" id="toc-paso-4-clonar-en-otra-máquina" class="nav-link" data-scroll-target="#paso-4-clonar-en-otra-máquina">Paso 4: Clonar en otra máquina</a></li>
+  </ul></li>
+  <li><a href="#notas-de-seguridad-nunca-commitees-credenciales" id="toc-notas-de-seguridad-nunca-commitees-credenciales" class="nav-link" data-scroll-target="#notas-de-seguridad-nunca-commitees-credenciales">Notas de seguridad: nunca commitees credenciales</a>
+  <ul class="collapse">
+  <li><a href="#el-error-más-común-y-más-peligroso" id="toc-el-error-más-común-y-más-peligroso" class="nav-link" data-scroll-target="#el-error-más-común-y-más-peligroso">El error más común (y más peligroso)</a></li>
+  <li><a href="#prevención" id="toc-prevención" class="nav-link" data-scroll-target="#prevención">Prevención</a></li>
+  </ul></li>
+  <li><a href="#scripting-en-bash-para-ciberseguridad" id="toc-scripting-en-bash-para-ciberseguridad" class="nav-link" data-scroll-target="#scripting-en-bash-para-ciberseguridad">Scripting en Bash para ciberseguridad</a>
+  <ul class="collapse">
+  <li><a href="#por-qué-script-en-seguridad" id="toc-por-qué-script-en-seguridad" class="nav-link" data-scroll-target="#por-qué-script-en-seguridad">¿Por qué script en seguridad?</a></li>
+  <li><a href="#estructura-básica-de-un-script" id="toc-estructura-básica-de-un-script" class="nav-link" data-scroll-target="#estructura-básica-de-un-script">Estructura básica de un script</a></li>
+  <li><a href="#scripting-para-recolección-de-evidencia" id="toc-scripting-para-recolección-de-evidencia" class="nav-link" data-scroll-target="#scripting-para-recolección-de-evidencia">Scripting para recolección de evidencia</a></li>
+  <li><a href="#automatización-con-cron" id="toc-automatización-con-cron" class="nav-link" data-scroll-target="#automatización-con-cron">Automatización con cron</a></li>
+  </ul></li>
+  <li><a href="#control-de-acceso-sudoers-y-pam" id="toc-control-de-acceso-sudoers-y-pam" class="nav-link" data-scroll-target="#control-de-acceso-sudoers-y-pam">Control de Acceso: sudoers y PAM</a>
+  <ul class="collapse">
+  <li><a href="#el-archivo-sudoers" id="toc-el-archivo-sudoers" class="nav-link" data-scroll-target="#el-archivo-sudoers">El archivo sudoers</a></li>
+  <li><a href="#buenas-prácticas" id="toc-buenas-prácticas" class="nav-link" data-scroll-target="#buenas-prácticas">Buenas prácticas</a></li>
+  <li><a href="#pam-autenticación-modular" id="toc-pam-autenticación-modular" class="nav-link" data-scroll-target="#pam-autenticación-modular">PAM: autenticación modular</a></li>
+  <li><a href="#políticas-de-contraseñas" id="toc-políticas-de-contraseñas" class="nav-link" data-scroll-target="#políticas-de-contraseñas">Políticas de contraseñas</a></li>
+  </ul></li>
+  <li><a href="#ejercicio-práctico-script-de-auditoría-sudoers" id="toc-ejercicio-práctico-script-de-auditoría-sudoers" class="nav-link" data-scroll-target="#ejercicio-práctico-script-de-auditoría-sudoers">3.1 🎯 Ejercicio práctico: script de auditoría + sudoers</a></li>
+  <li><a href="#checklist-de-autoevaluación" id="toc-checklist-de-autoevaluación" class="nav-link" data-scroll-target="#checklist-de-autoevaluación">Checklist de autoevaluación</a></li>
+  <li><a href="#próximo-paso" id="toc-próximo-paso" class="nav-link" data-scroll-target="#próximo-paso">Próximo paso</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Módulo 3 — Scripting y Control de Acceso</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Diego Saavedra, Mg. Sc. | Abacom </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="módulo-3-scripting-y-control-de-acceso" class="level1">
+<h1>Módulo 3 — Scripting y Control de Acceso</h1>
+<hr>
+<section id="introducción-automatizar-la-defensa" class="level2">
+<h2 class="anchored" data-anchor-id="introducción-automatizar-la-defensa">Introducción: automatizar la defensa</h2>
+<p><strong>En ciberseguridad, la automatización no es opcional.</strong> Cuando respondes a un incidente, no tienes tiempo de ejecutar 50 comandos manualmente. Necesitas scripts que recopilen evidencia, verifiquen integridad y apliquen controles en segundos.</p>
+<p>Este módulo cubre dos pilares fundamentales: 1. <strong>Scripting en Bash</strong> — automatizar tareas de seguridad 2. <strong>Control de Acceso</strong> — gestionar quién puede hacer qué en el sistema</p>
+<section id="el-flujo-de-trabajo-de-git" class="level3">
+<h3 class="anchored" data-anchor-id="el-flujo-de-trabajo-de-git">El flujo de trabajo de Git</h3>
+<pre><code>    ┌─────────────────────────────────────────────────────────────┐
+    │                 FLUJO DE TRABAJO GIT                        │
+    │                                                             │
+    │   ┌──────────────┐                                          │
+    │   │  WORKING     │  ← Tu directorio de trabajo actual      │
+    │   │  DIRECTORY   │     (archivos que editas)               │
+    │   └──────┬───────┘                                          │
+    │          │ git add                                          │
+    │          ▼                                                  │
+    │   ┌──────────────┐                                          │
+    │   │  STAGING     │  ← Área de preparación                  │
+    │   │  AREA        │     (archivos listos para commit)       │
+    │   └──────┬───────┘                                          │
+    │          │ git commit                                       │
+    │          ▼                                                  │
+    │   ┌──────────────┐                                          │
+    │   │  LOCAL       │  ← Tu repositorio local                 │
+    │   │  REPO        │     (historial completo en tu máquina)  │
+    │   └──────┬───────┘                                          │
+    │          │ git push / git pull                              │
+    │          ▼                                                  │
+    │   ┌──────────────┐                                          │
+    │   │  REMOTE      │  ← Repositorio remoto (GitHub, GitLab)  │
+    │   │  REPO        │     (compartido con el equipo)          │
+    │   └──────────────┘                                          │
+    │                                                             │
+    └─────────────────────────────────────────────────────────────┘</code></pre>
+</section>
+<section id="commit-snapshot-no-diferencia" class="level3">
+<h3 class="anchored" data-anchor-id="commit-snapshot-no-diferencia">Commit: snapshot, no diferencia</h3>
+<p>Un <strong>commit</strong> es una “foto” completa de tus archivos en un momento específico. No es una diferencia (diff) — es el estado completo del proyecto en ese instante.</p>
+<pre><code>    ┌──────────────────────────────────────────────────────┐
+    │                 HISTORIAL DE COMMITS                 │
+    │                                                      │
+    │   commit a1b2c3  ← "Agregar script de análisis"      │
+    │        │                                             │
+    │        ▼                                             │
+    │   commit d4e5f6  ← "Corregir bug en parser"          │
+    │        │                                             │
+    │        ▼                                             │
+    │   commit g7h8i9  ← "Documentar hallazgos"           │
+    │                                                      │
+    │   Cada commit tiene:                                 │
+    │   - Hash único (a1b2c3...)                          │
+    │   - Mensaje descriptivo                              │
+    │   - Autor y timestamp                                │
+    │   - Referencia al commit anterior                    │
+    │                                                      │
+    └──────────────────────────────────────────────────────┘</code></pre>
+</section>
+<section id="push-pull-sincronización-remota" class="level3">
+<h3 class="anchored" data-anchor-id="push-pull-sincronización-remota">Push / Pull: sincronización remota</h3>
+<ul>
+<li><strong>Push</strong>: envía tus commits locales al repositorio remoto</li>
+<li><strong>Pull</strong>: trae los cambios del remoto a tu máquina local</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="comandos-esenciales-con-ejemplos" class="level2">
+<h2 class="anchored" data-anchor-id="comandos-esenciales-con-ejemplos">Comandos esenciales con ejemplos</h2>
+<section id="git-init-crear-un-repositorio" class="level3">
+<h3 class="anchored" data-anchor-id="git-init-crear-un-repositorio">git init — crear un repositorio</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear un directorio para el proyecto</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> laboratorio-seguridad</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> laboratorio-seguridad</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Inicializar repositorio Git</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> init</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>Initialized empty Git repository in /home/estudiante/laboratorio-seguridad/.git/</code></pre>
+</section>
+<section id="git-clone-clonar-un-repositorio-existente" class="level3">
+<h3 class="anchored" data-anchor-id="git-clone-clonar-un-repositorio-existente">git clone — clonar un repositorio existente</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Clonar un repositorio remoto</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/usuario/repo-seguridad.git</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>Cloning into 'repo-seguridad'...
+remote: Enumerating objects: 42, done.
+Receiving objects: 100% (42/42), done.</code></pre>
+</section>
+<section id="git-add-y-git-status-preparar-cambios" class="level3">
+<h3 class="anchored" data-anchor-id="git-add-y-git-status-preparar-cambios">git add y git status — preparar cambios</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar el estado actual</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> status</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>On branch main
+Untracked files:
+  (use "git add &lt;file&gt;..." to include in commit)
+        script_analisis.sh
+
+nothing added to commit but untracked files present</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Agregar un archivo específico al staging area</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add script_analisis.sh</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Agregar todos los cambios</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add .</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="git-commit-guardar-snapshot" class="level3">
+<h3 class="anchored" data-anchor-id="git-commit-guardar-snapshot">git commit — guardar snapshot</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear commit con mensaje descriptivo</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">"Agregar script de análisis de logs"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>[main a1b2c3d] Agregar script de análisis de logs
+ 1 file changed, 15 insertions(+)
+ create mode 100644 script_analisis.sh</code></pre>
+<div class="warning">
+<p><strong>Advertencia:</strong> Los mensajes de commit deben ser descriptivos. <code>git commit -m "cambios"</code> no dice nada. <code>git commit -m "Agregar parser para logs de autenticación"</code> sí.</p>
+</div>
+</section>
+<section id="git-push-y-git-pull-sincronizar-con-remoto" class="level3">
+<h3 class="anchored" data-anchor-id="git-push-y-git-pull-sincronizar-con-remoto">git push y git pull — sincronizar con remoto</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enviar commits locales al remoto</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin main</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>Enumerating objects: 4, done.
+To https://github.com/usuario/repo.git
+   d4e5f6g..a1b2c3d  main -&gt; main</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Traer cambios del remoto</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> pull origin main</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>Updating a1b2c3d..h8i9j0k
+Fast-forward
+ README.md | 5 +++++
+ 1 file changed, 5 insertions(+)</code></pre>
+</section>
+<section id="git-log-ver-historial" class="level3">
+<h3 class="anchored" data-anchor-id="git-log-ver-historial">git log — ver historial</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Historial compacto</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> log <span class="at">--oneline</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>h8i9j0k (HEAD -&gt; main) Documentar hallazgos del laboratorio
+a1b2c3d Agregar script de análisis de logs
+d4e5f6g Commit inicial</code></pre>
+</section>
+<section id="git-diff-ver-diferencias" class="level3">
+<h3 class="anchored" data-anchor-id="git-diff-ver-diferencias">git diff — ver diferencias</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver cambios no guardados</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> diff</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>diff --git a/script_analisis.sh b/script_analisis.sh
+index 1234567..89abcde 100644
+--- a/script_analisis.sh
++++ b/script_analisis.sh
+@@ -10,6 +10,7 @@
+ echo "Analizando..."
+ grep "Failed" /var/log/auth.log
++grep "Accepted" /var/log/auth.log</code></pre>
+<hr>
+</section>
+</section>
+<section id="gitignore-correcto" class="level2">
+<h2 class="anchored" data-anchor-id="gitignore-correcto">.gitignore correcto</h2>
+<section id="qué-ignorar" class="level3">
+<h3 class="anchored" data-anchor-id="qué-ignorar">Qué ignorar</h3>
+<p>El archivo <code>.gitignore</code> le dice a Git qué archivos NO debe versionar. En ciberseguridad, esto es crítico.</p>
+<pre class="gitignore"><code># ═══════════════════════════════════════════════════
+# .gitignore para proyectos de ciberseguridad
+# ═══════════════════════════════════════════════════
+
+# CREDENALLES - NUNCA versionar
+*.pem
+*.key
+*.p12
+*.pfx
+.env
+.env.*
+secrets/
+credentials/
+passwords.txt
+*.secret
+
+# ARCHIVOS TEMPORALES
+*.tmp
+*.log
+*.bak
+*~
+.DS_Store
+Thumbs.db
+
+# OUTPUTS DE HERRAMIENTAS
+nmap_output/
+scan_reports/
+pcap_captures/*.pcap
+evidence/screenshots/
+
+# ARCHIVOS GRANDES
+*.iso
+*.img
+*.zip
+*.tar.gz
+
+# ENTORNOS VIRTUALES
+venv/
+.venv/
+node_modules/</code></pre>
+</section>
+<section id="qué-no-ignorar" class="level3">
+<h3 class="anchored" data-anchor-id="qué-no-ignorar">Qué NO ignorar</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Archivo</th>
+<th>Por qué versionarlo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Scripts (.sh, .py)</td>
+<td>Son el trabajo principal</td>
+</tr>
+<tr class="even">
+<td>Documentación (.md)</td>
+<td>Explica el propósito y uso</td>
+</tr>
+<tr class="odd">
+<td>Plantillas (.template)</td>
+<td>Base para configuraciones</td>
+</tr>
+<tr class="even">
+<td>Archivos de configuración</td>
+<td>Permiten reproducir el entorno</td>
+</tr>
+</tbody>
+</table>
+<div class="warning">
+<p><strong>Advertencia de seguridad:</strong> Si alguna vez commiteas credenciales por accidente, cambiar la contraseña inmediatamente. Eliminar el archivo de Git no basta — el historial conserva el commit. Usa <code>git filter-branch</code> o BFG Repo-Cleaner para eliminar datos sensibles del historial.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="estrategia-de-ramas-git-flow-simplificado" class="level2">
+<h2 class="anchored" data-anchor-id="estrategia-de-ramas-git-flow-simplificado">Estrategia de ramas: Git Flow simplificado</h2>
+<p>En este curso seguimos la convención definida en <code>CONTRIBUTING.md</code>: una estructura de tres niveles que separa el desarrollo de las correcciones de estabilidad.</p>
+<pre><code>    ┌────────────────────────────────────────────────────────────────────┐
+    │                    ESTRATEGIA DE RAMAS (CONTRIBUTING.md)          │
+    │                                                                    │
+    │   main   ──────●────────────────────●──────────────────●──────►     │
+    │              │                    │                    │             │
+    │              │        merge       │                    │             │
+    │              └────── develop ─────┘                    │             │
+    │                      │                                    │             │
+    │                      │                    merge         │             │
+    │                      │    ┌──── fix/corregir-timeout ────┘             │
+    │                      │    │                                        │
+    │                      ▼    ▼                                        │
+    │                    feature/                                      │
+    │                    nmap-escaneo                                    │
+    │                    │                                               │
+    │             ┌──────●───●───●───●───●─┐                           │
+    │             │  commits atómicos con  │                            │
+    │             │  Conventional Commits │                            │
+    │             └────────────────────────┘                           │
+    │                                                                    │
+    │   • main:     código de producción estable                          │
+    │   • develop:  integración de nuevas funcionalidades                 │
+    │   • feature/*: desarrollo de una funcionalidad concreta            │
+    │   • fix/*:    correcciones rápidas desde main (hotfixes)            │
+    │                                                                    │
+    └────────────────────────────────────────────────────────────────────┘</code></pre>
+<section id="convenciones-de-ramas" class="level3">
+<h3 class="anchored" data-anchor-id="convenciones-de-ramas">Convenciones de ramas</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 21%">
+<col style="width: 33%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Tipo de rama</th>
+<th>Prefijo</th>
+<th>Creado desde</th>
+<th>Uso</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>main</strong></td>
+<td>—</td>
+<td>—</td>
+<td>Código estable, listo para producción</td>
+</tr>
+<tr class="even">
+<td><strong>develop</strong></td>
+<td>—</td>
+<td><code>main</code></td>
+<td>Integración de features antes de merge a <code>main</code></td>
+</tr>
+<tr class="odd">
+<td><strong>Feature</strong></td>
+<td><code>feature/</code></td>
+<td><code>develop</code></td>
+<td>Nueva funcionalidad (ej: <code>feature/nmap-escaneo</code>)</td>
+</tr>
+<tr class="even">
+<td><strong>Fix</strong></td>
+<td><code>fix/</code></td>
+<td><code>main</code></td>
+<td>Corrección urgente de producción (ej: <code>fix/corregir-timeout</code>)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="conventional-commits" class="level3">
+<h3 class="anchored" data-anchor-id="conventional-commits">Conventional Commits</h3>
+<p>Los mensajes de commit siguen el formato <strong>Conventional Commits</strong>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 25%">
+<col style="width: 45%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Tipo</th>
+<th>Uso</th>
+<th>Ejemplo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>feat:</code></td>
+<td>Nueva funcionalidad</td>
+<td><code>feat: agregar parser para logs de autenticación</code></td>
+</tr>
+<tr class="even">
+<td><code>fix:</code></td>
+<td>Corrección de bug</td>
+<td><code>fix: corregir regex que fallaba con timestamps</code></td>
+</tr>
+<tr class="odd">
+<td><code>docs:</code></td>
+<td>Cambios en documentación</td>
+<td><code>docs: actualizar guía de uso de tcpdump</code></td>
+</tr>
+<tr class="even">
+<td><code>refactor:</code></td>
+<td>Reestructuración sin cambios de comportamiento</td>
+<td><code>refactor: simplificar lógica de validación</code></td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ✅ BIEN: commits atómicos con tipo convencional</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">"feat: agregar script de descubrimiento de hosts"</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">"fix: corregir filtro tcpdump para tráfico DNS"</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">"docs: documentar filtros avanzados de tcpdump"</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="co"># ❌ MAL: commit monolítico sin tipo</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">"cambios"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="note">
+<p><strong>Nota del instructor:</strong> Cada commit debe ser una “foto” verificable. Si no puedes describir en una línea lo que cambió, el commit es demasiado grande. <code>feat:</code> y <code>fix:</code> no son solo estilo — son contratos con tu equipo y con el futuro tú.</p>
+</div>
+</section>
+<section id="commits-atómicos" class="level3">
+<h3 class="anchored" data-anchor-id="commits-atómicos">Commits atómicos</h3>
+<p>Un <strong>commit atómico</strong> contiene un solo cambio lógico. No mezcles correcciones de bugs con nuevas funcionalidades. Si un commit incluye “agregar funcionalidad” y “corregir bug”, tu <code>git bisect</code> se vuelve inútil para localizar cuándo se introdujo el error.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ❌ MAL: un commit con múltiples cambios no relacionados</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">"Varios cambios y correcciones"</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ✅ BIEN: commits separados por cambio lógico</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">"feat: agregar parser para logs de autenticación"</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">"fix: corregir regex que fallaba con timestamps"</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">"docs: documentar uso del script de análisis"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="minipasos-guiados" class="level2">
+<h2 class="anchored" data-anchor-id="minipasos-guiados">Minipasos guiados</h2>
+<section id="paso-1-crear-repositorio-local" class="level3">
+<h3 class="anchored" data-anchor-id="paso-1-crear-repositorio-local">Paso 1: Crear repositorio local</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> lab-seguridad</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> lab-seguridad</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> init</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Configurar identidad (solo una vez por máquina)</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> config <span class="at">--global</span> user.name <span class="st">"Tu Nombre"</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> config <span class="at">--global</span> user.email <span class="st">"tu@email.com"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="paso-2-primer-commit-con-notas-de-laboratorio" class="level3">
+<h3 class="anchored" data-anchor-id="paso-2-primer-commit-con-notas-de-laboratorio">Paso 2: Primer commit con notas de laboratorio</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear archivo de notas</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> notas_laboratorio.md <span class="op">&lt;&lt; 'EOF'</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="st"># Notas de Laboratorio</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="st">## Fecha: 2024-01-15</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="st">## Objetivo: Análisis de logs de autenticación</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="st">### Hallazgos</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="st">- 47 intentos de acceso fallidos desde IP 192.168.1.100</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="st">- 2 accesos exitosos fuera de horario laboral</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a><span class="st">### Próximos pasos</span></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="st">- Investigar IP sospechosa</span></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a><span class="st">- Revisar logs de los últimos 7 días</span></span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Agregar y commitear</span></span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add notas_laboratorio.md</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">"Agregar notas iniciales de laboratorio"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="paso-3-push-a-repositorio-remoto" class="level3">
+<h3 class="anchored" data-anchor-id="paso-3-push-a-repositorio-remoto">Paso 3: Push a repositorio remoto</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Agregar repositorio remoto</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> remote add origin https://github.com/tu-usuario/lab-seguridad.git</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Enviar commits</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push <span class="at">-u</span> origin main</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="paso-4-clonar-en-otra-máquina" class="level3">
+<h3 class="anchored" data-anchor-id="paso-4-clonar-en-otra-máquina">Paso 4: Clonar en otra máquina</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># En otra máquina, clonar el repositorio</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/tu-usuario/lab-seguridad.git</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> lab-seguridad</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar el historial</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> log <span class="at">--oneline</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="notas-de-seguridad-nunca-commitees-credenciales" class="level2">
+<h2 class="anchored" data-anchor-id="notas-de-seguridad-nunca-commitees-credenciales">Notas de seguridad: nunca commitees credenciales</h2>
+<section id="el-error-más-común-y-más-peligroso" class="level3">
+<h3 class="anchored" data-anchor-id="el-error-más-común-y-más-peligroso">El error más común (y más peligroso)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ❌ NUNCA hagas esto</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"password123"</span> <span class="op">&gt;</span> config.env</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add config.env</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">"Agregar configuración"</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Si subes credenciales a un repositorio público:</p>
+<ol type="1">
+<li><strong>Cualquiera puede verlas</strong> — bots escanean GitHub 24/7 buscando secretos</li>
+<li><strong>El historial persiste</strong> — borrar el archivo no lo elimina del historial</li>
+<li><strong>El daño es inmediato</strong> — atacantes automatizados explotan credenciales en minutos</li>
+</ol>
+</section>
+<section id="prevención" class="level3">
+<h3 class="anchored" data-anchor-id="prevención">Prevención</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Crear .gitignore ANTES de empezar</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"*.env"</span> <span class="op">&gt;&gt;</span> .gitignore</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"credentials/"</span> <span class="op">&gt;&gt;</span> .gitignore</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Usar variables de entorno</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DB_PASSWORD</span><span class="op">=</span><span class="st">"secreto"</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="co"># En el código: os.environ['DB_PASSWORD']</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Usar herramientas de detección</span></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a><span class="co"># git-secrets, trufflehog, gitleaks</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="warning">
+<p><strong>Advertencia de seguridad:</strong> Si accidentalmente commiteas una contraseña, cámbiala INMEDIATEMENTE. No basta con hacer otro commit que elimine el archivo — el secreto sigue en el historial de Git.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="scripting-en-bash-para-ciberseguridad" class="level2">
+<h2 class="anchored" data-anchor-id="scripting-en-bash-para-ciberseguridad">Scripting en Bash para ciberseguridad</h2>
+<section id="por-qué-script-en-seguridad" class="level3">
+<h3 class="anchored" data-anchor-id="por-qué-script-en-seguridad">¿Por qué script en seguridad?</h3>
+<p>Los scripts automatizan tareas repetitivas: recopilar evidencia, verificar hashes, escanear puertos, generar reportes. En respuesta a incidentes, un script puede hacer en segundos lo que a un humano le tomaría horas.</p>
+</section>
+<section id="estructura-básica-de-un-script" class="level3">
+<h3 class="anchored" data-anchor-id="estructura-básica-de-un-script">Estructura básica de un script</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Script: verificar-integridad.sh</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Propósito: Verificar integridad de archivos críticos del sistema</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Variables</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="va">DIRECTORIO</span><span class="op">=</span><span class="st">"/etc"</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="va">ARCHIVO_HASH</span><span class="op">=</span><span class="st">"hashes_criticos.sha256"</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar si el archivo de hashes existe</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-f</span> <span class="st">"</span><span class="va">$ARCHIVO_HASH</span><span class="st">"</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"ERROR: Archivo de hashes no encontrado"</span></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">exit</span> 1</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar integridad</span></span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="st">"</span><span class="va">$DIRECTORIO</span><span class="st">"</span></span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a><span class="fu">sha256sum</span> <span class="at">-c</span> <span class="st">"</span><span class="va">$ARCHIVO_HASH</span><span class="st">"</span> <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="va">$?</span> <span class="ot">-eq</span> 0 <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"✅ Integridad verificada: ningún archivo modificado"</span></span>
+<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span></span>
+<span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"❌ ALERTA: Archivos modificados detectados"</span></span>
+<span id="cb30-23"><a href="#cb30-23" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"Ejecutar: auditctl -w </span><span class="va">$DIRECTORIO</span><span class="st"> -p wa -k integrity_check"</span></span>
+<span id="cb30-24"><a href="#cb30-24" aria-hidden="true" tabindex="-1"></a>    <span class="bu">exit</span> 1</span>
+<span id="cb30-25"><a href="#cb30-25" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="scripting-para-recolección-de-evidencia" class="level3">
+<h3 class="anchored" data-anchor-id="scripting-para-recolección-de-evidencia">Scripting para recolección de evidencia</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Script: recolectar-evidencias.sh</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Uso: bash recolectar-evidencias.sh</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="va">FECHA</span><span class="op">=</span><span class="va">$(</span><span class="fu">date</span> +%Y%m%d_%H%M%S<span class="va">)</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="va">DIR_EVIDENCIA</span><span class="op">=</span><span class="st">"~/laboratorio/evidencias/</span><span class="va">$FECHA</span><span class="st">"</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">"</span><span class="va">$DIR_EVIDENCIA</span><span class="st">"</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Listar procesos activos</span></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a><span class="fu">ps</span> aux <span class="op">&gt;</span> <span class="st">"</span><span class="va">$DIR_EVIDENCIA</span><span class="st">/procesos.txt"</span></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Conexiones de red</span></span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a><span class="ex">ss</span> <span class="at">-tulnp</span> <span class="op">&gt;</span> <span class="st">"</span><span class="va">$DIR_EVIDENCIA</span><span class="st">/conexiones.txt"</span></span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Logs de autenticación</span></span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cp /var/log/auth.log <span class="st">"</span><span class="va">$DIR_EVIDENCIA</span><span class="st">/auth.log"</span> <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Usuarios con privilegios</span></span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F:</span> <span class="st">'$3 == 0 {print $1}'</span> /etc/passwd <span class="op">&gt;</span> <span class="st">"</span><span class="va">$DIR_EVIDENCIA</span><span class="st">/root_users.txt"</span></span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Evidencias recolectadas en: </span><span class="va">$DIR_EVIDENCIA</span><span class="st">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="automatización-con-cron" class="level3">
+<h3 class="anchored" data-anchor-id="automatización-con-cron">Automatización con cron</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejecutar verificación de integridad cada hora</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="ex">0</span> <span class="pp">*</span> <span class="pp">*</span> <span class="pp">*</span> <span class="pp">*</span> /home/estudiante/scripts/verificar-integridad.sh <span class="op">&gt;&gt;</span> /var/log/integridad.log <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Backup diario a las 2:00 AM</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="ex">0</span> 2 <span class="pp">*</span> <span class="pp">*</span> <span class="pp">*</span> /home/estudiante/scripts/backup-diario.sh</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="control-de-acceso-sudoers-y-pam" class="level2">
+<h2 class="anchored" data-anchor-id="control-de-acceso-sudoers-y-pam">Control de Acceso: sudoers y PAM</h2>
+<section id="el-archivo-sudoers" class="level3">
+<h3 class="anchored" data-anchor-id="el-archivo-sudoers">El archivo sudoers</h3>
+<p>Controla quién puede ejecutar qué como root:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Formato: usuario HOST=(runas) COMANDOS</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ops_admin</span> ALL=<span class="er">(</span><span class="ex">ALL</span><span class="kw">)</span> <span class="ex">NOPASSWD:</span> /usr/bin/systemctl restart nginx</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="ex">dev_user</span> ALL=<span class="er">(</span><span class="ex">ALL</span><span class="kw">)</span> <span class="ex">NOPASSWD:</span> /usr/bin/docker</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="ex">auditor</span> ALL=<span class="er">(</span><span class="ex">ALL</span><span class="kw">)</span> <span class="ex">NOPASSWD:</span> /usr/bin/journalctl</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="buenas-prácticas" class="level3">
+<h3 class="anchored" data-anchor-id="buenas-prácticas">Buenas prácticas</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 58%">
+<col style="width: 41%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Práctica</th>
+<th>Razón</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>NOPASSWD solo para comandos específicos</strong></td>
+<td>No dar shell root completo</td>
+</tr>
+<tr class="even">
+<td><strong>Grupos en vez de usuarios individuales</strong></td>
+<td>Escalable</td>
+</tr>
+<tr class="odd">
+<td><strong>Alias para conjuntos de comandos</strong></td>
+<td>Mantenible</td>
+</tr>
+<tr class="even">
+<td><strong>visudo para editar</strong></td>
+<td>Validación de sintaxis</td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Usar visudo (nunca editar directamente)</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> visudo</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejemplo con alias</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="ex">Cmnd_Alias</span> WEB_CMDS = /usr/bin/systemctl restart nginx, /usr/bin/systemctl reload nginx</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="ex">ops_admin</span> ALL=<span class="er">(</span><span class="ex">ALL</span><span class="kw">)</span> <span class="ex">NOPASSWD:</span> WEB_CMDS</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="pam-autenticación-modular" class="level3">
+<h3 class="anchored" data-anchor-id="pam-autenticación-modular">PAM: autenticación modular</h3>
+<p>PAM permite configurar autenticación por servicio:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/pam.d/sshd</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="ex">auth</span> required pam_google_authenticator.so</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="ex">account</span> required pam_nologin.so</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="ex">password</span> requisite pam_pwquality.so retry=3</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="políticas-de-contraseñas" class="level3">
+<h3 class="anchored" data-anchor-id="políticas-de-contraseñas">Políticas de contraseñas</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/login.defs</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="ex">PASS_MAX_DAYS</span> 90      <span class="co"># Expiración de contraseña</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="ex">PASS_MIN_DAYS</span> 1       <span class="co"># Mínimo entre cambios</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="ex">PASS_WARN_AGE</span> 14      <span class="co"># Advertencia antes de expirar</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="ejercicio-práctico-script-de-auditoría-sudoers" class="level2">
+<h2 class="anchored" data-anchor-id="ejercicio-práctico-script-de-auditoría-sudoers">3.1 🎯 Ejercicio práctico: script de auditoría + sudoers</h2>
+<p><strong>Objetivo</strong>: Crear script de recolección de evidencias y configurar sudoers limitado.</p>
+<p><strong>Parte A: Script de auditoría</strong></p>
+<ol type="1">
+<li><p>Crear directorio:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/laboratorio/scripts</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p>Crear script <code>recolectar-evidencias.sh</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> ~/laboratorio/scripts/recolectar-evidencias.sh <span class="op">&lt;&lt; 'EOF'</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="st">#!/bin/bash</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="st">DIR="$HOME/laboratorio/evidencias/$(date +%Y%m%d_%H%M%S)"</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="st">mkdir -p "$DIR"</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="st">ps aux &gt; "$DIR/procesos.txt"</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="st">ss -tulnp &gt; "$DIR/conexiones.txt"</span></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="st">echo "Evidencias en: $DIR"</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x ~/laboratorio/scripts/recolectar-evidencias.sh</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p>Ejecutar y verificar:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> ~/laboratorio/scripts/recolectar-evidencias.sh</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> ~/laboratorio/evidencias/<span class="pp">*</span>/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ol>
+<p><strong>Parte B: sudoers limitado</strong></p>
+<ol type="1">
+<li><p>Crear archivo sudoers:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"estudiante ALL=(ALL) NOPASSWD: /usr/bin/systemctl status sshd"</span> <span class="kw">|</span> <span class="fu">sudo</span> tee /etc/sudoers.d/estudiante</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 440 /etc/sudoers.d/estudiante</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p>Verificar:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ol>
+<p><strong>Validación</strong>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 29%">
+<col style="width: 33%">
+<col style="width: 37%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Prueba</th>
+<th>Comando</th>
+<th>Esperado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Script ejecutable</td>
+<td><code>bash ~/laboratorio/scripts/recolectar-evidencias.sh</code></td>
+<td>Crea directorio con archivos</td>
+</tr>
+<tr class="even">
+<td>Evidencias generadas</td>
+<td><code>ls ~/laboratorio/evidencias/*/</code></td>
+<td>procesos.txt, conexiones.txt</td>
+</tr>
+<tr class="odd">
+<td>Sudoers aplicado</td>
+<td><code>sudo -l</code></td>
+<td>Solo comando permitido</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="checklist-de-autoevaluación" class="level2">
+<h2 class="anchored" data-anchor-id="checklist-de-autoevaluación">Checklist de autoevaluación</h2>
+<ul class="task-list">
+<li><label><input type="checkbox">Explicar por qué Git es importante en ciberseguridad</label></li>
+<li><label><input type="checkbox">Usar flujo Git: working → staging → local → remoto</label></li>
+<li><label><input type="checkbox">Escribir commits con Conventional Commits</label></li>
+<li><label><input type="checkbox">Crear <code>.gitignore</code> apropiado para seguridad</label></li>
+<li><label><input type="checkbox">Escribir script bash con shebang y variables</label></li>
+<li><label><input type="checkbox">Usar condicionales y bucles en scripts</label></li>
+<li><label><input type="checkbox">Crear script de recolección de evidencias</label></li>
+<li><label><input type="checkbox">Configurar sudoers con privilegios específicos</label></li>
+<li><label><input type="checkbox">Explicar PAM y su rol en autenticación</label></li>
+<li><label><input type="checkbox">Configurar políticas de contraseñas</label></li>
+</ul>
+<p><strong>Criterio de aprobación</strong>: 8/10 casillas marcadas.</p>
+<hr>
+</section>
+<section id="próximo-paso" class="level2">
+<h2 class="anchored" data-anchor-id="próximo-paso">Próximo paso</h2>
+<p>En el <strong><a href="modulo-04-docker-contenedores.qmd">Módulo 4 — Contenedores Docker</a></strong> aprenderás a aislar servicios completos en contenedores, el estándar de la industria para despliegue seguro de aplicaciones. El control de versiones que dominaste aquí aplica al ciclo de vida de imágenes y contenedores.</p>
+<blockquote class="blockquote">
+<p><em>“El tercer principio de la ciberseguridad es: no puedes escalar lo que no puedes replicar. Docker es tu capacidad de replicar.”</em></p>
+</blockquote>
+<p><a href="./index.qmd">← Volver al índice de la guía</a></p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

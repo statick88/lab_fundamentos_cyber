@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Diego Saavedra, Mg. Sc. | Abacom">
+
+<title>Módulo 5 — Wargames: minicurso Bandit (niveles 0-5)</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="modulo-05-wargames_files/libs/clipboard/clipboard.min.js"></script>
+<script src="modulo-05-wargames_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="modulo-05-wargames_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="modulo-05-wargames_files/libs/quarto-html/popper.min.js"></script>
+<script src="modulo-05-wargames_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="modulo-05-wargames_files/libs/quarto-html/anchor.min.js"></script>
+<link href="modulo-05-wargames_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="modulo-05-wargames_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="modulo-05-wargames_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="modulo-05-wargames_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="modulo-05-wargames_files/libs/bootstrap/bootstrap-8ffd5f67044e5306d9846f29df41dda5.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#módulo-5-wargames-minicurso-bandit-niveles-0-5" id="toc-módulo-5-wargames-minicurso-bandit-niveles-0-5" class="nav-link active" data-scroll-target="#módulo-5-wargames-minicurso-bandit-niveles-0-5">Módulo 5 — Wargames: minicurso Bandit (niveles 0-5)</a>
+  <ul class="collapse">
+  <li><a href="#introducción-el-gimnasio-del-hacker" id="toc-introducción-el-gimnasio-del-hacker" class="nav-link" data-scroll-target="#introducción-el-gimnasio-del-hacker">Introducción: el gimnasio del hacker</a></li>
+  <li><a href="#qué-es-un-wargame-mecánica-y-filosofía" id="toc-qué-es-un-wargame-mecánica-y-filosofía" class="nav-link" data-scroll-target="#qué-es-un-wargame-mecánica-y-filosofía">¿Qué es un wargame? Mecánica y filosofía</a>
+  <ul class="collapse">
+  <li><a href="#la-arquitectura-del-aprendizaje-progresivo" id="toc-la-arquitectura-del-aprendizaje-progresivo" class="nav-link" data-scroll-target="#la-arquitectura-del-aprendizaje-progresivo">La arquitectura del aprendizaje progresivo</a></li>
+  <li><a href="#analogía-del-edificio-en-construcción" id="toc-analogía-del-edificio-en-construcción" class="nav-link" data-scroll-target="#analogía-del-edificio-en-construcción">Analogía del edificio en construcción</a></li>
+  </ul></li>
+  <li><a href="#teoría-profunda-permisos-claves-ssh-y-cracking" id="toc-teoría-profunda-permisos-claves-ssh-y-cracking" class="nav-link" data-scroll-target="#teoría-profunda-permisos-claves-ssh-y-cracking">Teoría profunda: permisos, claves SSH y cracking</a>
+  <ul class="collapse">
+  <li><a href="#autenticación-por-clave-vs.-contraseña" id="toc-autenticación-por-clave-vs.-contraseña" class="nav-link" data-scroll-target="#autenticación-por-clave-vs.-contraseña">Autenticación por clave vs.&nbsp;contraseña</a></li>
+  <li><a href="#claves-ssh-tu-identidad-digital" id="toc-claves-ssh-tu-identidad-digital" class="nav-link" data-scroll-target="#claves-ssh-tu-identidad-digital">Claves SSH: tu identidad digital</a></li>
+  <li><a href="#protección-de-claves-privadas-passphrase" id="toc-protección-de-claves-privadas-passphrase" class="nav-link" data-scroll-target="#protección-de-claves-privadas-passphrase">Protección de claves privadas: passphrase</a></li>
+  <li><a href="#privilege-escalation-conceptos-fundamentales" id="toc-privilege-escalation-conceptos-fundamentales" class="nav-link" data-scroll-target="#privilege-escalation-conceptos-fundamentales">Privilege escalation: conceptos fundamentales</a></li>
+  <li><a href="#john-the-ripper-cracking-de-contraseñas" id="toc-john-the-ripper-cracking-de-contraseñas" class="nav-link" data-scroll-target="#john-the-ripper-cracking-de-contraseñas">John the Ripper: cracking de contraseñas</a></li>
+  <li><a href="#plantilla-de-reporte-estructura-del-checkpoint" id="toc-plantilla-de-reporte-estructura-del-checkpoint" class="nav-link" data-scroll-target="#plantilla-de-reporte-estructura-del-checkpoint">Plantilla de reporte: estructura del checkpoint</a></li>
+  </ul></li>
+  <li><a href="#ejercicios-prácticos-progresivos" id="toc-ejercicios-prácticos-progresivos" class="nav-link" data-scroll-target="#ejercicios-prácticos-progresivos">Ejercicios prácticos progresivos</a>
+  <ul class="collapse">
+  <li><a href="#e1-comprender-la-mecánica-de-bandit-niveles-05" id="toc-e1-comprender-la-mecánica-de-bandit-niveles-05" class="nav-link" data-scroll-target="#e1-comprender-la-mecánica-de-bandit-niveles-05">E1: Comprender la mecánica de Bandit (niveles 0→5)</a></li>
+  <li><a href="#e2-recrear-bandit-nivel-0-2-localmente-con-ssh" id="toc-e2-recrear-bandit-nivel-0-2-localmente-con-ssh" class="nav-link" data-scroll-target="#e2-recrear-bandit-nivel-0-2-localmente-con-ssh">E2: Recrear Bandit nivel 0-2 localmente con SSH</a></li>
+  <li><a href="#e3-cracking-de-passphrase-con-john" id="toc-e3-cracking-de-passphrase-con-john" class="nav-link" data-scroll-target="#e3-cracking-de-passphrase-con-john">E3: Cracking de passphrase con john</a></li>
+  <li><a href="#e4-redactar-reporte-usando-la-plantilla-checkpoint-v" id="toc-e4-redactar-reporte-usando-la-plantilla-checkpoint-v" class="nav-link" data-scroll-target="#e4-redactar-reporte-usando-la-plantilla-checkpoint-v">E4: Redactar reporte usando la plantilla checkpoint-v</a></li>
+  </ul></li>
+  <li><a href="#notas-de-seguridad-el-marco-ético-del-wargame" id="toc-notas-de-seguridad-el-marco-ético-del-wargame" class="nav-link" data-scroll-target="#notas-de-seguridad-el-marco-ético-del-wargame">Notas de seguridad: el marco ético del wargame</a>
+  <ul class="collapse">
+  <li><a href="#dónde-está-la-línea" id="toc-dónde-está-la-línea" class="nav-link" data-scroll-target="#dónde-está-la-línea">Dónde está la línea</a></li>
+  <li><a href="#principios-para-recordar" id="toc-principios-para-recordar" class="nav-link" data-scroll-target="#principios-para-recordar">Principios para recordar</a></li>
+  </ul></li>
+  <li><a href="#checklist-de-autoevaluación" id="toc-checklist-de-autoevaluación" class="nav-link" data-scroll-target="#checklist-de-autoevaluación">Checklist de autoevaluación</a></li>
+  <li><a href="#próximo-paso" id="toc-próximo-paso" class="nav-link" data-scroll-target="#próximo-paso">Próximo paso</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Módulo 5 — Wargames: minicurso Bandit (niveles 0-5)</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Diego Saavedra, Mg. Sc. | Abacom </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="módulo-5-wargames-minicurso-bandit-niveles-0-5" class="level1">
+<h1>Módulo 5 — Wargames: minicurso Bandit (niveles 0-5)</h1>
+<hr>
+<section id="introducción-el-gimnasio-del-hacker" class="level2">
+<h2 class="anchored" data-anchor-id="introducción-el-gimnasio-del-hacker">Introducción: el gimnasio del hacker</h2>
+<p><strong>Un wargame no es un videojuego — es un gimnasio donde cada repetición construye músculo mental.</strong></p>
+<p>Piensa en un simulador de vuelo. Nadie se convierte en piloto leyendo manuales de aerodinámica sin tocar los controles. Los wargames de ciberseguridad funcionan igual: son entornos controlados donde practicar técnicas reales — escalada de privilegios, búsqueda de archivos ocultos, extracción de contraseñas — sin dañar sistemas reales ni cruzar líneas legales.</p>
+<p>En este módulo exploramos <strong>Bandit</strong>, el wargame de OverTheWire diseñado para principiantes absolutos. Bandit no requiere herramientas especiales ni conocimientos previos: solo SSH y lo que ya aprendiste sobre permisos, <code>grep</code>, <code>find</code>, <code>chmod</code> y pipes. Cada nivel te enseña un concepto nuevo, y cada concepto te prepara para el siguiente — como los ejercicios progresivos de un plan de entrenamiento.</p>
+<div class="note">
+<p><strong>Nota del instructor:</strong> Bandit está alojado en <strong>OverTheWire</strong> (overthewire.org) — un recurso externo gratuito. NO está instalado en el laboratorio. Usarás <code>ssh</code> (instalado vía <code>openssh-client</code>) para conectarte a sus servidores. Más adelante recrearemos niveles similares localmente, pero el wargame oficial es externo por diseño: así practicas con infraestructura real sin riesgo para tu máquina.</p>
+</div>
+<hr>
+</section>
+<section id="qué-es-un-wargame-mecánica-y-filosofía" class="level2">
+<h2 class="anchored" data-anchor-id="qué-es-un-wargame-mecánica-y-filosofía">¿Qué es un wargame? Mecánica y filosofía</h2>
+<section id="la-arquitectura-del-aprendizaje-progresivo" class="level3">
+<h3 class="anchored" data-anchor-id="la-arquitectura-del-aprendizaje-progresivo">La arquitectura del aprendizaje progresivo</h3>
+<p>Un wargame organiza retos en niveles secuenciales. Cada nivel es un objetivo independiente que requiere dominar uno o dos conceptos. La belleza del diseño está en la progresión: el nivel 5 asume que dominas lo aprendido en los niveles 0-4.</p>
+<pre><code>    ┌─────────────────────────────────────────────────────────────┐
+    │              ARQUITECTURA DE UN WARGAME                     │
+    │                                                             │
+    │   Tu máquina local                                          │
+    │   ┌──────────────┐                                          │
+    │   │  Terminal    │                                          │
+    │   │  (openssh-   │                                          │
+    │   │   client)    │                                          │
+    │   └──────┬───────┘                                          │
+    │          │ SSH (puerto 2220)                                │
+    │          │                                                  │
+    │          ▼                                                  │
+    │   ┌──────────────────────────────────────────┐             │
+    │   │   Servidor OverTheWire (bandit.labs.)    │             │
+    │   │                                          │             │
+    │   │   Nivel 0 ──► Nivel 1 ──► ... ──► 5     │             │
+    │   │     │           │                  │      │             │
+    │   │     ▼           ▼                  ▼      │             │
+    │   │   Contraseña  Contraseña       Contraseña  │             │
+    │   │   del N1      del N2           del N6      │             │
+    │   └──────────────────────────────────────────┘             │
+    │                                                             │
+    │   Cada nivel te da la contraseña del siguiente.             │
+    │   Sin atajos: debes resolver el nivel actual primero.       │
+    └─────────────────────────────────────────────────────────────┘</code></pre>
+</section>
+<section id="analogía-del-edificio-en-construcción" class="level3">
+<h3 class="anchored" data-anchor-id="analogía-del-edificio-en-construcción">Analogía del edificio en construcción</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Concepto del wargame</th>
+<th>Analogía de construcción</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Nivel actual</td>
+<td>El piso que estás construyendo</td>
+</tr>
+<tr class="even">
+<td>Contraseña del siguiente nivel</td>
+<td>La llave del siguiente piso</td>
+</tr>
+<tr class="odd">
+<td>Comandos básicos (ls, cat, find)</td>
+<td>Herramientas de albañilería</td>
+</tr>
+<tr class="even">
+<td>Permisos y privilegios</td>
+<td>Planos eléctricos y de plomería</td>
+</tr>
+<tr class="odd">
+<td>Escalada de privilegios</td>
+<td>Instalar el ascensor entre pisos</td>
+</tr>
+<tr class="even">
+<td>SSH al servidor remoto</td>
+<td>La grúa que te materiales externos</td>
+</tr>
+</tbody>
+</table>
+<div class="note">
+<p><strong>Nota del laboratorio:</strong> En este curso cubrimos los niveles 0 a 5 de Bandit como introducción. Bandit tiene 34 niveles en total — los primeros 10 son fundamentos, y después introduce conceptos de redes, criptografía y explotación. Considera este módulo como la base que te permitirá continuar por tu cuenta.</p>
+<p>La referencia oficial es <a href="https://overthewire.org/wargames/bandit/">OverTheWire: Bandit</a>. No la clonamos ni la instalamos porque el aprendizaje ocurre al conectarte a un sistema remoto con restricciones reales — esa fricción es pedagógicamente intencional.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="teoría-profunda-permisos-claves-ssh-y-cracking" class="level2">
+<h2 class="anchored" data-anchor-id="teoría-profunda-permisos-claves-ssh-y-cracking">Teoría profunda: permisos, claves SSH y cracking</h2>
+<section id="autenticación-por-clave-vs.-contraseña" class="level3">
+<h3 class="anchored" data-anchor-id="autenticación-por-clave-vs.-contraseña">Autenticación por clave vs.&nbsp;contraseña</h3>
+<p>SSH soporta dos métodos principales de autenticación:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 44%">
+<col style="width: 32%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Método</th>
+<th>Cómo funciona</th>
+<th>Fortaleza</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Contraseña</td>
+<td>El servidor verifica la contraseña que envías</td>
+<td>Débil si la contraseña es predecible</td>
+</tr>
+<tr class="even">
+<td>Clave pública/privada</td>
+<td>Generas un par de claves; la pública va al servidor</td>
+<td>Fuerte si la clave privada está protegida</td>
+</tr>
+</tbody>
+</table>
+<p>En Bandit, el nivel 0 usa autenticación por contraseña simple. A partir del nivel 14, te encuentras con autenticación por claves SSH — y eso requiere que entiendas qué es una clave privada y cómo protegerla.</p>
+</section>
+<section id="claves-ssh-tu-identidad-digital" class="level3">
+<h3 class="anchored" data-anchor-id="claves-ssh-tu-identidad-digital">Claves SSH: tu identidad digital</h3>
+<p>Una clave SSH privada es un archivo que <strong>debes proteger como protegerías las llaves de tu casa</strong>. Si alguien obtiene tu clave privada, puede suplantarte en cualquier servidor que la acepte.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generar un par de claves SSH (en tu máquina local)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh-keygen</span> <span class="at">-t</span> rsa <span class="at">-b</span> 2048 <span class="at">-f</span> ~/.ssh/mi_clave</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># El resultado son dos archivos:</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># ~/.ssh/mi_clave      ← clave privada (NUNCA compartir)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># ~/.ssh/mi_clave.pub  ← clave pública (se copia al servidor)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="protección-de-claves-privadas-passphrase" class="level3">
+<h3 class="anchored" data-anchor-id="protección-de-claves-privadas-passphrase">Protección de claves privadas: passphrase</h3>
+<p>Cuando generas una clave SSH, puedes (y debes) protegerla con una passphrase. Es como ponerle un candado a tu llavero: incluso si alguien roba el archivo, no puede usarlo sin la passphrase.</p>
+<div class="warning">
+<p><strong>Advertencia de seguridad:</strong> Una clave privada SIN passphrase es como un llavero sin candado: si alguien lo encuentra, tiene acceso inmediato. SIEMPRE usa passphrase en claves de producción. En laboratorio, a veces omitimos la passphrase por conveniencia pedagógica — pero debes saber que en el mundo real, eso es inaceptable.</p>
+</div>
+</section>
+<section id="privilege-escalation-conceptos-fundamentales" class="level3">
+<h3 class="anchored" data-anchor-id="privilege-escalation-conceptos-fundamentales">Privilege escalation: conceptos fundamentales</h3>
+<p>La escalada de privilegios (privilege escalation) es el proceso de obtener permisos más altos de los que tienes actualmente. Es uno de los pilares de la ciberseguridad — tanto para atacantes como para defensores.</p>
+<p>Existen dos tipos principales:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 18%">
+<col style="width: 31%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Tipo</th>
+<th>Objetivo</th>
+<th>Ejemplo típico</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Horizontal</strong></td>
+<td>Acceder a la cuenta de otro usuario con mismos privilegios</td>
+<td>Robar sesión de otro usuario</td>
+</tr>
+<tr class="even">
+<td><strong>Vertical</strong></td>
+<td>Obtener privilegios superiores (root, admin)</td>
+<td>Explotar un binario SUID mal configurado</td>
+</tr>
+</tbody>
+</table>
+<p>En Bandit, los niveles 0-5 se centran en escalada horizontal: encontrar archivos ocultos, entender permisos y usar comandos básicos para avanzar. La escalada vertical (SUID, exploits) aparece en niveles superiores.</p>
+</section>
+<section id="john-the-ripper-cracking-de-contraseñas" class="level3">
+<h3 class="anchored" data-anchor-id="john-the-ripper-cracking-de-contraseñas">John the Ripper: cracking de contraseñas</h3>
+<p><strong>John</strong> es una herramienta de auditoría de contraseñas que intenta recuperar plaintext a partir de hashes. En el laboratorio está instalado (línea 41 del Dockerfile) para que entiendas cómo los atacantes prueban la fortaleza de las contraseñas.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejemplo básico: crackear un hash con wordlist</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"5f4dcc3b5aa765d61d8327deb882cf99"</span> <span class="op">&gt;</span> hash.txt</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">john</span> <span class="at">--wordlist</span><span class="op">=</span>/usr/share/wordlists/rockyou.txt hash.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="warning">
+<p><strong>Advertencia de seguridad:</strong> John es una herramienta de AUDITORÍA, no de ataque. Úsala SOLO en sistemas propios o con autorización explícita. Usarla en sistemas ajenos sin autorización es un delito en la mayoría de jurisdicciones. La línea entre “investigar” y “atacar” es la autorización — sin ella, es delito.</p>
+</div>
+</section>
+<section id="plantilla-de-reporte-estructura-del-checkpoint" class="level3">
+<h3 class="anchored" data-anchor-id="plantilla-de-reporte-estructura-del-checkpoint">Plantilla de reporte: estructura del checkpoint</h3>
+<p>En el <strong>checkpoint-v</strong> (5 retos del módulo V) utilizamos una plantilla de reporte para documentar cada reto. Esta estructura te obliga a pensar como un profesional: no basta con “resolviste el reto”, debes demostrar lo que hiciste.</p>
+<p>La plantilla <code>plantilla.md</code> contiene estas secciones por reto:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 59%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Sección</th>
+<th>Qué incluye</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Objetivo</strong></td>
+<td>Descripción breve de qué busca el reto</td>
+</tr>
+<tr class="even">
+<td><strong>Comandos utilizados</strong></td>
+<td>Bloque de código con los comandos que ejecutaste</td>
+</tr>
+<tr class="odd">
+<td><strong>Salida obtenida</strong></td>
+<td>Bloque de código con la salida real de los comandos</td>
+</tr>
+<tr class="even">
+<td><strong>Respuesta</strong></td>
+<td>La contraseña o solución encontrada</td>
+</tr>
+<tr class="odd">
+<td><strong>Frase revelada</strong></td>
+<td>Tabla de seguimiento de la frase completa</td>
+</tr>
+</tbody>
+</table>
+<p>Los comandos clave que registrarás según la plantilla: <code>pwd</code>, <code>ls -la</code>, <code>cat</code>, <code>grep</code>, <code>chmod</code>, <code>ps aux</code>, <code>find</code>, <code>head</code>/<code>tail</code>.</p>
+<hr>
+</section>
+</section>
+<section id="ejercicios-prácticos-progresivos" class="level2">
+<h2 class="anchored" data-anchor-id="ejercicios-prácticos-progresivos">Ejercicios prácticos progresivos</h2>
+<div class="note">
+<p><strong>Modo nativo (sin Docker):</strong> En el contenedor, <code>openssh-client</code>, <code>john</code> y <code>nmap</code> vienen preinstalados. En modo nativo, instala las dependencias con <code>sudo apt-get install -y openssh-client john nmap</code>. Las conexiones SSH funcionan igual; la única diferencia es que en modo nativo necesitarás usar tu propia contraseña de usuario para <code>sudo</code> en ejercicios que requieran permisos administrativos.</p>
+</div>
+<section id="e1-comprender-la-mecánica-de-bandit-niveles-05" class="level3">
+<h3 class="anchored" data-anchor-id="e1-comprender-la-mecánica-de-bandit-niveles-05">E1: Comprender la mecánica de Bandit (niveles 0→5)</h3>
+<p>Antes de conectar, entiende la progresión. Cada nivel introduce UN concepto nuevo:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Conectarse al nivel 0 de Bandit (servidor externo)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> bandit0@bandit.labs.overthewire.org <span class="at">-p</span> 2220</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Contraseña: bandit0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Progresión de conceptos nivel 0-5:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 17%">
+<col style="width: 46%">
+<col style="width: 36%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Nivel</th>
+<th>Concepto principal</th>
+<th>Comando clave</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>Conexión SSH básica</td>
+<td><code>ssh</code></td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>Archivos con nombre especial (<code>-</code>)</td>
+<td><code>cat ./-</code></td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>Archivos con espacios en el nombre</td>
+<td><code>cat "archivo con espacios"</code></td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td>Archivos ocultos (<code>.</code> prefix)</td>
+<td><code>ls -la</code>, <code>cat .../.hidden</code></td>
+</tr>
+<tr class="odd">
+<td>4</td>
+<td>Distinguir archivo legible entre binarios</td>
+<td><code>head</code>, <code>find</code></td>
+</tr>
+<tr class="even">
+<td>5</td>
+<td>Buscar archivo por características</td>
+<td><code>find -size</code>, <code>find -readable</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Preguntas de reflexión:</strong></p>
+<ol type="1">
+<li>¿Por qué el nivel 1 usa <code>cat ./-</code> en lugar de <code>cat -</code>?</li>
+<li>¿Qué hace <code>ls -la</code> que <code>ls</code> solo no muestra?</li>
+<li>¿Por qué es importante <code>find</code> cuando tienes cientos de archivos?</li>
+</ol>
+<div class="note">
+<p><strong>Nota del instructor:</strong> Las respuestas a estas preguntas parecen obvias cuando alguien te las explica — pero la comprensión REAL ocurre cuando te atascaste 20 minutos, lo resuelves, y entonces entiendes por qué importa. No busques las respuestas en internet. El valor está en el proceso, no en la contraseña final.</p>
+</div>
+<hr>
+</section>
+<section id="e2-recrear-bandit-nivel-0-2-localmente-con-ssh" class="level3">
+<h3 class="anchored" data-anchor-id="e2-recrear-bandit-nivel-0-2-localmente-con-ssh">E2: Recrear Bandit nivel 0-2 localmente con SSH</h3>
+<p>Aunque Bandit es externo, puedes recrear su mecánica localmente usando <code>openssh-client</code> (línea 37 del Dockerfile) y un servidor SSH local.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Verificar que openssh-client está instalado</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">which</span> ssh</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>/usr/bin/ssh</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Generar un par de claves local (sin passphrase, para laboratorio)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh-keygen</span> <span class="at">-t</span> rsa <span class="at">-f</span> ~/.ssh/bandit_local <span class="at">-N</span> <span class="st">""</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>Generating public/private rsa key pair.
+Your identification has been saved in /home/estudiante/.ssh/bandit_local
+Your public key has been saved in /home/estudiante/.ssh/bandit_local.pub</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Copiar la clave pública al servidor local</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ssh-copy-id</span> <span class="at">-i</span> ~/.ssh/bandit_local.pub estudiante@localhost</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Conectarte con autenticación por clave (sin contraseña)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> <span class="at">-i</span> ~/.ssh/bandit_local estudiante@localhost</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Simular el "nivel 1": crear un archivo con nombre problemático</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"contrasena_nivel_2_simulado"</span> <span class="op">&gt;</span> ./-</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Leerlo correctamente (como en Bandit nivel 1)</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> ./-</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>contrasena_nivel_2_simulado</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 7. Simular el "nivel 2": archivo con espacios</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"contraseda_nivel_3_simulado"</span> <span class="op">&gt;</span> <span class="st">"archivo con espacios"</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 8. Leerlo correctamente (como en Bandit nivel 2)</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="st">"archivo con espacios"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>contraseda_nivel_3_simulado</code></pre>
+<div class="note">
+<p><strong>Nota del laboratorio:</strong> Esta recreación local tiene fines pedagógicos: entender la mecánica de nombres de archivo problemáticos. El servidor real de OverTheWire tiene 34 niveles con progresión mucho más rica. Una vez domines 0-5 localmente, conectarte al servidor real será mucho más productivo.</p>
+</div>
+<hr>
+</section>
+<section id="e3-cracking-de-passphrase-con-john" class="level3">
+<h3 class="anchored" data-anchor-id="e3-cracking-de-passphrase-con-john">E3: Cracking de passphrase con john</h3>
+<p>En niveles superiores de Bandit encontrarás claves SSH protegidas con passphrase. En el laboratorio podemos simular el flujo de trabajo con <code>john</code> (instalado en Dockerfile línea 41).</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Generar una clave SSH CON passphrase (débil, para el ejercicio)</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh-keygen</span> <span class="at">-t</span> rsa <span class="at">-f</span> ~/.ssh/key_con_pass <span class="at">-N</span> <span class="st">"abc123"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>Your identification has been saved in /home/estudiante/.ssh/key_con_pass</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Convertir la clave a formato que john pueda atacar</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co"># (ssh2john es parte de john y procesa claves SSH)</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ssh2john</span> ~/.ssh/key_con_pass <span class="op">&gt;</span> ~/hash_key.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Crear una wordlist mínima para el ejercicio</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"password"</span> <span class="op">&gt;</span> ~/wordlist.txt</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"123456"</span> <span class="op">&gt;&gt;</span> ~/wordlist.txt</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"abc123"</span> <span class="op">&gt;&gt;</span> ~/wordlist.txt</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"bandit"</span> <span class="op">&gt;&gt;</span> ~/wordlist.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Ejecutar john contra el hash</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="ex">john</span> <span class="at">--wordlist</span><span class="op">=</span>~/wordlist.txt ~/hash_key.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>Loaded 1 password hash (SSH [RSA/DSA/EC/OPENSSH (unprotected) 32/64])
+abc123            (key_con_pass)
+guesses: 1  time: 0:00:00:01 DONE</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Verificar que john encontró la passphrase</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ex">john</span> <span class="at">--show</span> ~/hash_key.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>key_con_pass:abc123
+
+1 password hash cracked, 0 left</code></pre>
+<p><strong>¿Qué acaba de pasar?</strong>:</p>
+<ol type="1">
+<li>Convertiste una clave SSH protegida a un hash atacable</li>
+<li>John probó cada palabra de tu wordlist contra el hash</li>
+<li>Cuando encontró coincidencia, reveló la passphrase</li>
+</ol>
+<div class="warning">
+<p><strong>Advertencia de seguridad:</strong> Este ejercicio demuestra POR QUÉ las passphrases débiles son peligrosas. En el mundo real, un atacante con acceso a tu clave privada puede crackearla en segundos si usaste una palabra de diccionario. Las contraseñas fuertes son tu primera línea de defensa — y a veces la única.</p>
+<p>NO uses passphrase débiles en producción. Y NUNCA intentes crackear contraseñas ajenas: esto es SOLO para auditoría de tus propios sistemas o con autorización explícita.</p>
+</div>
+<hr>
+</section>
+<section id="e4-redactar-reporte-usando-la-plantilla-checkpoint-v" class="level3">
+<h3 class="anchored" data-anchor-id="e4-redactar-reporte-usando-la-plantilla-checkpoint-v">E4: Redactar reporte usando la plantilla checkpoint-v</h3>
+<p>El checkpoint-v requiere documentar 5 retos usando la estructura de <code>plantilla.md</code>. Aplica esta estructura al nivel 0 de Bandit:</p>
+<hr>
+<p><strong>RETO 1 — Bandit Nivel 0</strong></p>
+<p><strong>Objetivo:</strong> Conectarse al servidor de Bandit mediante SSH y verificar la conexión exitosa.</p>
+<p><strong>Comandos utilizados:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> bandit0@bandit.labs.overthewire.org <span class="at">-p</span> 2220</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Contraseña: bandit0</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="fu">whoami</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="bu">pwd</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Salida obtenida:</strong></p>
+<pre><code>bandit0@bandit:~$ whoami
+bandit0
+bandit0@bandit:~$ pwd
+/home/bandit0
+bandit0@bandit:~$ ls -la
+total 4
+drwxr-xr-x  2 root root root 4096 Nov 14  08:47 .
+drwxr-xr-x 33 root root 4096 Nov 14  08:47 ..
+-rw-r--r--  1 root root   33 Nov 14  08:47 readme</code></pre>
+<p><strong>Respuesta:</strong> La contraseña para el nivel 1 se encuentra en el archivo <code>readme</code> del directorio home.</p>
+<p><strong>Frase revelada:</strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Reto</th>
+<th>Palabra</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>Conexión</td>
+<td>SSH al servidor externo</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>—</td>
+<td>Pendiente</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>—</td>
+<td>Pendiente</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>—</td>
+<td>Pendiente</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>—</td>
+<td>Pendiente</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<div class="note">
+<p><strong>Nota del instructor:</strong> Este formato de reporte no es burocracia — es la diferencia entre “hice algo” y “puedo demostrar lo que hice”. En auditorías reales, el informe es tan importante como la técnica. Practicarlo desde el checkpoint-v te acostumbra a documentar como profesional.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="notas-de-seguridad-el-marco-ético-del-wargame" class="level2">
+<h2 class="anchored" data-anchor-id="notas-de-seguridad-el-marco-ético-del-wargame">Notas de seguridad: el marco ético del wargame</h2>
+<section id="dónde-está-la-línea" class="level3">
+<h3 class="anchored" data-anchor-id="dónde-está-la-línea">Dónde está la línea</h3>
+<p>Los wargames existen en un espacio legal y éticamente claro: <strong>sistemas diseñados específicamente para ser atacados, con autorización implícita del propietario.</strong> OverTheWire te invita explícitamente a resolver Bandit. Eso es la diferencia entre “hacking ético” y “cibercrimen”.</p>
+</section>
+<section id="principios-para-recordar" class="level3">
+<h3 class="anchored" data-anchor-id="principios-para-recordar">Principios para recordar</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 26%">
+<col style="width: 73%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Principio</th>
+<th>Qué significa en la práctica</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Autorización explícita</strong></td>
+<td>Si el sistema no es tuyo ni tiene una invitación clara, NO lo ataques</td>
+</tr>
+<tr class="even">
+<td><strong>Sistemas dedicados</strong></td>
+<td>Usa wargames, CTFs y laboratorios — no sistemas productivos</td>
+</tr>
+<tr class="odd">
+<td><strong>Documentación</strong></td>
+<td>Si no puedes explicar lo que hiciste, no deberías haberlo hecho</td>
+</tr>
+<tr class="even">
+<td><strong>Límite legal</strong></td>
+<td>En muchos países, acceder a un sistema sin autorización es delito incluso si no causas daño</td>
+</tr>
+</tbody>
+</table>
+<div class="warning">
+<p><strong>Advertencia de seguridad:</strong> La curiosidad es la virtud más valiosa en ciberseguridad — pero sin ética, se convierte en vulnerabilidad legal. Cada técnica que aprendas en este módulo (SSH, permisos, cracking) es una herramienta de doble filo. Úsalas SOLO en sistemas propios o con autorización. La cárcel no es metáfora: hay personas presas por “curiosidad” no autorizada.</p>
+<p>El hecho de que PUEDAS acceder a algo no significa que DEBAS. Esa distinción te define como profesional.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="checklist-de-autoevaluación" class="level2">
+<h2 class="anchored" data-anchor-id="checklist-de-autoevaluación">Checklist de autoevaluación</h2>
+<p>Antes de avanzar al Módulo 6, verifica que puedes:</p>
+<ul class="task-list">
+<li><label><input type="checkbox">Explicar qué es un wargame y por qué Bandit es externo al laboratorio</label></li>
+<li><label><input type="checkbox">Conectarse por SSH a un servidor remoto (bandit.labs.overthewire.org)</label></li>
+<li><label><input type="checkbox">Resolver archivos con nombres problemáticos (<code>-</code>, espacios, ocultos)</label></li>
+<li><label><input type="checkbox">Explicar la diferencia entre autenticación por contraseña y por clave SSH</label></li>
+<li><label><input type="checkbox">Generar un par de claves SSH con <code>ssh-keygen</code></label></li>
+<li><label><input type="checkbox">Entender qué es <code>find</code> y cuándo usarlo sobre <code>ls</code></label></li>
+<li><label><input type="checkbox">Explicar el concepto de escalada de privilegios (horizontal vs.&nbsp;vertical)</label></li>
+<li><label><input type="checkbox">Usar <code>john</code> para auditar la fortaleza de una passphrase débil</label></li>
+<li><label><input type="checkbox">Redactar un reporte técnico usando la estructura plantilla.md</label></li>
+<li><label><input type="checkbox">Aplicar el marco ético: solo atacar sistemas autorizados</label></li>
+<li><label><input type="checkbox">Describir la progresión de conceptos de Bandit niveles 0 a 5</label></li>
+<li><label><input type="checkbox">Identificar que <code>openssh-client</code> es la herramienta que permite SSH en el laboratorio</label></li>
+</ul>
+<div class="note">
+<p><strong>Nota del instructor:</strong> Si no puedes marcar al menos 9 de estos 12 ítems, repasa los ejercicios. Los wargames son el puente entre teoría y práctica: si no entiendes los permisos del Módulo 1, aquí te vas a atascar. No avances con dudas — la escalada de privilegios es el tema más importante de todo el curso, y empieza aquí.</p>
+<p>Has completado el módulo de introducción a wargames. Has entendido que la ciberseguridad se aprende haciendo — pero haciendo con responsabilidad. Eso te separa del script kiddy: tú entiendes el porqué.</p>
+</div>
+<hr>
+</section>
+<section id="próximo-paso" class="level2">
+<h2 class="anchored" data-anchor-id="próximo-paso">Próximo paso</h2>
+<p>En el <strong><a href="modulo-06-logging-siem-bcp.qmd">Módulo 6 — Logging, SIEM y BCP</a></strong> aprenderás a detectar y responder a los ataques que acabas de practicar. Lo que aquí es ofensiva ética, allí se convierte en defensión profesional. La ciberseguridad es un ciclo: atacar para defender, defender para comprender el ataque.</p>
+<blockquote class="blockquote">
+<p><em>“La segunda regla de la ciberseguridad es: no puedes defender lo que no puedes ver. El logging es tu visión. El SIEM, tu memoria. El BCP, tu plan cuando todo lo demás falla.”</em></p>
+</blockquote>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

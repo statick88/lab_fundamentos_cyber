@@ -42,5 +42,23 @@ docker-compose.override.yml
 *.log
 logs/
 
+# Suricata logs and artifacts
+suricata/logs/
+suricata/eve.json
+*.fast.log
+
+# tshark / Wireshark captures
+captures/*.pcapng
+captures/*.pcap
+
+# IDS test artifacts
+units/*/ids/
+units/*/captures/
+
+# Quarto book output (generated artifacts — never commit)
+content/ebook-guia/_book/
+content/ebook-guia/index.html
+
+# Quarto cache
 /.quarto/
 **/*.quarto_ipynb

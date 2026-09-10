@@ -1,5 +1,5 @@
 ---
-title: "Módulo 1 — Terminal, Permisos y Errores"
+title: "Módulo 1 — Linux para Ciberseguridad: Consola, Permisos y Errores"
 author: "Diego Saavedra, Mg. Sc. | Abacom"
 format:
   html:
@@ -9,20 +9,20 @@ format:
     theme: cosmo
 ---
 
-# Módulo 1 — Terminal, Permisos y Errores
+# Módulo 1 — Linux para Ciberseguridad: Consola, Permisos y Errores
 
 ---
 
-## Introducción: la terminal no es tu enemiga
+## Introducción: la terminal como herramienta de seguridad
 
-**La terminal no es tu enemiga — es tu micrófono contra el caos digital.**
+**La terminal no es tu enemiga — es tu interfaz directa con el sistema que estás protegiendo.**
 
-Piensa en la diferencia entre un dibujo y un idioma escrito. La interfaz gráfica (GUI) es como un dibujo: ves íconos, haces clic, arrastras. Es intuitivo, pero limitado. La terminal es como un idioma escrito: al principio cuesta, pero una vez que lo dominas, puedes expresar cualquier idea con precisión.
+En ciberseguridad, la terminal es tu herramienta principal. Las herramientas gráficas son útiles, pero cuando necesitas analizar logs de 10,000 líneas, verificar integridad de archivos, o responder a un incidente en producción, la terminal es la única opción confiable.
 
-En ciberseguridad, la terminal es tu herramienta principal. Las herramientas gráficas son útiles, pero cuando necesitas automatizar tareas, analizar logs de 10,000 líneas o conectarte a un servidor remoto, la terminal es la única opción.
+Este módulo te da las bases de Linux desde la perspectiva de un profesional de seguridad: no solo "cómo usar comandos", sino **por qué cada concepto de permisos, FHS y shell es relevante para defender sistemas**.
 
 ::: {.note}
-**Nota del instructor:** No te frustres si al principio la terminal parece hostil. Es como aprender un nuevo idioma: las primeras semanas son incómodas, pero un día te sorprendes pensando en ese idioma. Con la terminal pasa igual.
+**Por qué Linux en ciberseguridad:** El 90% de los servidores del mundo corren Linux. Los firewalls, routers, dispositivos IoT y servidores cloud usan Linux. Si no dominas la terminal, no puedes auditar, responder incidentes ni automatizar defensas.
 :::
 
 ---
@@ -150,6 +150,10 @@ Imagina que el sistema de archivos es una biblioteca:
 **Nota:** En Linux, **todo es un archivo**. Tu disco duro es un archivo en `/dev/`. Tu terminal es un archivo en `/dev/`. Esta filosofía es fundamental para entender cómo funciona el sistema.
 :::
 
+::: {.warning}
+**Perspectiva de seguridad:** En ciberseguridad, `/etc` es el directorio más crítico: contiene configuraciones de SSH, firewall, usuarios y servicios. Un atacante que modifique `/etc/passwd` o `/etc/ssh/sshd_config` puede crear backdoors. `/var/log` es tu fuente de evidencia forense. `/tmp` es un riesgo porque cualquier usuario puede escribir allí.
+:::
+
 ---
 
 ## Permisos: teoría y práctica
@@ -221,6 +225,10 @@ sudo chgrp administradores notas.txt
 # Cambiar dueño y grupo a la vez
 sudo chown profesor:administradores notas.txt
 ```
+
+::: {.warning}
+**Perspectiva de seguridad:** El permiso `600` (`rw-------`) es el estándar de oro para archivos sensibles: claves SSH, archivos `.env`, certificados privados. Si un atacante accede a un directorio con permisos `777`, puede leer/escribir cualquier archivo. El principio de menor privilegio aplica aquí: solo conceder los permisos estrictamente necesarios.
+:::
 
 ---
 

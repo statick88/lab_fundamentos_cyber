@@ -60,7 +60,7 @@ El promedio de **51.4** no es un fracaso — es un **mapa**. Nos dice dónde col
 
 ## Cómo Utilizar Este Ebook
 
-Este recurso está estructurado en **6 módulos temáticos** más esta guía de inicio. La metodología es deliberadamente simple:
+Este recurso está estructurado en **16 módulos temáticos** (11 core + 4 complementarios + esta guía de inicio). La metodología es deliberadamente simple:
 
 ### 1. Lee el concepto teórico primero
 
@@ -112,12 +112,11 @@ Este curso está pensado para ejecutarse en **dos modos**. Elige el que mejor se
 | Módulo | Tema | Duración estimada |
 |--------|------|-------------------|
 | **0** | Esta guía — Diagnóstico y método de estudio | 30 min |
-| **1** | Terminal Linux: navegación, permisos y errores | 3-4 h |
-| **2** | Reconocimiento de Red con Ubuntu 24.04 | 4 h |
-| **3** | Git: control de versiones para ciberseguridad | 2-3 h |
-| **4** | Docker: contenedores y aislamiento | 2-3 h |
-| **5** | Wargames: minicurso Bandit (niveles 0-5) | 3-4 h |
-| **6** | Logging, SIEM y BCP | 3-4 h |
+| **I** | Linux para Ciberseguridad: Consola, Permisos y Errores | 10-12 h |
+| **II** | Redes, Firewalls, IAM/MFA y Scripting | 14-16 h |
+| **III** | Criptografía, Logging, SIEM, Hardening y Docker | 18-20 h |
+| **IV** | Nginx, SSL/TLS, Backup y Recuperación | 15-17 h |
+| **V** | Checkpoints y Evaluación | 2-3 h |
 
 ---
 

@@ -1,0 +1,570 @@
+---
+title: "Módulo 10 — SSL/TLS: Certificados y Cifrado en Tránsito"
+author: "Diego Saavedra, Mg. Sc. | Abacom"
+format:
+  html:
+    toc: true
+    toc-location: left
+    code-fold: false
+    theme: cosmo
+---
+
+# Módulo 10 — SSL/TLS: Certificados y Cifrado en Tránsito
+
+---
+
+## Introducción: cifrar la comunicación
+
+**SSL/TLS es el protocolo que protege las comunicaciones en Internet.** Cada vez que ves el candado en el navegador o `https://`, estás viendo TLS en acción. Sin TLS, todo el tráfico viaja en texto plano: contraseñas, tarjetas de crédito, tokens de sesión — cualquier cosa.
+
+En ciberseguridad, entender TLS no es opcional. Es la base de:
+- **Confidencialidad**: nadie puede leer el tráfico cifrado.
+- **Integridad**: cualquier modificación del mensaje se detecta.
+- **Autenticación**: el certificado prueba la identidad del servidor.
+
+En este módulo aprenderás el funcionamiento de TLS, cómo generar y gestionar certificados, y cómo configurar HTTPS en nginx.
+
+::: {.warning}
+**Importante**: SSL (Secure Sockets Layer) es el protocolo antiguo, considerado inseguro. Hoy se usa **TLS (Transport Layer Security)** 1.2 y 1.3. Nunca uses SSLv3 o TLS 1.0/1.1 en producción.
+:::
+
+---
+
+## Criptografía aplicada a TLS
+
+### Cifrado simétrico vs asimétrico
+
+TLS combina ambos tipos:
+
+| Tipo | Velocidad | Uso en TLS |
+|------|-----------|------------|
+| **Simétrico** (AES) | Rápido | Cifrar el tráfico (datos) |
+| **Asimétrico** (RSA, ECDSA) | Lento | Intercambiar claves y autenticar |
+
+### Handshake TLS (simplificado)
+
+```
+CLIENTE                          SERVIDOR
+   │                                 │
+   │─── ClientHello ────────────────▶│
+   │   (versiones TLS, cipher suites) │
+   │                                 │
+   │◀── ServerHello ────────────────│
+   │   (TLS 1.3, cipher suite)       │
+   │                                 │
+   │◀── Certificate ────────────────│  ← Certificado del servidor
+   │   (clave pública + cadena CA)   │
+   │                                 │
+   │─── Finished ──────────────────▶│
+   │                                 │
+   ═══════ TRÁFICO CIFRADO SIMÉTRICO ═══════
+```
+
+### Cipher suites
+
+Una cipher suite define:
+- **Intercambio de claves**: ECDHE (perfect forward secrecy)
+- **Cifrado**: AES-256-GCM, CHACHA20-POLY1305
+- **Hash**: SHA384
+
+```bash
+# Ver cipher suites soportados por openssl
+openssl ciphers -v 'ALL' | head -20
+```
+
+---
+
+## Certificados digitales
+
+### Estructura de un certificado X.509
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│              CERTIFICADO X.509 (PEM)                         │
+│                                                             │
+│  -----BEGIN CERTIFICATE-----                                │
+│  MIIFazCCA1OgAwIBAgISA0m63Gs3RFUKQwfQ0QdEIVrDMA0GCSqG  │
+│  SIb3DQEBCwUAMF0xCzAJBgNVBAYTAlVTMRMwEQYDVQQIDApDYWxp    │
+│  ... (datos codificados en Base64) ...                       │
+│  -----END CERTIFICATE-----                                  │
+│                                                             │
+│  Contenido decodificado:                                    │
+│  • Subject: CN=example.com, O=MiEmpresa, C=US              │
+│  • Issuer: Let's Encrypt Authority X3                       │
+│  • Validez: 2025-01-01 a 2026-01-01                        │
+│  • Clave pública: RSA 2048/4096 o ECDSA P-256              │
+│  • Huella digital: SHA256 fingerprint                       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Tipos de certificados
+
+| Tipo | Descripción | Uso |
+|------|-------------|-----|
+| **DV** (Domain Validated) | Verifica dominio | Blogs, sitios personales |
+| **OV** (Organization Validated) | Verifica dominio + organización | Empresas |
+| **EV** (Extended Validated) | Verificación rigurosa | Bancos, gobierno |
+| **Wildcard** | `*.example.com` | Subdominios múltiples |
+| **Self-signed** | Autofirmado | Desarrollo, testing |
+
+---
+
+## Herramientas: OpenSSL
+
+### Verificar un certificado
+
+```bash
+# Ver información del certificado
+openssl x509 -in certificado.pem -text -noout
+
+# Ver solo el subject
+openssl x509 -in certificado.pem -subject -noout
+
+# Ver fechas de validez
+openssl x509 -in certificado.pem -dates -noout
+
+# Ver huella digital
+openssl x509 -in certificado.pem -fingerprint -sha256 -noout
+```
+
+### Generar clave privada
+
+```bash
+# RSA 4096 bits (recomendado)
+openssl genrsa -out servidor.key 4096
+
+# ECDSA P-256 (más rápido, igual seguridad)
+openssl ecparam -genkey -name secp384r1 -out servidor.key
+
+# Proteger con contraseña
+openssl genrsa -aes256 -out servidor.key 4096
+```
+
+### Generar CSR (Certificate Signing Request)
+
+```bash
+openssl req -new -key servidor.key -out servidor.csr \
+  -subj "/C=US/ST=State/L=City/O=Organization/CN=example.com"
+```
+
+### Generar certificado autofirmado
+
+```bash
+# Válido por 365 días
+openssl req -x509 -newkey rsa:4096 -sha256 \
+  -days 365 -nodes \
+  -keyout servidor.key -out servidor.crt \
+  -subj "/C=ES/ST=Madrid/L=Madrid/O=Abacom/CN=localhost"
+```
+
+---
+
+## Autoridad de Certificación (CA) local
+
+### ¿Qué es una CA?
+
+Una **Autoridad de Certificación** es una entidad que firma certificados. Los navegadores confían en CAs públicas (Let's Encrypt, DigiCert). En entornos privados, puedes crear tu propia CA.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    JERARQUÍA DE CERTIFICADOS                 │
+│                                                             │
+│                  CA Raíz (self-signed)                       │
+│                  ┌──────────────┐                            │
+│                  │  rootCA.key  │                            │
+│                  │  rootCA.crt  │                            │
+│                  └──────┬───────┘                            │
+│                         │                                    │
+│            ┌────────────┴────────────┐                       │
+│            │                         │                        │
+│            ▼                         ▼                        │
+│   Certificado Intermedio      Certificado Servidor           │
+│   intermedio.key/crt          servidor.key/crt              │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Crear CA local
+
+```bash
+# 1. Crear CA raíz
+openssl req -x509 -newkey rsa:4096 -sha256 \
+  -days 3650 -nodes \
+  -keyout rootCA.key -out rootCA.crt \
+  -subj "/C=ES/ST=Madrid/O=Abacom CA/CN=Abacom Root CA"
+
+# 2. Crear clave del servidor
+openssl genrsa -out servidor.key 4096
+
+# 3. Crear CSR
+openssl req -new -key servidor.key -out servidor.csr \
+  -subj "/C=ES/ST=Madrid/O=Abacom/CN=servidor.local"
+
+# 4. Crear extensión para Subject Alternative Name
+cat > servidor.ext << 'EOF'
+[req]
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+
+[req_distinguished_name]
+countryName = Country Name (2 letter code)
+stateOrProvinceName = State or Province Name
+organizationName = Organization Name
+commonName = Common Name
+
+[v3_req]
+basicConstraints = CA:FALSE
+keyUsage = digitalSignature, keyEncipherment
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = servidor.local
+DNS.2 = localhost
+IP.1 = 127.0.0.1
+EOF
+
+# 5. Firmar con la CA
+openssl x509 -req -in servidor.csr -CA rootCA.crt -CAkey rootCA.key \
+  -CAcreateserial -out servidor.crt -days 365 -sha256 \
+  -extfile servidor.ext
+
+# 6. Verificar cadena
+openssl verify -CAfile rootCA.crt servidor.crt
+```
+
+---
+
+## Configuración HTTPS en nginx
+
+### Configuración básica HTTPS
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name example.com;
+
+    # Certificados
+    ssl_certificate /etc/nginx/ssl/servidor.crt;
+    ssl_certificate_key /etc/nginx/ssl/servidor.key;
+
+    # Protocolos TLS (solo seguros)
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    # Cipher suites seguras
+    ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384';
+    ssl_prefer_server_ciphers on;
+
+    # HSTS (HTTP Strict Transport Security)
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    # Session cache para rendimiento
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    # Root
+    root /var/www/html;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+
+### Redirigir HTTP a HTTPS
+
+```nginx
+# Puerto 80 → Redirigir a HTTPS
+server {
+    listen 80;
+    server_name example.com;
+
+    return 301 https://$server_name$request_uri;
+}
+```
+
+### Configuración completa con proxy
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name api.example.com;
+
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256;
+    ssl_prefer_server_ciphers on;
+
+    # OCSP Stapling
+    ssl_stapling on;
+    ssl_stapling_verify on;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+---
+
+## Let's Encrypt (certificados gratuitos)
+
+### Certbot: automatizar renovación
+
+```bash
+# Instalar certbot
+sudo apt install -y certbot python3-certbot-nginx
+
+# Obtener certificado (nginx)
+sudo certbot --nginx -d example.com -d www.example.com
+
+# Solo obtener (sin modificar nginx)
+sudo certbot certonly --standalone -d example.com
+
+# Verificar renovación automática
+sudo certbot renew --dry-run
+
+# Renovar manualmente
+sudo certbot renew
+```
+
+### Estructura de certificados Let's Encrypt
+
+```
+/etc/letsencrypt/live/example.com/
+├── fullchain.pem  ← Certificado + intermedio
+├── privkey.pem    ← Clave privada
+├── cert.pem       ← Solo certificado
+└── chain.pem      ← Solo intermedio
+```
+
+---
+
+## Verificación y testing
+
+### Verificar configuración TLS
+
+```bash
+# Ver protocolos y cipher suites aceptados
+nmap --script ssl-enum-ciphers -p 443 example.com
+
+# Verificar certificado con openssl
+openssl s_client -connect example.com:443 -servername example.com
+
+# Verificar cadena de confianza
+openssl verify -CAfile rootCA.crt servidor.crt
+
+# Verificar fecha de expiración
+echo | openssl s_client -connect example.com:443 2>/dev/null | \
+  openssl x509 -noout -dates
+```
+
+### Herramientas online
+
+- **SSL Labs**: https://www.ssllabs.com/ssltest/ — Test completo A+ a F
+- **Mozilla Observatory**: https://observatory.mozilla.org/
+- **testssl.sh**: script local para testing completo
+
+### Testssl.sh básico
+
+```bash
+# Clonar y ejecutar
+git clone https://github.com/drwetter/testssl.sh.git
+cd testssl.sh
+./testssl.sh example.com
+```
+
+---
+
+## Seguridad TLS
+
+### Hardening checklist
+
+- [ ] **TLS 1.2 y 1.3 únicamente** — Deshabilitar SSLv3, TLS 1.0, 1.1
+- [ ] **Cipher suites seguras** — Solo ECDHE + AES-GCM o CHACHA20
+- [ ] **Perfect Forward Secrecy** — Usar ECDHE para intercambio de claves
+- [ ] **HSTS** — `max-age=31536000` mínimo 1 año
+- [ ] **OCSP Stapling** — Verificar revocación sin consulta externa
+- [ ] **Certificados válidos** — No usar self-signed en producción
+- [ ] **Renovación automática** — cron/certbot renew
+- [ ] **Tamaño de clave** — RSA 2048+ o ECDSA P-256+
+
+### Ataques comunes
+
+| Ataque | Descripción | Mitigación |
+|--------|-------------|------------|
+| **POODLE** | SSLv3 padding oracle | Deshabilitar SSLv3 |
+| **BEAST** | CBC vulnerability TLS 1.0 | Usar TLS 1.2+ |
+| **Heartbleed** | Buffer overflow en OpenSSL | Actualizar OpenSSL |
+| **Logjam** | Export cipher weakness | Usar ECDHE, no DH |
+| **DROWN** | SSLv2 cross-protocol | Deshabilitar SSLv2 |
+
+---
+
+## 10.1 🎯 Ejercicio práctico: CA local y certificados
+
+**Objetivo**: Crear una CA local, emitir un certificado y configurar HTTPS en nginx.
+
+**Pasos**:
+
+1. Crear directorio de trabajo:
+   ```bash
+   mkdir -p ~/laboratorio/ssl/{ca,servidor}
+   cd ~/laboratorio/ssl
+   ```
+
+2. Crear CA raíz:
+   ```bash
+   openssl req -x509 -newkey rsa:4096 -sha256 \
+     -days 3650 -nodes \
+     -keyout ca/rootCA.key -out ca/rootCA.crt \
+     -subj "/C=ES/ST=Madrid/O=Abacom/CN=Abacom Root CA"
+   ```
+
+3. Generar clave y CSR del servidor:
+   ```bash
+   openssl genrsa -out servidor/servidor.key 4096
+   openssl req -new -key servidor/servidor.key -out servidor/servidor.csr \
+     -subj "/C=ES/ST=Madrid/O=Abacom/CN=localhost"
+   ```
+
+4. Crear archivo de extensiones:
+   ```bash
+   cat > servidor/servidor.ext << 'EOF'
+   [req]
+   req_extensions = v3_req
+   [v3_req]
+   basicConstraints = CA:FALSE
+   keyUsage = digitalSignature, keyEncipherment
+   subjectAltName = @alt_names
+   [alt_names]
+   DNS.1 = localhost
+   DNS.2 = servidor.local
+   IP.1 = 127.0.0.1
+   EOF
+   ```
+
+5. Firmar certificado:
+   ```bash
+   openssl x509 -req -in servidor/servidor.csr \
+     -CA ca/rootCA.crt -CAkey ca/rootCA.key -CAcreateserial \
+     -out servidor/servidor.crt -days 365 -sha256 \
+     -extfile servidor/servidor.ext
+   ```
+
+6. Verificar:
+   ```bash
+   openssl verify -CAfile ca/rootCA.crt servidor/servidor.crt
+   openssl x509 -in servidor/servidor.crt -text -noout | grep -A2 "Subject Alternative Name"
+   ```
+
+7. Configurar nginx con HTTPS:
+   ```bash
+   sudo cp servidor/servidor.crt /etc/nginx/ssl/
+   sudo cp servidor/servidor.key /etc/nginx/ssl/
+   ```
+
+8. Crear configuración HTTPS en nginx:
+   ```bash
+   sudo tee /etc/nginx/sites-available/ssl-test << 'NGINX'
+   server {
+       listen 443 ssl;
+       server_name localhost;
+
+       ssl_certificate /etc/nginx/ssl/servidor.crt;
+       ssl_certificate_key /etc/nginx/ssl/servidor.key;
+       ssl_protocols TLSv1.2 TLSv1.3;
+
+       root /var/www/html;
+       index index.html;
+
+       location / { try_files $uri $uri/ =404; }
+   }
+
+   server {
+       listen 80;
+       server_name localhost;
+       return 301 https://$server_name$request_uri;
+   }
+   NGINX
+   ```
+
+**Validación**:
+
+| Prueba | Comando | Esperado |
+|--------|---------|----------|
+| Certificado verificado | `openssl verify -CAfile ca/rootCA.crt servidor/servidor.crt` | `servidor/servidor.crt: OK` |
+| SAN presente | `openssl x509 -in servidor/servidor.crt -text -noout \| grep DNS` | DNS: localhost, servidor.local |
+| HTTPS funcional | `curl -k https://localhost` | HTTP 200 |
+| Redirección HTTP→HTTPS | `curl -I http://localhost` | 301 redirect |
+
+---
+
+## 10.2 📋 Checklist de autoevaluación
+
+Marca cada casilla solo si puedes hacerlo **sin consultar apuntes**:
+
+- [ ] Explicar la diferencia SSL vs TLS
+- [ ] Describir el handshake TLS (pasos principales)
+- [ ] Generar clave privada RSA y ECDSA
+- [ ] Crear un CSR con `openssl req`
+- [ ] Generar certificado autofirmado
+- [ ] Crear CA local y firmar certificados
+- [ ] Configurar HTTPS en nginx con certificado propio
+- [ ] Redirigir HTTP a HTTPS (301)
+- [ ] Verificar certificado con `openssl verify`
+- [ ] Configurar HSTS en nginx
+
+**Criterio de aprobación**: 9/10 casillas marcadas.
+
+---
+
+## 10.3 🔑 Puntos clave
+
+- **SSL**: protocolo antiguo e inseguro. Usar TLS 1.2+.
+- **TLS**: proporciona confidencialidad, integridad, autenticación.
+- **Handshake**: intercambio de claves + autenticación + cifrado simétrico.
+- **Certificado X.509**: contiene clave pública, identidad, validez, emisor.
+- **CA**: entidad que firma certificados. Confianza en la raíz.
+- **OpenSSL**: herramienta CLI para generar claves, CSR, certificados.
+- **Perfect Forward Secrecy**: ECDHE genera claves únicas por sesión.
+- **HSTS**: fuerza HTTPS en el navegador.
+- **Let's Encrypt**: CA gratuita, automatización con certbot.
+- **Verificación**: `openssl verify`, SSL Labs, testssl.sh.
+
+---
+
+## 10.4 🛡️ Proyecto: infraestructura PKI completa
+
+**Objetivo**: Desplegar una PKI mínima con CA local y múltiples servicios HTTPS.
+
+**Entregable**: Archivo `pki-setup.md` con:
+
+1. **CA Raíz**: generada con RSA 4096, válida 10 años.
+2. **Certificado intermedio**: firmado por la CA raíz.
+3. **Certificado de servidor**: para `app.local` y `api.local` (SAN).
+4. **Configuración nginx**: dos virtual hosts HTTPS con proxy inverso.
+5. **Script de renovación**: bash script que renueva certificados antes de expiración.
+6. **Verificación**: salida de `openssl verify` y `openssl s_client`.
+7. **Hardening**: lista de 5 configuraciones TLS en nginx.
+
+**Criterios de evaluación**:
+
+| Criterio | Peso |
+|----------|------|
+| CA funcional y verificable | 25% |
+| Certificados con SAN válidos | 25% |
+| Configuración HTTPS en nginx | 25% |
+| Script de renovación | 15% |
+| Documentación de hardening | 10% |
+
+---
+
+*📖 Tiempo estimado: 4-5 h • 🎯 15 retos • 📝 1 proyecto*

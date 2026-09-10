@@ -1,0 +1,298 @@
+---
+title: "Módulo — IAM, MFA y Control de Acceso"
+author: "Diego Saavedra, Mg. Sc. | Abacom"
+format:
+  html:
+    toc: true
+    toc-location: left
+    code-fold: false
+    theme: cosmo
+---
+
+# Módulo — IAM, MFA y Control de Acceso
+
+---
+
+## Introducción: la identidad es el nuevo perímetro
+
+**En ciberseguridad, la identidad es el nuevo perímetro.** Ya no alcanza con un firewall: si un atacante roba credenciales válidas, puede entrar sin disparar ninguna alarma. Por eso el control de acceso es uno de los pilares fundamentales de la defensa moderna.
+
+IAM (Identity and Access Management) es el conjunto de políticas, procesos y tecnologías que garantizan que **la persona correcta accede a los recursos correctos en el momento correcto**.
+
+En este módulo aprenderás a gestionar identidades, configurar MFA, aplicar el principio de menor privilegio y auditar accesos en sistemas Linux.
+
+::: {.note}
+**Contexto profesional:** El 80% de las filtraciones de datos involucran credenciales robadas o débiles. MFA reduce este riesgo en más del 99%. Configurar MFA no es opcional en entornos profesionales.
+:::
+
+---
+
+## IAM: Identity and Access Management
+
+### Componentes de IAM
+
+| Componente | Descripción | Ejemplo |
+|------------|-------------|---------|
+| **Usuarios** | Identidades individuales | `juan`, `maria` |
+| **Grupos** | Colección de usuarios | `sysadmins`, `desarrolladores` |
+| **Roles** | Conjunto de permisos | `dba`, `auditor` |
+| **Permisos** | Acciones permitidas | leer, escribir, ejecutar |
+| **Políticas** | Reglas de acceso | "solo desde IPs corporativas" |
+
+### Principio de menor privilegio
+
+**Un usuario debe tener solo los permisos necesarios para hacer su trabajo, ni uno más.**
+
+```bash
+# ❌ Mal: usuario con acceso root permanente
+sudo su -
+
+# ✅ Bien: usuario con permisos específicos via sudoers
+ops_admin ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart nginx
+```
+
+---
+
+## MFA: Multi-Factor Authentication
+
+### Factores de autenticación
+
+| Factor | Descripción | Ejemplo |
+|--------|-------------|---------|
+| **Algo que sabes** | Conocimiento | Contraseña, PIN |
+| **Algo que tienes** | Posesión | Token, smartphone, YubiKey |
+| **Algo que eres** | Biometría | Huella, rostro, voz |
+
+MFA combina 2+ factores. Si uno se roba, el segundo protege el acceso.
+
+### Implementación de MFA en Linux
+
+#### Google Authenticator (TOTP)
+
+```bash
+# 1. Instalar PAM y Google Authenticator
+sudo apt install -y libpam-google-authenticator
+
+# 2. Configurar para el usuario
+google-authenticator
+
+# 3. Configurar PAM para SSH
+echo "auth required pam_google_authenticator.so" | sudo tee -a /etc/pam.d/sshd
+
+# 4. Configurar SSH para requerir MFA
+echo "ChallengeResponseAuthentication yes" | sudo tee -a /etc/ssh/sshd_config
+echo "AuthenticationMethods publickey,password publickey,keyboard-interactive" | sudo tee -a /etc/ssh/sshd_config
+
+# 5. Reiniciar SSH
+sudo systemctl restart sshd
+```
+
+#### YubiKey (hardware token)
+
+```bash
+# Configurar YubiKey para SSH
+# 1. Generar clave en YubiKey
+ykman oath keys list
+
+# 2. Configurar SSH para usar clave física
+ssh -I /usr/lib/x86_64-linux-gnu/libykcs11.so usuario@servidor
+```
+
+---
+
+## sudoers: control de privilegios
+
+### El archivo `/etc/sudoers`
+
+Controla quién puede ejecutar qué como root:
+
+```bash
+# Formato: usuario HOST=(runas) COMANDOS
+ops_admin ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart nginx
+dev_user ALL=(ALL) NOPASSWD: /usr/bin/docker
+auditor ALL=(ALL) NOPASSWD: /usr/bin/journalctl
+```
+
+### Buenas prácticas
+
+| Práctica | Razón |
+|----------|-------|
+| **NOPASSWD solo para comandos específicos** | No dar shell root completo |
+| **Grupos en vez de usuarios individuales** | Escalable |
+| **Alias para conjuntos de comandos** | Mantenible |
+| **visudo para editar** | Validación de sintaxis |
+
+```bash
+# Usar visudo (nunca editar directamente)
+sudo visudo
+
+# Ejemplo con alias
+Cmnd_Alias WEB_CMDS = /usr/bin/systemctl restart nginx, /usr/bin/systemctl reload nginx
+ops_admin ALL=(ALL) NOPASSWD: WEB_CMDS
+```
+
+---
+
+## PAM: Pluggable Authentication Modules
+
+### ¿Qué es PAM?
+
+PAM permite configurar autenticación modularmente. Cada servicio (SSH, login, sudo) puede tener reglas diferentes.
+
+```
+/etc/pam.d/
+├── sshd      # Configuración SSH
+├── login     # Login en consola
+├── sudo      # Ejecución con sudo
+├── su        # Cambio de usuario
+└── common-auth  # Auth común
+```
+
+### Políticas de contraseñas
+
+```bash
+# /etc/login.defs
+PASS_MAX_DAYS 90      # Expiración de contraseña
+PASS_MIN_DAYS 1       # Mínimo entre cambios
+PASS_WARN_AGE 14      # Advertencia antes de expirar
+```
+
+---
+
+## Auditoría de accesos
+
+### Comandos esenciales
+
+```bash
+# Ver últimos logins
+last
+
+# Ver logins fallidos
+lastb
+
+# Ver quién está conectado
+who
+
+# Ver historial de sudo
+sudo cat /var/log/auth.log | grep sudo
+
+# Ver intentos de autenticación fallidos
+sudo cat /var/log/auth.log | grep "Failed password"
+```
+
+### Detectar usuarios con privilegios
+
+```bash
+# Ver usuarios root
+awk -F: '$3 == 0 {print $1}' /etc/passwd
+
+# Ver usuarios con sudo
+grep -E "^[^#].*sudo" /etc/group
+
+# Ver sudoers activos
+sudo cat /etc/sudoers | grep -v "^#"
+```
+
+---
+
+## 3.1 🎯 Ejercicio práctico: hardening de identidades
+
+**Objetivo**: Crear grupo de operadores, configurar sudoers limitado y auditar accesos.
+
+**Pasos**:
+
+1. Crear grupo y usuario:
+   ```bash
+   sudo groupadd sysadmins
+   sudo useradd -m -s /bin/bash ops_admin
+   sudo usermod -aG sysadmins ops_admin
+   ```
+
+2. Configurar sudoers con privilegios limitados:
+   ```bash
+   sudo tee /etc/sudoers.d/ops_admin << 'EOF'
+   ops_admin ALL=(ALL) NOPASSWD: /usr/bin/systemctl status nginx
+   EOF
+   sudo chmod 440 /etc/sudoers.d/ops_admin
+   ```
+
+3. Verificar política de contraseñas:
+   ```bash
+   sudo chage -l ops_admin
+   ```
+
+4. Auditar accesos:
+   ```bash
+   last | head -10
+   sudo cat /var/log/auth.log | grep "Failed password" | tail -5
+   ```
+
+**Validación**:
+
+| Prueba | Comando | Esperado |
+|--------|---------|----------|
+| Grupo creado | `getent group sysadmins` | `sysadmins:x:1001:ops_admin` |
+| Sudoers aplicado | `sudo -l -U ops_admin` | Solo comandos permitidos |
+| Política activa | `sudo chage -l ops_admin` | 90 días máximo |
+| Logs de acceso | `last | grep ops_admin` | Entradas registradas |
+
+---
+
+## 3.2 📋 Checklist de autoevaluación
+
+Marca cada casilla solo si puedes hacerlo **sin consultar apuntes**:
+
+- [ ] Explicar componentes de IAM (usuarios, grupos, roles, permisos)
+- [ ] Aplicar principio de menor privilegio
+- [ ] Configurar Google Authenticator para MFA
+- [ ] Editar sudoers con `visudo`
+- [ ] Crear alias de comandos en sudoers
+- [ ] Configurar políticas de contraseñas en `/etc/login.defs`
+- [ ] Auditar logins con `last` y `lastb`
+- [ ] Detectar usuarios con privilegios excesivos
+- [ ] Configurar PAM para servicio específico
+- [ ] Explicar diferencias entre factores de autenticación
+
+**Criterio de aprobación**: 8/10 casillas marcadas.
+
+---
+
+## 3.3 🔑 Puntos clave
+
+- **IAM**: gestión de identidades y accesos. Base de la seguridad moderna.
+- **MFA**: combina 2+ factores. Reduce riesgo de robo de credenciales en 99%.
+- **Principio de menor privilegio**: solo permisos necesarios.
+- **sudoers**: control fino de privilegios. Usar `visudo`.
+- **PAM**: módulos de autenticación configurables por servicio.
+- **Políticas de contraseñas**: `/etc/login.defs` define expiración, advertencia.
+- **Auditoría**: `last`, `lastb`, `auth.log` para rastrear accesos.
+- **Hardening de identidades**: primera línea de defensa.
+
+---
+
+## 3.4 🛡️ Proyecto: sistema de gestión de identidades
+
+**Objetivo**: Implementar IAM completo para entorno empresarial simulado.
+
+**Entregable**: Documento `iam-setup.md` con:
+
+1. **Grupos y usuarios**: 3 grupos (sysadmins, devs, auditors) con usuarios asignados.
+2. **sudoers**: configuración con privilegios específicos por grupo.
+3. **MFA**: Google Authenticator configurado para usuarios privilegiados.
+4. **Políticas**: expiración de contraseñas, complejidad, historial.
+5. **Auditoría**: script que genera reporte de accesos del mes.
+6. **PAM**: configuración para SSH con MFA obligatorio.
+
+**Criterios de evaluación**:
+
+| Criterio | Peso |
+|----------|------|
+| Estructura IAM (grupos/roles) | 25% |
+| sudoers con menor privilegio | 25% |
+| MFA implementado | 25% |
+| Políticas de contraseñas | 15% |
+| Script de auditoría | 10% |
+
+---
+
+*📖 Tiempo estimado: 3-4 h • 🎯 5 retos • 📝 1 proyecto*

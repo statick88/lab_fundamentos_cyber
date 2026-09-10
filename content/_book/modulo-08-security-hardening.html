@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Diego Saavedra, Mg. Sc. | Abacom">
+
+<title>Módulo 8 — Security Hardening y CIS Benchmarks</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="modulo-08-security-hardening_files/libs/clipboard/clipboard.min.js"></script>
+<script src="modulo-08-security-hardening_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="modulo-08-security-hardening_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="modulo-08-security-hardening_files/libs/quarto-html/popper.min.js"></script>
+<script src="modulo-08-security-hardening_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="modulo-08-security-hardening_files/libs/quarto-html/anchor.min.js"></script>
+<link href="modulo-08-security-hardening_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="modulo-08-security-hardening_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="modulo-08-security-hardening_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="modulo-08-security-hardening_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="modulo-08-security-hardening_files/libs/bootstrap/bootstrap-8ffd5f67044e5306d9846f29df41dda5.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#módulo-8-security-hardening-y-cis-benchmarks" id="toc-módulo-8-security-hardening-y-cis-benchmarks" class="nav-link active" data-scroll-target="#módulo-8-security-hardening-y-cis-benchmarks">Módulo 8 — Security Hardening y CIS Benchmarks</a>
+  <ul class="collapse">
+  <li><a href="#introducción-endurecer-no-es-opcional" id="toc-introducción-endurecer-no-es-opcional" class="nav-link" data-scroll-target="#introducción-endurecer-no-es-opcional">Introducción: endurecer no es opcional</a></li>
+  <li><a href="#los-4-pilares-de-la-seguridad-en-linux" id="toc-los-4-pilares-de-la-seguridad-en-linux" class="nav-link" data-scroll-target="#los-4-pilares-de-la-seguridad-en-linux">Los 4 pilares de la seguridad en Linux</a></li>
+  <li><a href="#gestión-de-identidades-y-usuarios-root" id="toc-gestión-de-identidades-y-usuarios-root" class="nav-link" data-scroll-target="#gestión-de-identidades-y-usuarios-root">Gestión de identidades y usuarios root</a>
+  <ul class="collapse">
+  <li><a href="#el-archivo-etcpasswd" id="toc-el-archivo-etcpasswd" class="nav-link" data-scroll-target="#el-archivo-etcpasswd">El archivo <code>/etc/passwd</code></a></li>
+  <li><a href="#el-archivo-etcshadow" id="toc-el-archivo-etcshadow" class="nav-link" data-scroll-target="#el-archivo-etcshadow">El archivo <code>/etc/shadow</code></a></li>
+  <li><a href="#buscar-usuarios-con-privilegios" id="toc-buscar-usuarios-con-privilegios" class="nav-link" data-scroll-target="#buscar-usuarios-con-privilegios">Buscar usuarios con privilegios</a></li>
+  <li><a href="#contraseñas-vacías-o-bloqueadas" id="toc-contraseñas-vacías-o-bloqueadas" class="nav-link" data-scroll-target="#contraseñas-vacías-o-bloqueadas">Contraseñas vacías o bloqueadas</a></li>
+  </ul></li>
+  <li><a href="#permisos-y-bits-especiales" id="toc-permisos-y-bits-especiales" class="nav-link" data-scroll-target="#permisos-y-bits-especiales">Permisos y bits especiales</a>
+  <ul class="collapse">
+  <li><a href="#permisos-básicos-rwx" id="toc-permisos-básicos-rwx" class="nav-link" data-scroll-target="#permisos-básicos-rwx">Permisos básicos: rwx</a></li>
+  <li><a href="#bits-especiales-suid-sgid-sticky" id="toc-bits-especiales-suid-sgid-sticky" class="nav-link" data-scroll-target="#bits-especiales-suid-sgid-sticky">Bits especiales: SUID, SGID, Sticky</a></li>
+  <li><a href="#buscar-archivos-suidsgid" id="toc-buscar-archivos-suidsgid" class="nav-link" data-scroll-target="#buscar-archivos-suidsgid">Buscar archivos SUID/SGID</a></li>
+  </ul></li>
+  <li><a href="#sudo-y-el-archivo-sudoers" id="toc-sudo-y-el-archivo-sudoers" class="nav-link" data-scroll-target="#sudo-y-el-archivo-sudoers">Sudo y el archivo sudoers</a>
+  <ul class="collapse">
+  <li><a href="#qué-es-sudo" id="toc-qué-es-sudo" class="nav-link" data-scroll-target="#qué-es-sudo">¿Qué es sudo?</a></li>
+  <li><a href="#el-archivo-etcsudoers" id="toc-el-archivo-etcsudoers" class="nav-link" data-scroll-target="#el-archivo-etcsudoers">El archivo <code>/etc/sudoers</code></a></li>
+  <li><a href="#buenas-prácticas-en-sudoers" id="toc-buenas-prácticas-en-sudoers" class="nav-link" data-scroll-target="#buenas-prácticas-en-sudoers">Buenas prácticas en sudoers</a></li>
+  </ul></li>
+  <li><a href="#firewall-ufw-e-iptables" id="toc-firewall-ufw-e-iptables" class="nav-link" data-scroll-target="#firewall-ufw-e-iptables">Firewall: UFW e iptables</a>
+  <ul class="collapse">
+  <li><a href="#concepto-qué-es-un-firewall" id="toc-concepto-qué-es-un-firewall" class="nav-link" data-scroll-target="#concepto-qué-es-un-firewall">Concepto: ¿qué es un firewall?</a></li>
+  <li><a href="#ufw-firewall-simplificado" id="toc-ufw-firewall-simplificado" class="nav-link" data-scroll-target="#ufw-firewall-simplificado">UFW: firewall simplificado</a></li>
+  <li><a href="#iptables-firewall-avanzado" id="toc-iptables-firewall-avanzado" class="nav-link" data-scroll-target="#iptables-firewall-avanzado">iptables: firewall avanzado</a></li>
+  </ul></li>
+  <li><a href="#endurecimiento-de-ssh" id="toc-endurecimiento-de-ssh" class="nav-link" data-scroll-target="#endurecimiento-de-ssh">Endurecimiento de SSH</a>
+  <ul class="collapse">
+  <li><a href="#configuración-de-etcsshsshd_config" id="toc-configuración-de-etcsshsshd_config" class="nav-link" data-scroll-target="#configuración-de-etcsshsshd_config">Configuración de <code>/etc/ssh/sshd_config</code></a></li>
+  <li><a href="#claves-ssh-autenticación-sin-contraseña" id="toc-claves-ssh-autenticación-sin-contraseña" class="nav-link" data-scroll-target="#claves-ssh-autenticación-sin-contraseña">Claves SSH: autenticación sin contraseña</a></li>
+  <li><a href="#permisos-correctos-de-.ssh" id="toc-permisos-correctos-de-.ssh" class="nav-link" data-scroll-target="#permisos-correctos-de-.ssh">Permisos correctos de <code>~/.ssh</code></a></li>
+  </ul></li>
+  <li><a href="#cis-benchmarks-estándar-de-endurecimiento" id="toc-cis-benchmarks-estándar-de-endurecimiento" class="nav-link" data-scroll-target="#cis-benchmarks-estándar-de-endurecimiento">CIS Benchmarks: estándar de endurecimiento</a>
+  <ul class="collapse">
+  <li><a href="#qué-son-los-cis-benchmarks" id="toc-qué-son-los-cis-benchmarks" class="nav-link" data-scroll-target="#qué-son-los-cis-benchmarks">¿Qué son los CIS Benchmarks?</a></li>
+  <li><a href="#benchmarks-relevantes-para-linux" id="toc-benchmarks-relevantes-para-linux" class="nav-link" data-scroll-target="#benchmarks-relevantes-para-linux">Benchmarks relevantes para Linux</a></li>
+  <li><a href="#verificar-cumplimiento-cis" id="toc-verificar-cumplimiento-cis" class="nav-link" data-scroll-target="#verificar-cumplimiento-cis">Verificar cumplimiento CIS</a></li>
+  </ul></li>
+  <li><a href="#monitoreo-y-detección-de-intrusiones" id="toc-monitoreo-y-detección-de-intrusiones" class="nav-link" data-scroll-target="#monitoreo-y-detección-de-intrusiones">Monitoreo y detección de intrusiones</a>
+  <ul class="collapse">
+  <li><a href="#logs-de-autenticación" id="toc-logs-de-autenticación" class="nav-link" data-scroll-target="#logs-de-autenticación">Logs de autenticación</a></li>
+  <li><a href="#detectar-actividad-sospechosa" id="toc-detectar-actividad-sospechosa" class="nav-link" data-scroll-target="#detectar-actividad-sospechosa">Detectar actividad sospechosa</a></li>
+  </ul></li>
+  <li><a href="#ejercicio-práctico-hardening-de-servidor-linux" id="toc-ejercicio-práctico-hardening-de-servidor-linux" class="nav-link" data-scroll-target="#ejercicio-práctico-hardening-de-servidor-linux">8.1 🎯 Ejercicio práctico: hardening de servidor Linux</a></li>
+  <li><a href="#checklist-de-autoevaluación" id="toc-checklist-de-autoevaluación" class="nav-link" data-scroll-target="#checklist-de-autoevaluación">8.2 📋 Checklist de autoevaluación</a></li>
+  <li><a href="#puntos-clave" id="toc-puntos-clave" class="nav-link" data-scroll-target="#puntos-clave">8.3 🔑 Puntos clave</a></li>
+  <li><a href="#proyecto-informe-de-hardening" id="toc-proyecto-informe-de-hardening" class="nav-link" data-scroll-target="#proyecto-informe-de-hardening">8.4 🛡️ Proyecto: informe de hardening</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Módulo 8 — Security Hardening y CIS Benchmarks</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Diego Saavedra, Mg. Sc. | Abacom </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="módulo-8-security-hardening-y-cis-benchmarks" class="level1">
+<h1>Módulo 8 — Security Hardening y CIS Benchmarks</h1>
+<hr>
+<section id="introducción-endurecer-no-es-opcional" class="level2">
+<h2 class="anchored" data-anchor-id="introducción-endurecer-no-es-opcional">Introducción: endurecer no es opcional</h2>
+<p><strong>Un sistema sin hardening es como una casa con puertas abiertas y ventanas sin cerradura.</strong> No importa qué tan buena sea tu alarma si el atacante puede entrar por la puerta principal sin resistencia.</p>
+<p>El <strong>hardening</strong> es el proceso de reducir la superficie de ataque de un sistema: eliminar servicios innecesarios, cerrar puertos, endurecer permisos, configurar firewalls y aplicar controles de acceso estrictos. En Linux, el hardening no es un producto — es una <strong>filosofía de mínimos privilegios</strong>.</p>
+<p>En este módulo aprenderás a aplicar controles de seguridad críticos en Linux: gestión de usuarios root, análisis de permisos, configuración de sudoers, firewall con UFW/iptables, endurecimiento de SSH, detección de archivos SUID/SGID y verificación de <strong>CIS Benchmarks</strong> (Center for Internet Security).</p>
+<div class="note">
+<p><strong>Nota del instructor:</strong> Este módulo cubre controles de nivel sistema. Muchos requieren privilegios de root. En tu laboratorio Docker tienes <code>sudo</code> sin contraseña; en un entorno real, estos cambios deben aplicarse con planificación, respaldo y prueba en staging antes de producción.</p>
+</div>
+<hr>
+</section>
+<section id="los-4-pilares-de-la-seguridad-en-linux" class="level2">
+<h2 class="anchored" data-anchor-id="los-4-pilares-de-la-seguridad-en-linux">Los 4 pilares de la seguridad en Linux</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│              CUATRO PILARES DE SEGURIDAD                      │
+│                                                             │
+│   1. AUTENTICACIÓN — ¿Quién eres?                           │
+│      • Contraseñas, claves SSH, MFA                         │
+│      • /etc/passwd, /etc/shadow                             │
+│                                                             │
+│   2. AUTORIZACIÓN — ¿Qué puedes hacer?                      │
+│      • Permisos (rwx), grupos, sudoers                      │
+│      • /etc/sudoers, ACLs, capabilities                    │
+│                                                             │
+│   3. AUDITORÍA — ¿Qué hiciste?                              │
+│      • Logs de sistema, autenticación, acceso               │
+│      • /var/log/auth.log, journalctl, lastb                 │
+│                                                             │
+│   4. ENDURECIMIENTO — ¿Qué redujiste?                       │
+│      • Firewall, servicios innecesarios, CIS Benchmarks     │
+│      • UFW/iptables, systemctl disable, find SUID           │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<hr>
+</section>
+<section id="gestión-de-identidades-y-usuarios-root" class="level2">
+<h2 class="anchored" data-anchor-id="gestión-de-identidades-y-usuarios-root">Gestión de identidades y usuarios root</h2>
+<section id="el-archivo-etcpasswd" class="level3">
+<h3 class="anchored" data-anchor-id="el-archivo-etcpasswd">El archivo <code>/etc/passwd</code></h3>
+<p>Cada usuario del sistema tiene una entrada en <code>/etc/passwd</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">root:x:0:0:root:/root:/bin/bash</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">estudiante:x:1000:1000:Estudiante:/home/estudiante:/bin/bash</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Campos separados por <code>:</code>: 1. <strong>Usuario</strong> — nombre de login 2. <strong>Contraseña</strong> — <code>x</code> significa que está en <code>/etc/shadow</code> 3. <strong>UID</strong> — User ID (0 = root) 4. <strong>GID</strong> — Group ID principal 5. <strong>GECOS</strong> — descripción/comentario 6. <strong>Home</strong> — directorio personal 7. <strong>Shell</strong> — intérprete de comandos</p>
+</section>
+<section id="el-archivo-etcshadow" class="level3">
+<h3 class="anchored" data-anchor-id="el-archivo-etcshadow">El archivo <code>/etc/shadow</code></h3>
+<p>Contiene hashes de contraseña y políticas de envejecimiento:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">root:</span><span class="va">$6$xyz</span><span class="ex">...:19000:0:99999:7:::</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">estudiante:</span><span class="va">$6$abc</span><span class="ex">...:19000:0:99999:7:::</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Campos clave: 1. <strong>Usuario</strong> 2. <strong>Hash de contraseña</strong> — <code>$6$</code> = SHA-512 3. <strong>Último cambio</strong> — días desde epoch 4. <strong>Mínimo</strong> — días mínimos entre cambios 5. <strong>Máximo</strong> — días máximos antes de expirar 6. <strong>Advertencia</strong> — días antes de expirar para avisar 7. <strong>Inactividad</strong> — días después de expirar para deshabilitar 8. <strong>Expiración</strong> — fecha absoluta de expiración</p>
+</section>
+<section id="buscar-usuarios-con-privilegios" class="level3">
+<h3 class="anchored" data-anchor-id="buscar-usuarios-con-privilegios">Buscar usuarios con privilegios</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver todos los usuarios con UID 0 (privilegio root)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F:</span> <span class="st">'$3 == 0 {print $1}'</span> /etc/passwd</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver usuarios con shell válido (no sistema)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-v</span> nologin /etc/passwd <span class="kw">|</span> <span class="fu">awk</span> <span class="at">-F:</span> <span class="st">'$7 ~ /bash|sh/ {print $1}'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="warning">
+<p><strong>Riesgo de seguridad:</strong> Solo <code>root</code> debe tener UID 0. Si otro usuario tiene UID 0, tiene privilegios de superusuario completos. Esto es una técnica común de persistencia de atacantes.</p>
+</div>
+</section>
+<section id="contraseñas-vacías-o-bloqueadas" class="level3">
+<h3 class="anchored" data-anchor-id="contraseñas-vacías-o-bloqueadas">Contraseñas vacías o bloqueadas</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Buscar usuarios sin contraseña (campo vacío o "!")</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F:</span> <span class="st">'($2 == "" || $2 == "!") {print $1}'</span> /etc/shadow</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Bloquear cuenta de usuario</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> usermod <span class="at">-L</span> usuario</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Desbloquear</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> usermod <span class="at">-U</span> usuario</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="permisos-y-bits-especiales" class="level2">
+<h2 class="anchored" data-anchor-id="permisos-y-bits-especiales">Permisos y bits especiales</h2>
+<section id="permisos-básicos-rwx" class="level3">
+<h3 class="anchored" data-anchor-id="permisos-básicos-rwx">Permisos básicos: rwx</h3>
+<p>Cada archivo tiene permisos para tres categorías:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Categoría</th>
+<th>Símbolo</th>
+<th>Octal</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Owner</td>
+<td><code>rwx</code></td>
+<td>7</td>
+<td>Lectura, escritura, ejecución</td>
+</tr>
+<tr class="even">
+<td>Group</td>
+<td><code>r-x</code></td>
+<td>5</td>
+<td>Lectura, ejecución</td>
+</tr>
+<tr class="odd">
+<td>Others</td>
+<td><code>r--</code></td>
+<td>4</td>
+<td>Solo lectura</td>
+</tr>
+</tbody>
+</table>
+<p>Ejemplo: <code>chmod 750 archivo</code> → <code>rwxr-x---</code></p>
+</section>
+<section id="bits-especiales-suid-sgid-sticky" class="level3">
+<h3 class="anchored" data-anchor-id="bits-especiales-suid-sgid-sticky">Bits especiales: SUID, SGID, Sticky</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 17%">
+<col style="width: 25%">
+<col style="width: 28%">
+<col style="width: 28%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Bit</th>
+<th>Octal</th>
+<th>Efecto</th>
+<th>Riesgo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>SUID</td>
+<td>4000</td>
+<td>Ejecuta con permisos del owner</td>
+<td>Alto — escalación de privilegios</td>
+</tr>
+<tr class="even">
+<td>SGID</td>
+<td>2000</td>
+<td>Ejecuta con permisos del grupo</td>
+<td>Medio</td>
+</tr>
+<tr class="odd">
+<td>Sticky</td>
+<td>1000</td>
+<td>Solo owner puede borrar en directorio</td>
+<td>Bajo — usado en <code>/tmp</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="buscar-archivos-suidsgid" class="level3">
+<h3 class="anchored" data-anchor-id="buscar-archivos-suidsgid">Buscar archivos SUID/SGID</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Archivos SUID (ejecutan como root)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> / <span class="at">-perm</span> <span class="at">-4000</span> <span class="at">-type</span> f <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">|</span> <span class="fu">head</span> <span class="at">-20</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Archivos SGID (ejecutan con grupo owner)</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> / <span class="at">-perm</span> <span class="at">-2000</span> <span class="at">-type</span> f <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">|</span> <span class="fu">head</span> <span class="at">-20</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Ambos</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> / <span class="at">-perm</span> <span class="at">-6000</span> <span class="at">-type</span> f <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">|</span> <span class="fu">head</span> <span class="at">-20</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="warning">
+<p><strong>Análisis de riesgo:</strong> Archivos SUID como <code>/usr/bin/passwd</code> son normales. Un SUID en <code>/tmp</code> o en un binario sin firma es sospechoso. Investiga cualquier SUID que no pertenezca al paquete oficial del sistema.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="sudo-y-el-archivo-sudoers" class="level2">
+<h2 class="anchored" data-anchor-id="sudo-y-el-archivo-sudoers">Sudo y el archivo sudoers</h2>
+<section id="qué-es-sudo" class="level3">
+<h3 class="anchored" data-anchor-id="qué-es-sudo">¿Qué es sudo?</h3>
+<p><code>sudo</code> (superuser do) permite ejecutar comandos como otro usuario, típicamente root. A diferencia de <code>su</code>, no requiere conocer la contraseña de root.</p>
+</section>
+<section id="el-archivo-etcsudoers" class="level3">
+<h3 class="anchored" data-anchor-id="el-archivo-etcsudoers">El archivo <code>/etc/sudoers</code></h3>
+<p>Define quién puede usar <code>sudo</code> y con qué permisos:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Permitir sudo sin contraseña a usuario del grupo sudo</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">%sudo</span>   ALL=<span class="er">(</span><span class="ex">ALL:ALL</span><span class="kw">)</span> <span class="ex">NOPASSWD:</span> ALL</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Permitir comandos específicos sin contraseña</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="ex">estudiante</span> ALL=<span class="er">(</span><span class="ex">ALL</span><span class="kw">)</span> <span class="ex">NOPASSWD:</span> /usr/bin/systemctl restart nginx</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="buenas-prácticas-en-sudoers" class="level3">
+<h3 class="anchored" data-anchor-id="buenas-prácticas-en-sudoers">Buenas prácticas en sudoers</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 58%">
+<col style="width: 41%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Práctica</th>
+<th>Razón</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Usar <code>visudo</code> para editar</td>
+<td>Valida sintaxis antes de guardar</td>
+</tr>
+<tr class="even">
+<td>Otorgar comandos específicos, no <code>ALL</code></td>
+<td>Principio de mínimo privilegio</td>
+</tr>
+<tr class="odd">
+<td>Evitar <code>NOPASSWD</code> salvo scripts automatizados</td>
+<td>Reduce riesgo de uso malicioso</td>
+</tr>
+<tr class="even">
+<td>Usar <code>Defaults !authenticate</code> con cuidado</td>
+<td>Puede debilitar seguridad</td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar sintaxis de sudoers</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> visudo <span class="at">-c</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver qué comandos puede ejecutar un usuario</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="firewall-ufw-e-iptables" class="level2">
+<h2 class="anchored" data-anchor-id="firewall-ufw-e-iptables">Firewall: UFW e iptables</h2>
+<section id="concepto-qué-es-un-firewall" class="level3">
+<h3 class="anchored" data-anchor-id="concepto-qué-es-un-firewall">Concepto: ¿qué es un firewall?</h3>
+<p>Un <strong>firewall</strong> es un filtro de tráfico de red. Decide qué paquetes entran y salen del sistema basándose en reglas.</p>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    FIREWALL                                  │
+│                                                             │
+│   Red externa                                               │
+│       │                                                     │
+│       ▼                                                     │
+│   ┌──────────┐                                              │
+│   │  PACKET  │  ¿Puerto 22 abierto?                         │
+│   │  FILTER  │  ¿Protocolo permitido?                       │
+│   └────┬─────┘  ¿IP confiable?                              │
+│        │                                                   │
+│        ▼                                                   │
+│   ┌──────────┐                                              │
+│   │  Linux   │  Solo tráfico autorizado pasa                │
+│   │  System  │                                              │
+│   └──────────┘                                              │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+</section>
+<section id="ufw-firewall-simplificado" class="level3">
+<h3 class="anchored" data-anchor-id="ufw-firewall-simplificado">UFW: firewall simplificado</h3>
+<p>UFW (Uncomplicated Firewall) es la interfaz simplificada de iptables:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver estado</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw status verbose</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Activar</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw enable</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Permitir puerto</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow 22/tcp</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow 80/tcp</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Denegar puerto</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw deny 3306</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Eliminar regla</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw delete allow 80/tcp</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Regla con origen específico</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow from 192.168.1.0/24 to any port 22</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="iptables-firewall-avanzado" class="level3">
+<h3 class="anchored" data-anchor-id="iptables-firewall-avanzado">iptables: firewall avanzado</h3>
+<p><code>iptables</code> es la herramienta nativa de filtrado en Linux:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver reglas actuales</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> iptables <span class="at">-L</span> <span class="at">-n</span> <span class="at">-v</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear regla DROP por defecto</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> iptables <span class="at">-P</span> INPUT DROP</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> iptables <span class="at">-P</span> FORWARD DROP</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> iptables <span class="at">-P</span> OUTPUT ACCEPT</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Permitir loopback</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> iptables <span class="at">-A</span> INPUT <span class="at">-i</span> lo <span class="at">-j</span> ACCEPT</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Permitir conexiones establecidas</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> iptables <span class="at">-A</span> INPUT <span class="at">-m</span> state <span class="at">--state</span> ESTABLISHED,RELATED <span class="at">-j</span> ACCEPT</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Permitir SSH</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> iptables <span class="at">-A</span> INPUT <span class="at">-p</span> tcp <span class="at">--dport</span> 22 <span class="at">-j</span> ACCEPT</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Guardar reglas</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> iptables-save <span class="op">&gt;</span> /etc/iptables/rules.v4</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="endurecimiento-de-ssh" class="level2">
+<h2 class="anchored" data-anchor-id="endurecimiento-de-ssh">Endurecimiento de SSH</h2>
+<section id="configuración-de-etcsshsshd_config" class="level3">
+<h3 class="anchored" data-anchor-id="configuración-de-etcsshsshd_config">Configuración de <code>/etc/ssh/sshd_config</code></h3>
+<p>SSH es el vector de acceso más común. Endurecerlo es crítico:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Deshabilitar login root</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">PermitRootLogin</span> no</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Usar solo Protocolo 2</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ex">Protocol</span> 2</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Autenticación por claves únicamente</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="ex">PubkeyAuthentication</span> yes</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="ex">PasswordAuthentication</span> no</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Limitar usuarios permitidos</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="ex">AllowUsers</span> estudiante admin</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Cambiar puerto por defecto (opcional)</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="ex">Port</span> 2222</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="claves-ssh-autenticación-sin-contraseña" class="level3">
+<h3 class="anchored" data-anchor-id="claves-ssh-autenticación-sin-contraseña">Claves SSH: autenticación sin contraseña</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generar par de claves RSA 4096</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh-keygen</span> <span class="at">-t</span> rsa <span class="at">-b</span> 4096 <span class="at">-f</span> ~/.ssh/id_rsa</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Copiar clave pública a servidor</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ssh-copy-id</span> usuario@servidor</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Conectar con clave</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> <span class="at">-i</span> ~/.ssh/id_rsa usuario@servidor</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="permisos-correctos-de-.ssh" class="level3">
+<h3 class="anchored" data-anchor-id="permisos-correctos-de-.ssh">Permisos correctos de <code>~/.ssh</code></h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Directorio .ssh debe ser 700</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> 700 ~/.ssh</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Clave privada debe ser 600</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> 600 ~/.ssh/id_rsa</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Clave pública puede ser 644</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> 644 ~/.ssh/id_rsa.pub</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="cis-benchmarks-estándar-de-endurecimiento" class="level2">
+<h2 class="anchored" data-anchor-id="cis-benchmarks-estándar-de-endurecimiento">CIS Benchmarks: estándar de endurecimiento</h2>
+<section id="qué-son-los-cis-benchmarks" class="level3">
+<h3 class="anchored" data-anchor-id="qué-son-los-cis-benchmarks">¿Qué son los CIS Benchmarks?</h3>
+<p>Los <strong>CIS Benchmarks</strong> (Center for Internet Security) son guías de configuración segura para sistemas operativos, aplicaciones y dispositivos de red. Son el estándar de facto para hardening.</p>
+</section>
+<section id="benchmarks-relevantes-para-linux" class="level3">
+<h3 class="anchored" data-anchor-id="benchmarks-relevantes-para-linux">Benchmarks relevantes para Linux</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 26%">
+<col style="width: 21%">
+<col style="width: 51%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Benchmark</th>
+<th>Enfoque</th>
+<th>Ejemplo de control</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>CIS Ubuntu Linux</td>
+<td>Sistema operativo</td>
+<td>1.1.1.1 Asegurar /tmp con noexec,nosuid,nodev</td>
+</tr>
+<tr class="even">
+<td>CIS SSH</td>
+<td>Servidor SSH</td>
+<td>3.4.1.1 Deshabilitar PermitRootLogin</td>
+</tr>
+<tr class="odd">
+<td>CIS Nginx</td>
+<td>Servidor web</td>
+<td>4.2.3 Deshabilitar server_tokens</td>
+</tr>
+<tr class="even">
+<td>CIS Docker</td>
+<td>Contenedores</td>
+<td>5.1 Ejecutar como usuario no root</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="verificar-cumplimiento-cis" class="level3">
+<h3 class="anchored" data-anchor-id="verificar-cumplimiento-cis">Verificar cumplimiento CIS</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar montajes de /tmp, /var, /var/log</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mount</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">'/tmp|/var'</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar configuración SSH</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-E</span> <span class="st">'PermitRootLogin|Protocol'</span> /etc/ssh/sshd_config</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar archivos SUID</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> / <span class="at">-perm</span> <span class="at">-4000</span> <span class="at">-type</span> f <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">|</span> <span class="fu">head</span> <span class="at">-20</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="monitoreo-y-detección-de-intrusiones" class="level2">
+<h2 class="anchored" data-anchor-id="monitoreo-y-detección-de-intrusiones">Monitoreo y detección de intrusiones</h2>
+<section id="logs-de-autenticación" class="level3">
+<h3 class="anchored" data-anchor-id="logs-de-autenticación">Logs de autenticación</h3>
+<p>Los logs de autenticación registran cada intento de login:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Últimos logins exitosos</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">last</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Últimos logins fallidos</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="fu">lastb</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Logs de SSH</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> journalctl <span class="at">-u</span> ssh</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tail <span class="at">-f</span> /var/log/auth.log</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Buscar intentos fallidos recientes</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> grep <span class="st">"Failed password"</span> /var/log/auth.log <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-20</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="detectar-actividad-sospechosa" class="level3">
+<h3 class="anchored" data-anchor-id="detectar-actividad-sospechosa">Detectar actividad sospechosa</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Usuarios conectados ahora</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">who</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Historial de comandos de un usuario</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cat /home/usuario/.bash_history</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Procesos ejecutándose como root</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ps</span> aux <span class="kw">|</span> <span class="fu">grep</span> root</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="ejercicio-práctico-hardening-de-servidor-linux" class="level2">
+<h2 class="anchored" data-anchor-id="ejercicio-práctico-hardening-de-servidor-linux">8.1 🎯 Ejercicio práctico: hardening de servidor Linux</h2>
+<p><strong>Objetivo</strong>: Aplicar 5 controles de hardening en un servidor Linux de laboratorio.</p>
+<p><strong>Requisitos previos</strong>: - Acceso sudo configurado - SSH instalado y corriendo - Directorio <code>~/laboratorio/security</code></p>
+<p><strong>Controles a aplicar</strong>:</p>
+<ol type="1">
+<li><strong>Usuarios root</strong>: Verificar que solo <code>root</code> tiene UID 0.</li>
+<li><strong>Permisos críticos</strong>: Verificar <code>/etc/passwd</code> y <code>/etc/shadow</code>.</li>
+<li><strong>Sudoers</strong>: Analizar <code>/etc/sudoers</code> para configuraciones peligrosas.</li>
+<li><strong>Firewall</strong>: Activar UFW y permitir solo SSH.</li>
+<li><strong>SSH hardening</strong>: Deshabilitar <code>PermitRootLogin</code> en <code>/etc/ssh/sshd_config</code>.</li>
+<li><strong>Archivos SUID</strong>: Buscar SUID sospechosos en <code>/tmp</code>.</li>
+<li><strong>Logs</strong>: Revisar intentos de login fallidos.</li>
+<li><strong>Montajes seguros</strong>: Verificar que <code>/tmp</code> tiene opciones <code>noexec,nosuid,nodev</code>.</li>
+</ol>
+<p><strong>Pasos</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Verificar usuarios root</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F:</span> <span class="st">'$3 == 0 {print $1}'</span> /etc/passwd</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Verificar permisos de archivos críticos</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span> /etc/passwd /etc/shadow</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Analizar sudoers</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cat /etc/sudoers <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-v</span> <span class="st">"^#"</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-v</span> <span class="st">"^$"</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Activar firewall</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw enable</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow 22/tcp</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw status</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Endurecer SSH</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> sed <span class="at">-i</span> <span class="st">'s/^PermitRootLogin.*/PermitRootLogin no/'</span> /etc/ssh/sshd_config</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl reload ssh</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Buscar SUID sospechosos</span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> /tmp <span class="at">-perm</span> <span class="at">-4000</span> <span class="at">-type</span> f <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a><span class="co"># 7. Revisar logs de autenticación</span></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tail <span class="at">-20</span> /var/log/auth.log</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a><span class="co"># 8. Verificar montajes seguros</span></span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a><span class="fu">mount</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">'/tmp|/var'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Troubleshooting</strong>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Problema</th>
+<th>Solución</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>ufw: command not found</code></td>
+<td>Instalar: <code>sudo apt install ufw</code></td>
+</tr>
+<tr class="even">
+<td><code>sshd_config: permission denied</code></td>
+<td>Usar <code>sudo visudo -c</code> para validar antes de recargar</td>
+</tr>
+<tr class="odd">
+<td><code>mount: permission denied</code></td>
+<td>Verificar que el punto de montaje existe</td>
+</tr>
+<tr class="even">
+<td>No hay intentos de login fallidos</td>
+<td>Normal en sistema recién instalado; simular con <code>sudo lastb</code></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="checklist-de-autoevaluación" class="level2">
+<h2 class="anchored" data-anchor-id="checklist-de-autoevaluación">8.2 📋 Checklist de autoevaluación</h2>
+<p>Marca cada casilla solo si puedes hacerlo <strong>sin consultar apuntes</strong>:</p>
+<ul class="task-list">
+<li><label><input type="checkbox">Identificar usuarios con UID 0 y explicar el riesgo</label></li>
+<li><label><input type="checkbox">Explicar la diferencia entre <code>/etc/passwd</code> y <code>/etc/shadow</code></label></li>
+<li><label><input type="checkbox">Buscar archivos SUID/SGID y clasificar riesgo</label></li>
+<li><label><input type="checkbox">Configurar regla básica en UFW (allow/deny)</label></li>
+<li><label><input type="checkbox">Modificar <code>/etc/sudoers</code> con <code>visudo</code></label></li>
+<li><label><input type="checkbox">Deshabilitar <code>PermitRootLogin</code> en <code>sshd_config</code></label></li>
+<li><label><input type="checkbox">Generar par de claves SSH con <code>ssh-keygen</code></label></li>
+<li><label><input type="checkbox">Configurar permisos correctos en <code>~/.ssh</code> (700)</label></li>
+<li><label><input type="checkbox">Interpretar logs de autenticación (<code>auth.log</code>, <code>journalctl</code>)</label></li>
+<li><label><input type="checkbox">Verificar opciones de montaje seguras (<code>noexec</code>, <code>nosuid</code>, <code>nodev</code>)</label></li>
+</ul>
+<p><strong>Criterio de aprobación</strong>: 8/10 casillas marcadas.</p>
+<hr>
+</section>
+<section id="puntos-clave" class="level2">
+<h2 class="anchored" data-anchor-id="puntos-clave">8.3 🔑 Puntos clave</h2>
+<ul>
+<li><strong>Hardening</strong>: reducir superficie de ataque eliminando servicios innecesarios y endureciendo configuraciones.</li>
+<li><strong>UID 0</strong>: solo <code>root</code> debe tenerlo; cualquier otro usuario con UID 0 es una amenaza.</li>
+<li><strong>SUID/SGID</strong>: bits que elevan privilegios; deben auditarse regularmente.</li>
+<li><strong>Sudoers</strong>: principio de mínimo privilegio; usar <code>visudo</code> para editar.</li>
+<li><strong>UFW</strong>: interfaz simplificada de iptables para firewall básico.</li>
+<li><strong>SSH hardening</strong>: <code>PermitRootLogin no</code>, claves en lugar de contraseñas, <code>Protocol 2</code>.</li>
+<li><strong>CIS Benchmarks</strong>: estándar de endurecimiento; cubren montajes, SSH, servicios.</li>
+<li><strong>Logs</strong>: <code>/var/log/auth.log</code> y <code>journalctl</code> son evidencia de intentos de acceso.</li>
+</ul>
+<hr>
+</section>
+<section id="proyecto-informe-de-hardening" class="level2">
+<h2 class="anchored" data-anchor-id="proyecto-informe-de-hardening">8.4 🛡️ Proyecto: informe de hardening</h2>
+<p><strong>Objetivo</strong>: Generar un informe de hardening para el servidor de laboratorio.</p>
+<p><strong>Entregable</strong>: Archivo <code>hardening-report.md</code> con:</p>
+<ol type="1">
+<li><strong>Usuarios y privilegios</strong>: lista de usuarios con UID 0, cuentas sin contraseña.</li>
+<li><strong>Permisos críticos</strong>: estado de <code>/etc/passwd</code>, <code>/etc/shadow</code>, <code>/etc/sudoers</code>.</li>
+<li><strong>Servicios abiertos</strong>: puertos escuchando, servicios innecesarios identificados.</li>
+<li><strong>Firewall</strong>: estado de UFW/iptables, reglas activas.</li>
+<li><strong>SSH</strong>: configuración de <code>sshd_config</code>, existencia de claves.</li>
+<li><strong>SUID/SGID</strong>: lista de archivos con bits especiales, clasificación de riesgo.</li>
+<li><strong>Logs</strong>: resumen de intentos de login fallidos.</li>
+<li><strong>CIS Check</strong>: verificación de 3 controles CIS aplicables.</li>
+<li><strong>Plan de remediación</strong>: 5 acciones priorizadas con impacto y esfuerzo.</li>
+</ol>
+<p><strong>Criterios de evaluación</strong>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Criterio</th>
+<th>Peso</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Completitud del inventario</td>
+<td>25%</td>
+</tr>
+<tr class="even">
+<td>Clasificación de riesgo SUID</td>
+<td>25%</td>
+</tr>
+<tr class="odd">
+<td>Configuración SSH</td>
+<td>20%</td>
+</tr>
+<tr class="even">
+<td>Estado del firewall</td>
+<td>15%</td>
+</tr>
+<tr class="odd">
+<td>Plan de remediación accionable</td>
+<td>15%</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><em>📖 Tiempo estimado: 4-5 h • 🎯 15 retos • 📝 1 proyecto</em></p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,612 @@
+---
+title: "Módulo 6 — Logging, SIEM y BCP"
+author: "Diego Saavedra, Mg. Sc. | Abacom"
+format:
+  html:
+    toc: true
+    toc-location: left
+    code-fold: false
+    theme: cosmo
+---
+
+# Módulo 6 — Logging, SIEM y BCP
+
+---
+
+## Introducción: los logs son la memoria de tu sistema
+
+**Si tu sistema fuera un edificio, los logs serían las cámaras de seguridad, el libro de visitas y el registro de apertura de puertas — todo en uno.**
+
+Imagina que ocurre un incidente de seguridad. Un atacante entra, explota una vulnerabilidad y extrae datos. Sin logs, es como si el atacante hubiera caminado por un corredor oscuro sin cámaras, sin testigos, sin rastro. **No puedes defender lo que no puedes ver.**
+
+En ciberseguridad, los **logs** (registros) son la evidencia fundamental. Cada conexión, cada intento de inicio de sesión, cada archivo accedido deja una huella. El problema no es recoger huellas — es saber leerlas.
+
+En este módulo aprenderás a capturar tráfico de red con `tcpdump`, a gestionar logs con `logrotate`, a entender qué es un SIEM y cómo se escribe un informe de seguridad que realmente sirva.
+
+::: {.note}
+**Nota del instructor:** Muchos técnicos piensan que "más logs = más seguridad". Falso. Logs que no revisas son como alarmas que nadie escucha. La seguridad está en el **análisis**, no en la acumulación.
+:::
+
+---
+
+## Captura y análisis de tráfico de red
+
+### ¿Por qué capturar paquetes?
+
+Cuando un atacante escanea tu red, intenta conectarse a puertos o extrae datos, todo eso viaja en paquetes TCP/IP. Si puedes **capturar y leer esos paquetes**, puedes ver el ataque en tiempo real.
+
+Es como tener un micrófono en cada pasillo de tu edificio. No solo sabes que alguien entró — sabes **qué dijo, a qué hora y con quién habló**.
+
+### tcpdump: el estándar de captura
+
+`tcpdump` es una herramienta de línea de comandos que captura paquetes que pasan por una interfaz de red. Es la base del análisis de tráfico.
+
+```
+    ┌─────────────────────────────────────────────────────────────┐
+    │              FLUJO DE CAPTURA CON tcpdump                  │
+    │                                                             │
+    │   Red externa                                               │
+    │       │                                                     │
+    │       ▼                                                     │
+    │   ┌──────────┐                                              │
+    │   │ Interfaz │  eth0 / ens33                                │
+    │   └────┬─────┘                                              │
+    │        │                                                    │
+    │        ▼                                                    │
+    │   ┌──────────────┐                                          │
+    │   │   tcpdump    │  ← captura cada paquete                 │
+    │   └──────┬───────┘                                          │
+    │          │                                                  │
+    │          ▼                                                  │
+    │   ┌──────────────┐                                          │
+    │   │ capture.pcap │  ← archivo analizable                    │
+    │   └──────────────┘                                          │
+    │                                                             │
+    └─────────────────────────────────────────────────────────────┘
+```
+
+### Sintaxis esencial
+
+```bash
+# Capturar tráfico en interfaz eth0 y guardar en archivo
+tcpdump -i eth0 -w capture.pcap
+
+# Capturar solo 100 paquetes y mostrarlos en pantalla
+tcpdump -i eth0 -c 100
+
+# Capturar tráfico de un puerto específico (ej: HTTP)
+tcpdump -i eth0 port 80
+
+# Leer un archivo de captura guardado
+tcpdump -r capture.pcap
+
+# Mostrar contenido ASCII de los paquetes (para debug)
+tcpdump -i eth0 -A
+```
+
+### Análisis con openssl s_client
+
+Para verificar la seguridad de las conexiones TLS/SSL, puedes usar `openssl s_client` para inspeccionar el handshake:
+
+```bash
+# Conectar a un servidor y ver detalles del certificado TLS
+openssl s_client -connect ejemplo.com:443
+
+# Ver fechas de validez del certificado
+openssl s_client -connect ejemplo.com:443 2>/dev/null | openssl x509 -noout -dates
+```
+
+```
+notBefore=Jan  1 00:00:00 2025 GMT
+notAfter=Dec 31 23:59:59 2025 GMT
+```
+
+::: {.warning}
+**Advertencia de seguridad:** Capturar tráfico en redes que no te pertenecen o sin autorización es **ilegal**. Usa tcpdump SOLO en tu laboratorio, en redes propias o con autorización explícita. La herramienta no hace distinciones éticas — tú debes hacerlas.
+:::
+
+---
+
+## Gestión de logs con logrotate
+
+### El problema: los logs crecen sin parar
+
+Imagina un servidor web que registra cada visita. En un día: 10,000 líneas. En un mes: 300,000 líneas. En un año: tu disco está lleno y no puedes escribir más logs — justo cuando más los necesitas.
+
+**logrotate** resuelve esto: rota, comprime y elimina logs automáticamente.
+
+### Analogía del archivo físico
+
+Piensa en un archivo de biblioteca:
+
+| Situación | Sin logrotate | Con logrotate |
+|-----------|---------------|---------------|
+| Un mes de logs | Un solo archivo enorme de 2 GB | 30 archivos diarios de 67 MB |
+| Buscar un evento de hace 3 meses | Imposible sin herramientas | Archivo comprimido, listo para buscar |
+| Disco lleno | El sistema falla | Logs antiguos se eliminan automáticamente |
+
+### Configuración básica
+
+```bash
+# Archivo de configuración de logrotate
+sudo nano /etc/logrotate.d/mi-aplicacion
+```
+
+```
+/var/log/mi-app/*.log {
+    daily           # Rotar cada día
+    missingok       # No fallar si el archivo no existe
+    rotate 7        # Mantener 7 rotaciones
+    compress        # Comprimir logs rotados
+    delaycompress   # No comprimir el más reciente
+    notifempty      # No rotar si está vacío
+    create 0640 estudiante estudiante  # Permisos del nuevo archivo
+}
+```
+
+### Comandos de gestión
+
+```bash
+# Probar configuración (modo debug, no hace cambios)
+sudo logrotate -d /etc/logrotate.d/mi-aplicacion
+
+# Forzar rotación inmediata
+sudo logrotate -f /etc/logrotate.d/mi-aplicacion
+
+# Ver estado de rotaciones anteriores
+cat /var/lib/logrotate/status
+```
+
+::: {.note}
+**Nota del laboratorio:** `logrotate` ya está instalado en tu contenedor (Dockerfile línea 55). Puedes verificarlo con `which logrotate`.
+:::
+
+---
+
+## SIEM: Security Information and Event Management
+
+### ¿Qué es un SIEM?
+
+Un **SIEM** (Security Information and Event Management) es un sistema que recoge logs de múltiples fuentes, los correlaciona y genera alertas cuando detecta patrones soschosos.
+
+Es como centralizar todas las cámaras de seguridad de un edificio en una sola sala de monitoreo, donde un operador (o un algoritmo) detecta comportamientos anómalos.
+
+### Componentes de un SIEM
+
+```
+    ┌─────────────────────────────────────────────────────────────┐
+    │                    ARQUITECTURA SIEM                        │
+    │                                                             │
+    │   Fuentes de datos                                          │
+    │   ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐              │
+    │   │ Servidor│ │ Firewall│ │  IDS   │ │  Apps  │              │
+    │   └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘              │
+    │       │          │          │          │                    │
+    │       ▼          ▼          ▼          ▼                    │
+    │   ┌───────────────────────────────────────┐                │
+    │   │         MOTOR DE CORRELACIÓN          │                │
+    │   │   (reglas + machine learning)         │                │
+    │   └──────────────────┬────────────────────┘                │
+    │                      │                                      │
+    │                      ▼                                      │
+    │   ┌───────────────────────────────────────┐                │
+    │   │          DASHBOARD Y ALERTAS          │                │
+    │   └───────────────────────────────────────┘                │
+    │                                                             │
+    └─────────────────────────────────────────────────────────────┘
+```
+
+### Tabla comparativa: logging vs SIEM
+
+| Característica | Logging tradicional | SIEM |
+|----------------|---------------------|------|
+| Alcance | Un solo sistema | Múltiples fuentes |
+| Correlación | Manual (tu cerebro) | Automatizada |
+| Tiempo de detección | Días o semanas | Minutos |
+| Coste | Bajo (herramientas nativas) | Alto (licencias + infraestructura) |
+| Uso típico | Servidor único, debugging | Empresas, SOC |
+
+### BCP: Business Continuity Plan
+
+El **BCP** (Plan de Continuidad del Negocio) es un documento que define cómo una organización continuará operando durante y después de un incidente.
+
+**No es lo mismo que un plan de respuesta a incidentes.** El IRP dice "qué hacer cuando atacan". El BCP dice "cómo seguimos funcionando mientras nos atacan y después".
+
+Elementos clave de un BCP:
+
+| Elemento | Descripción |
+|----------|-------------|
+| **Análisis de impacto** | ¿Qué sistemas son críticos? ¿Cuánto tiempo podemos estar sin ellos? |
+| **RTO** (Recovery Time Objective) | Tiempo máximo para recuperar un sistema |
+| **RPO** (Recovery Point Objective) | Cuánta pérdida de datos es aceptable |
+| **Procedimientos** | Pasos específicos para cada escenario |
+| **Comunicación** | Quién notifica a quién, en qué orden |
+
+::: {.note}
+**Nota del instructor:** Un BCP sin probar es un deseo. Los planes que no se simulan fallan cuando más se necesitan. Si alguna vez diseñas un BCP, exige que se haga un tabletop exercise al menos una vez al año.
+:::
+
+---
+
+## Ejercicios prácticos progresivos
+
+::: {.note}
+**Modo nativo (sin Docker):** En el contenedor, `tcpdump` funciona con NOPASSWD sudo y la interfaz se llama `eth0`. En modo nativo, `tcpdump` requiere `sudo` para acceder a la interfaz de red, y el nombre de tu interfaz probablemente sea diferente (`enp0s3`, `wlan0`, `ens33`, etc.). Usa `ip link` para identificar tu interfaz principal, por ejemplo: `sudo tcpdump -i $(ip -o link show | awk -F': ' '/state UP/ {print $2; exit}') -c 10`. Además, `john` y `logrotate` deben instalarse con `sudo apt-get install -y john logrotate`.
+:::
+
+### E1: Capturar y analizar tráfico de red con tcpdump
+
+**Objetivo:** Capturar paquetes en tu interfaz de red y analizar el contenido.
+
+```bash
+# 1. Verificar que tcpdump está instalado
+which tcpdump
+```
+
+```
+/usr/sbin/tcpdump
+```
+
+```bash
+# 2. Listar interfaces de red disponibles
+tcpdump -D
+```
+
+```
+1.eth0 [Up, Running]
+2.lo [Up, Running, Loopback]
+```
+
+```bash
+# 3. Capturar 50 paquetes en la interfaz de loopback y guardar
+tcpdump -i lo -c 50 -w ~/laboratorio/evidencias/capture.pcap
+```
+
+```bash
+# 4. Leer la captura y mostrar resumen
+tcpdump -r ~/laboratorio/evidencias/capture.pcap | head -10
+```
+
+Salida esperada:
+```
+reading from file capture.pcap, link-type EN10MB (Ethernet)
+10:00:01.123456 IP localhost.43210 > localhost.8080: Flags [S], seq 123456, win 65495
+10:00:01.123789 IP localhost.8080 > localhost.43210: Flags [S.], seq 654321, ack 123457
+```
+
+```bash
+# 5. Filtrar solo tráfico ICMP (ping) de una captura existente
+tcpdump -r ~/laboratorio/evidencias/capture.pcap icmp
+```
+
+::: {.note}
+**Nota del laboratorio:** Si no tienes tráfico en loopback, genera algo con `ping localhost` en otra terminal mientras capturas.
+:::
+
+---
+
+### E2: Configurar logrotate para una aplicación personalizada
+
+**Objetivo:** Crear una configuración de logrotate para los logs de tu laboratorio.
+
+```bash
+# 1. Crear directorio de logs de la aplicación
+mkdir -p ~/laboratorio/logs
+
+# 2. Generar logs de ejemplo (simulando una app)
+echo "$(date) — Inicio de aplicación" >> ~/laboratorio/logs/app.log
+echo "$(date) — Usuario autenticado" >> ~/laboratorio/logs/app.log
+echo "$(date) — Error: timeout de conexión" >> ~/laboratorio/logs/app.log
+```
+
+```bash
+# 3. Crear archivo de configuración de logrotate
+sudo nano /etc/logrotate.d/laboratorio-app
+```
+
+Contenido del archivo:
+```
+/home/estudiante/laboratorio/logs/*.log {
+    daily
+    missingok
+    rotate 5
+    compress
+    delaycompress
+    notifempty
+    create 0640 estudiante estudiante
+}
+```
+
+```bash
+# 4. Verificar sintaxis de configuración
+sudo logrotate -d /etc/logrotate.d/laboratorio-app
+```
+
+Salida esperada:
+```
+reading config file /etc/logrotate.d/laboratorio-app
+Rotating: /home/estudiante/laboratorio/logs/*.log
+```
+
+```bash
+# 5. Forzar una rotación para probar
+sudo logrotate -f /etc/logrotate.d/laboratorio-app
+
+# 6. Verificar que se creó el archivo rotado
+ls -la ~/laboratorio/logs/
+```
+
+Salida esperada:
+```
+-rw-r--r-- 1 estudiante estudiante  89 Jan 1 11:00 app.log
+-rw-r--r-- 1 estudiante estudiante 156 Jan 1 10:59 app.log.1
+```
+
+---
+
+### E3: Escribir un informe de seguridad usando plantilla.md
+
+**Objetivo:** Documentar un hallazgo de seguridad siguiendo la estructura de `plantilla.md`.
+
+La plantilla de respuestas (`plantilla.md`) tiene una estructura específica que debes seguir. Cada reto incluye estas secciones:
+
+| Sección | Descripción |
+|---------|-------------|
+| **Objetivo** | Qué se busca lograr con el ejercicio |
+| **Comandos utilizados** | Los comandos ejecutados (en bloque de código) |
+| **Salida obtenida** | La salida real de los comandos (en bloque de código) |
+| **Respuesta** | Tu interpretación o conclusión |
+| **Frase revelada** | Tabla de progreso del reto |
+
+Ejemplo aplicado a un análisis de logs:
+
+**Objetivo:** Identificar intentos de acceso no autorizado en logs del sistema.
+
+**Comandos utilizados:**
+```bash
+grep "Failed password" /var/log/auth.log | tail -20
+```
+
+**Salida obtenida:**
+```
+Jan 1 10:30:01 lab sshd[1234]: Failed password for root from 192.168.1.50 port 54321
+Jan 1 10:30:03 lab sshd[1235]: Failed password for root from 192.168.1.50 port 54322
+Jan 1 10:30:05 lab sshd[1236]: Failed password for invalid user admin from 192.168.1.50
+```
+
+**Respuesta:** Se detectaron 3 intentos fallidos de SSH desde la IP 192.168.1.50 en un intervalo de 4 segundos, lo que indica un ataque de fuerza bruta automatizado. Se recomienda bloquear la IP con `iptables` o `fail2ban`.
+
+**Frase revelada:** ⬜ ⬜ ⬜ ⬜ ✅
+
+::: {.note}
+**Nota del instructor:** Un informe de seguridad no es un copy-paste de logs. Es tu **interpretación** de lo que los logs significan. La sección "Respuesta" es donde demuestras que entiendes, no solo que ejecutaste comandos.
+:::
+
+---
+
+### E4: Analizar handshake TLS con openssl s_client
+
+**Objetivo:** Verificar la configuración TLS de un servidor remoto y extraer información del certificado.
+
+```bash
+# 1. Verificar que openssl está instalado
+which openssl
+```
+
+```
+/usr/bin/openssl
+```
+
+```bash
+# 2. Conectar a un servidor y ver el certificado
+openssl s_client -connect ejemplo.com:443 -servername ejemplo.com < /dev/null 2>/dev/null | head -20
+```
+
+Salida esperada:
+```
+CONNECTED(00000003)
+---
+Certificate chain
+ 0 s:CN = ejemplo.com
+   i:CN = Let's Encrypt Authority X3
+---
+```
+
+```bash
+# 3. Extraer fechas de validez del certificado
+openssl s_client -connect ejemplo.com:443 < /dev/null 2>/dev/null | openssl x509 -noout -dates
+```
+
+```
+notBefore=Jan  1 00:00:00 2025 GMT
+notAfter=Dec 31 23:59:59 2025 GMT
+```
+
+```bash
+# 4. Verificar versión TLS soportada
+openssl s_client -connect ejemplo.com:443 -tls1_2 < /dev/null 2>&1 | grep "Protocol"
+```
+
+```
+Protocol  : TLSv1.2
+```
+
+```bash
+# 5. Guardar resultados en un archivo para el informe
+openssl s_client -connect ejemplo.com:443 < /dev/null 2>/dev/null | openssl x509 -noout -text > ~/laboratorio/evidencias/certificado.txt
+```
+
+::: {.warning}
+**Advertencia de seguridad:** Analizar servidores sin autorización puede ser considerado reconocimiento activo. Usa este conocimiento SOLO contra servidores que te pertenezcan o en entornos de laboratorio autorizados.
+:::
+
+---
+
+### E5: Generar certificados TLS autofirmados con openssl req
+
+**Objetivo:** Crear un par de claves y certificado autofirmado para proteger servicios internos o de laboratorio.
+
+```bash
+# 1. Crear directorio para certificados
+mkdir -p ~/laboratorio/certificados
+cd ~/laboratorio/certificados
+```
+
+```bash
+# 2. Generar clave privada RSA de 2048 bits
+openssl genrsa -out servidor.key 2048
+```
+
+Salida esperada:
+```
+Generating RSA private key, 2048 bit long modulus
+.......................................+++
+..............+++
+e is 65537 (0x10001)
+```
+
+```bash
+# 3. Generar certificado autofirmado (válido 365 días)
+openssl req -x509 -new -nodes -key servidor.key -sha256 -days 365 \
+  -out servidor.crt \
+  -subj "/C=EC/ST=Pichincha/L=Quito/O=Lab/CN=localhost"
+```
+
+```bash
+# 4. Verificar el certificado generado
+openssl x509 -in servidor.crt -noout -text | head -20
+```
+
+Salida esperada (parcial):
+```
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            ab:cd:ef:...
+        Signature Algorithm: sha256WithRSAEncryption
+        Issuer: C = EC, ST = Pichincha, L = Quito, O = Lab, CN = localhost
+        Validity
+            Not Before: ...
+            Not After : ...
+        Subject: C = EC, ST = Pichincha, L = Quito, O = Lab, CN = localhost
+```
+
+```bash
+# 5. Verificar fechas de validez
+openssl x509 -in servidor.crt -noout -dates
+```
+
+```
+notBefore=Jan  1 00:00:00 2025 GMT
+notAfter=Dec 31 23:59:59 2025 GMT
+```
+
+```bash
+# 6. Verificar la clave pública correspondiente
+openssl x509 -in servidor.crt -noout -pubkey | head -3
+```
+
+```
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
+-----END PUBLIC KEY-----
+```
+
+```bash
+# 7. Verificar que la clave y certificado coinciden
+diff <(openssl x509 -in servidor.crt -noout -pubkey) \
+     <(openssl rsa -in servidor.key -pubout 2>/dev/null)
+```
+
+```
+(sin salida — las claves coinciden)
+```
+
+```bash
+# 8. Guardar evidencia del certificado
+openssl x509 -in servidor.crt -noout -text > ~/laboratorio/evidencias/certificado_generado.txt
+```
+
+::: {.note}
+**Nota del instructor:** Un certificado autofirmado NO es válido para producción — los navegantes y clientes lo rechazarán porque no está firmado por una CA confiable. Para servicios internos, laboratorios y entornos de desarrollo es perfecto. En producción, usa Let's Encrypt o una CA organizacional.
+:::
+
+::: {.warning}
+**Advertencia de seguridad:** La clave privada (`servidor.key`) es el activo más sensible de tu infraestructura TLS. Si un atacante obtiene tu clave privada, puede impersonar tu servidor. Protege permisos: `chmod 600 servidor.key` y nunca la compartas.
+:::
+
+---
+
+## Notas de seguridad: el valor de la evidencia
+
+### Cadena de custodia digital
+
+Cuando analizas un incidente, tus logs y capturas son evidencia. Si no puedes demostrar que no fueron manipulados, la evidencia pierde valor.
+
+Principios básicos:
+
+1. **Integridad:** Calcula hashes (SHA-256) de tus capturas al obtenerlas
+2. **Documentación:** Registra quién, cuándo y cómo se obtuvo la evidencia
+3. **Almacenamiento seguro:** Las evidencias no deben estar en el mismo sistema comprometido
+
+```bash
+# Calcular hash de una captura para verificar integridad
+sha256sum ~/laboratorio/evidencias/capture.pcap
+```
+
+```
+a1b2c3d4e5f6...  /home/estudiante/laboratorio/evidencias/capture.pcap
+```
+
+### El principio de defensa en profundidad
+
+Ninguna herramienta por sí sola te protege. La seguridad efectiva combina capas:
+
+| Capa | Herramienta/Concepto |
+|------|---------------------|
+| Perímetro | Firewall, iptables |
+| Detección | IDS, SIEM |
+| Respuesta | IRP, BCP |
+| Evidencia | Logs, tcpdump, logrotate |
+
+::: {.warning}
+**Advertencia de seguridad:** Un SIEM sin analistas es decoración. Un BCP sin probar es un deseo. Las herramientas no protegen — las **personas que las usan correctamente** protegen.
+:::
+
+---
+
+## Checklist de autoevaluación
+
+Antes de finalizar este módulo, verifica que puedes:
+
+- [ ] Explicar qué es un log y por qué es fundamental en ciberseguridad
+- [ ] Capturar tráfico de red con `tcpdump` y guardar en archivo `.pcap`
+- [ ] Leer y filtrar capturas guardadas con `tcpdump -r`
+- [ ] Configurar `logrotate` para rotar, comprimir y eliminar logs automáticamente
+- [ ] Explicar qué es un SIEM y qué problema resuelve
+- [ ] Diferenciar logging tradicional de un SIEM
+- [ ] Describir los componentes clave de un BCP (RTO, RPO, análisis de impacto)
+- [ ] Analizar un handshake TLS con `openssl s_client`
+- [ ] Estructurar un informe de seguridad usando plantilla.md (objetivo, comandos, salida, respuesta)
+- [ ] Generar una clave privada RSA y un certificado autofirmado con `openssl req -x509`
+- [ ] Verificar un certificado con `openssl x509` (fechas, emisor, clave pública)
+- [ ] Calcular el hash de un archivo de evidencia para verificar integridad
+- [ ] Aplicar el principio de defensa en profundidad al diseñar una arquitectura de seguridad
+- [ ] Entender por qué la cadena de custodia digital importa en incidentes de seguridad
+
+::: {.note}
+**Nota del instructor:** Si no puedes marcar al menos 10 de estos 14 ítems, repasa los ejercicios. Los logs y la documentación son lo que separa a un técnico de un profesional. No avances con dudas.
+:::
+
+---
+
+## Próximo paso
+
+Has completado el último módulo temático de esta guía. Ahora tienes las bases para capturar tráfico, gestionar logs, entender SIEMs y documentar incidentes. El siguiente paso es **practicar**: vuelve a los ejercicios, modifica los parámetros, rompe cosas en tu laboratorio y repara lo que rompas.
+
+> **"El conocimiento sin práctica es teoría. La práctica sin conocimiento es peligro. La combinación de ambos es ciberseguridad."**
+
+::: {.center}
+[← Volver al índice de la guía](./index.qmd)
+:::

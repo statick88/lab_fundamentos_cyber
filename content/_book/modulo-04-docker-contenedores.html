@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Diego Saavedra, Mg. Sc. | Abacom">
+
+<title>Módulo 4 — Docker: contenedores y aislamiento</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="modulo-04-docker-contenedores_files/libs/clipboard/clipboard.min.js"></script>
+<script src="modulo-04-docker-contenedores_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="modulo-04-docker-contenedores_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="modulo-04-docker-contenedores_files/libs/quarto-html/popper.min.js"></script>
+<script src="modulo-04-docker-contenedores_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="modulo-04-docker-contenedores_files/libs/quarto-html/anchor.min.js"></script>
+<link href="modulo-04-docker-contenedores_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="modulo-04-docker-contenedores_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="modulo-04-docker-contenedores_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="modulo-04-docker-contenedores_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="modulo-04-docker-contenedores_files/libs/bootstrap/bootstrap-8ffd5f67044e5306d9846f29df41dda5.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#módulo-4-docker-contenedores-y-aislamiento" id="toc-módulo-4-docker-contenedores-y-aislamiento" class="nav-link active" data-scroll-target="#módulo-4-docker-contenedores-y-aislamiento">Módulo 4 — Docker: contenedores y aislamiento</a>
+  <ul class="collapse">
+  <li><a href="#introducción-el-contenedor-no-es-una-máquina-virtual" id="toc-introducción-el-contenedor-no-es-una-máquina-virtual" class="nav-link" data-scroll-target="#introducción-el-contenedor-no-es-una-máquina-virtual">Introducción: el contenedor no es una máquina virtual</a></li>
+  <li><a href="#qué-es-un-contenedor-aislamiento-real-vs.-ilusión-de-aislamiento" id="toc-qué-es-un-contenedor-aislamiento-real-vs.-ilusión-de-aislamiento" class="nav-link" data-scroll-target="#qué-es-un-contenedor-aislamiento-real-vs.-ilusión-de-aislamiento">¿Qué es un contenedor? Aislamiento real vs.&nbsp;ilusión de aislamiento</a>
+  <ul class="collapse">
+  <li><a href="#la-arquitectura-contenedor-vs.-máquina-virtual" id="toc-la-arquitectura-contenedor-vs.-máquina-virtual" class="nav-link" data-scroll-target="#la-arquitectura-contenedor-vs.-máquina-virtual">La arquitectura contenedor vs.&nbsp;máquina virtual</a></li>
+  <li><a href="#analogía-del-edificio" id="toc-analogía-del-edificio" class="nav-link" data-scroll-target="#analogía-del-edificio">Analogía del edificio</a></li>
+  </ul></li>
+  <li><a href="#arquitectura-del-laboratorio-docker-compose.yml-en-detalle" id="toc-arquitectura-del-laboratorio-docker-compose.yml-en-detalle" class="nav-link" data-scroll-target="#arquitectura-del-laboratorio-docker-compose.yml-en-detalle">Arquitectura del laboratorio: docker-compose.yml en detalle</a>
+  <ul class="collapse">
+  <li><a href="#el-servicio-lab-linux" id="toc-el-servicio-lab-linux" class="nav-link" data-scroll-target="#el-servicio-lab-linux">El servicio <code>lab-linux</code></a></li>
+  <li><a href="#la-estrategia-de-capacidades-lo-que-se-quita-y-lo-que-se-devuelve" id="toc-la-estrategia-de-capacidades-lo-que-se-quita-y-lo-que-se-devuelve" class="nav-link" data-scroll-target="#la-estrategia-de-capacidades-lo-que-se-quita-y-lo-que-se-devuelve">La estrategia de capacidades: lo que se quita y lo que se devuelve</a></li>
+  <li><a href="#la-red-aislada" id="toc-la-red-aislada" class="nav-link" data-scroll-target="#la-red-aislada">La red aislada</a></li>
+  <li><a href="#volumen-persistente" id="toc-volumen-persistente" class="nav-link" data-scroll-target="#volumen-persistente">Volumen persistente</a></li>
+  </ul></li>
+  <li><a href="#estrategia-de-backup-con-rsync" id="toc-estrategia-de-backup-con-rsync" class="nav-link" data-scroll-target="#estrategia-de-backup-con-rsync">Estrategia de backup con rsync</a>
+  <ul class="collapse">
+  <li><a href="#por-qué-rsync" id="toc-por-qué-rsync" class="nav-link" data-scroll-target="#por-qué-rsync">¿Por qué rsync?</a></li>
+  <li><a href="#la-regla-3-2-1-del-backup" id="toc-la-regla-3-2-1-del-backup" class="nav-link" data-scroll-target="#la-regla-3-2-1-del-backup">La regla 3-2-1 del backup</a></li>
+  <li><a href="#backup-conceptual-con-restic" id="toc-backup-conceptual-con-restic" class="nav-link" data-scroll-target="#backup-conceptual-con-restic">Backup conceptual con restic</a></li>
+  </ul></li>
+  <li><a href="#hardening-de-docker-defensa-en-capas" id="toc-hardening-de-docker-defensa-en-capas" class="nav-link" data-scroll-target="#hardening-de-docker-defensa-en-capas">Hardening de Docker: defensa en capas</a>
+  <ul class="collapse">
+  <li><a href="#capa-1-la-imagen-no-incluyas-lo-que-no-usas" id="toc-capa-1-la-imagen-no-incluyas-lo-que-no-usas" class="nav-link" data-scroll-target="#capa-1-la-imagen-no-incluyas-lo-que-no-usas">Capa 1: la imagen — no incluyas lo que no usas</a></li>
+  <li><a href="#capa-2-el-contenedor-lo-que-se-ejecuta" id="toc-capa-2-el-contenedor-lo-que-se-ejecuta" class="nav-link" data-scroll-target="#capa-2-el-contenedor-lo-que-se-ejecuta">Capa 2: el contenedor — lo que se ejecuta</a></li>
+  <li><a href="#capa-3-el-daemon-la-configuración-del-motor" id="toc-capa-3-el-daemon-la-configuración-del-motor" class="nav-link" data-scroll-target="#capa-3-el-daemon-la-configuración-del-motor">Capa 3: el daemon — la configuración del motor</a></li>
+  </ul></li>
+  <li><a href="#ejercicios-prácticos-progresivos" id="toc-ejercicios-prácticos-progresivos" class="nav-link" data-scroll-target="#ejercicios-prácticos-progresivos">Ejercicios prácticos progresivos</a>
+  <ul class="collapse">
+  <li><a href="#e1-inspeccionar-la-configuración-de-capacidades-del-contenedor" id="toc-e1-inspeccionar-la-configuración-de-capacidades-del-contenedor" class="nav-link" data-scroll-target="#e1-inspeccionar-la-configuración-de-capacidades-del-contenedor">E1: Inspeccionar la configuración de capacidades del contenedor</a></li>
+  <li><a href="#e2-crear-un-backup-incremental-con-rsync" id="toc-e2-crear-un-backup-incremental-con-rsync" class="nav-link" data-scroll-target="#e2-crear-un-backup-incremental-con-rsync">E2: Crear un backup incremental con rsync</a></li>
+  <li><a href="#e3-construir-un-dockerfile-hardened-con-usuario-no-root" id="toc-e3-construir-un-dockerfile-hardened-con-usuario-no-root" class="nav-link" data-scroll-target="#e3-construir-un-dockerfile-hardened-con-usuario-no-root">E3: Construir un Dockerfile hardened con usuario no-root</a></li>
+  <li><a href="#e4-analizar-capacidades-vs.-cis-docker-benchmark" id="toc-e4-analizar-capacidades-vs.-cis-docker-benchmark" class="nav-link" data-scroll-target="#e4-analizar-capacidades-vs.-cis-docker-benchmark">E4: Analizar capacidades vs.&nbsp;CIS Docker Benchmark</a></li>
+  </ul></li>
+  <li><a href="#notas-de-seguridad-el-contenedor-no-es-una-frontera" id="toc-notas-de-seguridad-el-contenedor-no-es-una-frontera" class="nav-link" data-scroll-target="#notas-de-seguridad-el-contenedor-no-es-una-frontera">Notas de seguridad: el contenedor no es una frontera</a>
+  <ul class="collapse">
+  <li><a href="#tabla-de-capacidades-peligrosas" id="toc-tabla-de-capacidades-peligrosas" class="nav-link" data-scroll-target="#tabla-de-capacidades-peligrosas">Tabla de capacidades peligrosas</a></li>
+  <li><a href="#principios-de-hardening-para-recordar" id="toc-principios-de-hardening-para-recordar" class="nav-link" data-scroll-target="#principios-de-hardening-para-recordar">Principios de hardening para recordar</a></li>
+  <li><a href="#e5-hardening-de-nginx-con-nginx.conf-personalizado" id="toc-e5-hardening-de-nginx-con-nginx.conf-personalizado" class="nav-link" data-scroll-target="#e5-hardening-de-nginx-con-nginx.conf-personalizado">E5: Hardening de Nginx con nginx.conf personalizado</a></li>
+  </ul></li>
+  <li><a href="#checklist-de-autoevaluación" id="toc-checklist-de-autoevaluación" class="nav-link" data-scroll-target="#checklist-de-autoevaluación">Checklist de autoevaluación</a></li>
+  <li><a href="#próximo-paso" id="toc-próximo-paso" class="nav-link" data-scroll-target="#próximo-paso">Próximo paso</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Módulo 4 — Docker: contenedores y aislamiento</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Diego Saavedra, Mg. Sc. | Abacom </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="módulo-4-docker-contenedores-y-aislamiento" class="level1">
+<h1>Módulo 4 — Docker: contenedores y aislamiento</h1>
+<hr>
+<section id="introducción-el-contenedor-no-es-una-máquina-virtual" class="level2">
+<h2 class="anchored" data-anchor-id="introducción-el-contenedor-no-es-una-máquina-virtual">Introducción: el contenedor no es una máquina virtual</h2>
+<p><strong>Un contenedor es como un apartamento amoblado: tiene todo lo que necesitas para vivir, pero comparte los cimientos del edificio con tus vecinos.</strong></p>
+<p>Si una máquina virtual es una casa independiente — con sus propios cimientos, tuberías y electricidad —, un contenedor es un apartamento funcional dentro de un edificio compartido. El edificio es el sistema operativo anfitrión (el host). Cada apartamento tiene su propia cocina, baño y espacio privado, pero todos comparten la estructura base: el kernel del sistema.</p>
+<p>En ciberseguridad, esta distinción importa. Un contenedor NO es una caja fuerte sellada. Comparte el kernel con el host, lo que significa que si un atacante escapa del contenedor, puede comprometer todo el sistema. Entender los límites reales del aislamiento es el primer paso para defenderlo.</p>
+<div class="note">
+<p><strong>Nota del instructor:</strong> Este laboratorio mismo corre dentro de un contenedor Docker. Cuando ejecutas <code>docker inspect</code> sobre tu propio entorno, estás haciendo algo que los analistas de seguridad hacen todos los días: auditar la configuración real de un contenedor en producción. No es teoría abstracta — es tu realidad.</p>
+</div>
+<hr>
+</section>
+<section id="qué-es-un-contenedor-aislamiento-real-vs.-ilusión-de-aislamiento" class="level2">
+<h2 class="anchored" data-anchor-id="qué-es-un-contenedor-aislamiento-real-vs.-ilusión-de-aislamiento">¿Qué es un contenedor? Aislamiento real vs.&nbsp;ilusión de aislamiento</h2>
+<p>Un contenedor es una unidad ligera de software que empaqueta una aplicación junto con todas sus dependencias (bibliotecas, archivos de configuración, variables de entorno) en un paquete ejecutable y portátil.</p>
+<section id="la-arquitectura-contenedor-vs.-máquina-virtual" class="level3">
+<h3 class="anchored" data-anchor-id="la-arquitectura-contenedor-vs.-máquina-virtual">La arquitectura contenedor vs.&nbsp;máquina virtual</h3>
+<pre><code>    ┌─────────────────────────────────────────────────────────────────┐
+    │                    MÁQUINA VIRTUAL vs CONTENEDOR                │
+    │                                                                 │
+    │  MÁQUINA VIRTUAL (pesada)          CONTENEDOR (ligero)          │
+    │                                                                 │
+    │  ┌──────────┐ ┌──────────┐         ┌──────────┐ ┌──────────┐  │
+    │  │ App A    │ │ App B    │         │ App A    │ │ App B    │  │
+    │  │ + Deps   │ │ + Deps   │         │ + Deps   │ │ + Deps   │  │
+    │  │ + Guest  │ │ + Guest  │         │          │ │          │  │
+    │  │   OS     │ │   OS     │         │          │ │          │  │
+    │  └────┬─────┘ └────┬─────┘         └────┬─────┘ └────┬─────┘  │
+    │       │             │                    │           │         │
+    │  ┌────┴─────────────┴────┐          ┌────┴───────────┴────┐   │
+    │  │     HYPERVISOR        │          │   DOCKER ENGINE    │   │
+    │  │  (VMware, KVM)        │          │   (containerd)     │   │
+    │  └───────────┬───────────┘          └───────┬────────────┘   │
+    │              │                              │                 │
+    │  ┌───────────┴───────────┐          ┌───────┴────────────┐   │
+    │  │   SISTEMA OPERATIVO   │          │   SISTEMA OPERATIVO│   │
+    │  │       HOST            │          │       HOST (kernel)│   │
+    │  └───────────┬───────────┘          └───────┬────────────┘   │
+    │              │                              │                 │
+    │  ┌───────────┴───────────┐          ┌───────┴────────────┐   │
+    │  │      HARDWARE         │          │      HARDWARE      │   │
+    │  └───────────────────────┘          └────────────────────┘   │
+    └─────────────────────────────────────────────────────────────────┘</code></pre>
+</section>
+<section id="analogía-del-edificio" class="level3">
+<h3 class="anchored" data-anchor-id="analogía-del-edificio">Analogía del edificio</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 34%">
+<col style="width: 34%">
+<col style="width: 31%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Concepto</th>
+<th>Analogía</th>
+<th>Técnica</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Host (anfitrión)</td>
+<td>El edificio completo</td>
+<td>El servidor Linux real</td>
+</tr>
+<tr class="even">
+<td>Kernel</td>
+<td>Los cimientos y estructura</td>
+<td>El núcleo del SO compartido</td>
+</tr>
+<tr class="odd">
+<td>Contenedor</td>
+<td>Un apartamento amoblado</td>
+<td>Proceso aislado con su filesystem</td>
+</tr>
+<tr class="even">
+<td>Docker Engine</td>
+<td>El administrador del edificio</td>
+<td>El motor que gestiona contenedores</td>
+</tr>
+<tr class="odd">
+<td>Imagen</td>
+<td>Los planos del apartamento</td>
+<td>Plantilla inmutable para crear contenedores</td>
+</tr>
+<tr class="even">
+<td>Dockerfile</td>
+<td>El manual de construcción</td>
+<td>Script que define cómo construir la imagen</td>
+</tr>
+<tr class="odd">
+<td>Capabilities</td>
+<td>Las llaves de cada puerto</td>
+<td>Permisos granulares del kernel</td>
+</tr>
+</tbody>
+</table>
+<div class="note">
+<p><strong>Nota:</strong> Los contenedores usan dos features del kernel de Linux para aislar: <strong>namespaces</strong> (aísla qué ve el contenedor: red, procesos, usuarios) y <strong>cgroups</strong> (limita cuánto consume: CPU, memoria). Ninguno de los dos es seguridad perimetral — son contención, no defensa en profundidad.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="arquitectura-del-laboratorio-docker-compose.yml-en-detalle" class="level2">
+<h2 class="anchored" data-anchor-id="arquitectura-del-laboratorio-docker-compose.yml-en-detalle">Arquitectura del laboratorio: docker-compose.yml en detalle</h2>
+<p>Este laboratorio corre en un contenedor Docker definido por <code>docker-compose.yml</code>. Vamos a diseccionar su configuración de seguridad, línea por línea.</p>
+<section id="el-servicio-lab-linux" class="level3">
+<h3 class="anchored" data-anchor-id="el-servicio-lab-linux">El servicio <code>lab-linux</code></h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">lab-linux</span><span class="kw">:</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">build</span><span class="kw">:</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">context</span><span class="kw">:</span><span class="at"> .</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">dockerfile</span><span class="kw">:</span><span class="at"> Dockerfile</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">container_name</span><span class="kw">:</span><span class="at"> lab-ciberseguridad</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> lab-data:/home/estudiante/laboratorio</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> ./resultados:/home/estudiante/laboratorio/resultados</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">networks</span><span class="kw">:</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">lab-cyber</span><span class="kw">:</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">ipv4_address</span><span class="kw">:</span><span class="at"> </span><span class="fl">172.20.0.10</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">cap_drop</span><span class="kw">:</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> ALL</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">cap_add</span><span class="kw">:</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> NET_ADMIN</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> NET_RAW</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> SETUID</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> SETGID</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="la-estrategia-de-capacidades-lo-que-se-quita-y-lo-que-se-devuelve" class="level3">
+<h3 class="anchored" data-anchor-id="la-estrategia-de-capacidades-lo-que-se-quita-y-lo-que-se-devuelve">La estrategia de capacidades: lo que se quita y lo que se devuelve</h3>
+<p>La configuración de capacidades (capabilities) es la decisión de seguridad más crítica del laboratorio:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 35%">
+<col style="width: 22%">
+<col style="width: 41%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Directiva</th>
+<th>Valor</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>cap_drop</code></td>
+<td><code>ALL</code></td>
+<td><strong>Elimina TODAS</strong> las capacidades del contenedor</td>
+</tr>
+<tr class="even">
+<td><code>cap_add</code></td>
+<td><code>NET_ADMIN</code></td>
+<td>Permite administración de red (necesario para iptables, ufw)</td>
+</tr>
+<tr class="odd">
+<td><code>cap_add</code></td>
+<td><code>NET_RAW</code></td>
+<td>Permite sockets raw (necesario para nmap, tcpdump)</td>
+</tr>
+<tr class="even">
+<td><code>cap_add</code></td>
+<td><code>SETUID</code></td>
+<td>Permite cambiar UID de procesos (necesario para sudo)</td>
+</tr>
+<tr class="odd">
+<td><code>cap_add</code></td>
+<td><code>SETGID</code></td>
+<td>Permite cambiar GID de procesos (necesario para grupos)</td>
+</tr>
+<tr class="even">
+<td><strong>NO <code>SYS_ADMIN</code></strong></td>
+<td>ausente</td>
+<td><strong>Deliberadamente excluido</strong> — evita montar filesystems y escapar</td>
+</tr>
+</tbody>
+</table>
+<div class="warning">
+<p><strong>Advertencia de seguridad:</strong> <code>SYS_ADMIN</code> es la capacidad más peligrosa en un contenedor. Permite montar sistemas de archivos, modificar namespaces y es la vía principal de escapes de contenedores (container escape). Que este laboratorio la excluya NO es casualidad — es la primera línea de defensa. Si ves <code>SYS_ADMIN</code> en un Dockerfile de producción, cuestionalo inmediatamente.</p>
+</div>
+</section>
+<section id="la-red-aislada" class="level3">
+<h3 class="anchored" data-anchor-id="la-red-aislada">La red aislada</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">networks</span><span class="kw">:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">lab-cyber</span><span class="kw">:</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">driver</span><span class="kw">:</span><span class="at"> bridge</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ipam</span><span class="kw">:</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">config</span><span class="kw">:</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="kw">-</span><span class="at"> </span><span class="fu">subnet</span><span class="kw">:</span><span class="at"> 172.20.0.0/24</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">gateway</span><span class="kw">:</span><span class="at"> </span><span class="fl">172.20.0.1</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">driver_opts</span><span class="kw">:</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">com.docker.network.bridge.enable_ip_masquerade</span><span class="kw">:</span><span class="at"> </span><span class="st">"false"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>La red <code>lab-cyber</code> usa un bridge dedicado con <code>/24</code> y —crucialmente— tiene <strong>IP deshabilitado</strong> (<code>enable_ip_masquerade: "false"</code>). Esto significa que el contenedor no puede enmascarar su tráfico para salir al exterior. Es una red de laboratorio, no una red de producción.</p>
+</section>
+<section id="volumen-persistente" class="level3">
+<h3 class="anchored" data-anchor-id="volumen-persistente">Volumen persistente</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> lab-data:/home/estudiante/laboratorio</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> ./resultados:/home/estudiante/laboratorio/resultados</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El volumen <code>lab-data</code> preserva tu trabajo entre reinicios. El bind mount <code>./resultados</code> sincroniza evidencias con el host. Esta separación es intencional: tus archivos de trabajo viven en un volumen gestionado, mientras que los resultados de auditoría se exportan al host.</p>
+<hr>
+</section>
+</section>
+<section id="estrategia-de-backup-con-rsync" class="level2">
+<h2 class="anchored" data-anchor-id="estrategia-de-backup-con-rsync">Estrategia de backup con rsync</h2>
+<p>Antes de hablar de hardening, necesitas entender cómo proteger los datos que viven dentro y fuera del contenedor. La regla es simple: <strong>un contenedor es efímero, los datos no lo son</strong>.</p>
+<section id="por-qué-rsync" class="level3">
+<h3 class="anchored" data-anchor-id="por-qué-rsync">¿Por qué rsync?</h3>
+<p><code>rsync</code> es la herramienta estándar para backups incrementales en Linux. A diferencia de <code>cp</code>, rsync: - Solo copia lo que cambió (incremental) - Preserva permisos, dueños y timestamps - Puede comprimir durante la transferencia - Funciona sobre SSH para backups remotos</p>
+<div class="note">
+<p><strong>Nota del laboratorio:</strong> <code>rsync</code> está instalado en el contenedor (Dockerfile, línea 34). <code>tar</code> y <code>gzip</code> están disponibles a través del paquete <code>coreutils</code>. No necesitas instalar nada adicional para los ejercicios de este módulo.</p>
+</div>
+</section>
+<section id="la-regla-3-2-1-del-backup" class="level3">
+<h3 class="anchored" data-anchor-id="la-regla-3-2-1-del-backup">La regla 3-2-1 del backup</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 13%">
+<col style="width: 25%">
+<col style="width: 60%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Regla</th>
+<th>Significado</th>
+<th>Aplicación en este laboratorio</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>3</strong> copias</td>
+<td>Original + 2 respaldos</td>
+<td>Datos en volumen + backup local + exportado al host</td>
+</tr>
+<tr class="even">
+<td><strong>2</strong> medios</td>
+<td>Distintos tipos de almacenamiento</td>
+<td>Volumen Docker + bind mount en host</td>
+</tr>
+<tr class="odd">
+<td><strong>1</strong> offsite</td>
+<td>Una copia fuera del sitio físico</td>
+<td>(Conceptual) subir a almacenamiento externo</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="backup-conceptual-con-restic" class="level3">
+<h3 class="anchored" data-anchor-id="backup-conceptual-con-restic">Backup conceptual con restic</h3>
+<p><code>restic</code> es una herramienta moderna de backup que soporta deduplicación, cifrado y almacenamiento remoto. Aunque no está instalado en este laboratorio, es el tipo de herramienta que usarías en producción. La idea conceptual:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># CONCEPTUAL (no ejecutable en este laboratorio)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Inicializar repositorio de backup</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">restic</span> init <span class="at">--repo</span> /backup/restic-repo</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear backup cifrado</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="ex">restic</span> backup /home/estudiante/laboratorio</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Restaurar desde backup</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="ex">restic</span> restore latest <span class="at">--target</span> /restaurado</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="hardening-de-docker-defensa-en-capas" class="level2">
+<h2 class="anchored" data-anchor-id="hardening-de-docker-defensa-en-capas">Hardening de Docker: defensa en capas</h2>
+<p>Hardening significa reducir la superficie de attack al mínimo indispensable. En Docker, esto se aplica en tres capas: la imagen, el contenedor y el daemon.</p>
+<section id="capa-1-la-imagen-no-incluyas-lo-que-no-usas" class="level3">
+<h3 class="anchored" data-anchor-id="capa-1-la-imagen-no-incluyas-lo-que-no-usas">Capa 1: la imagen — no incluyas lo que no usas</h3>
+<p>Una imagen minimalista es una imagen segura. Cada paquete extra es una posible vulnerabilidad.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 37%">
+<col style="width: 40%">
+<col style="width: 22%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Mala práctica</th>
+<th>Buena práctica</th>
+<th>Por qué</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>FROM ubuntu:latest</code></td>
+<td><code>FROM ubuntu:24.04</code></td>
+<td>Fijar versión evita sorpresas</td>
+</tr>
+<tr class="even">
+<td>Instalar con shell</td>
+<td>Dockerfile con <code>--no-install-recommends</code></td>
+<td>Menos paquetes = menos superficie</td>
+</tr>
+<tr class="odd">
+<td>Imagen con shell</td>
+<td>Imagen distroless o sin shell</td>
+<td>Sin shell = sin ejecución interactiva para atacantes</td>
+</tr>
+<tr class="even">
+<td>Usuario root por defecto</td>
+<td>Usuario no-root explícito</td>
+<td>Principio de mínimo privilegio</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="capa-2-el-contenedor-lo-que-se-ejecuta" class="level3">
+<h3 class="anchored" data-anchor-id="capa-2-el-contenedor-lo-que-se-ejecuta">Capa 2: el contenedor — lo que se ejecuta</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode dockerfile code-with-copy"><code class="sourceCode dockerfile"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear usuario no-root con UID fijo</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">RUN</span> <span class="ex">groupadd</span> <span class="at">-r</span> appuser <span class="kw">&amp;&amp;</span> <span class="ex">useradd</span> <span class="at">-r</span> <span class="at">-g</span> appuser <span class="at">-u</span> 1000 <span class="at">-d</span> /app <span class="at">-s</span> /sbin/nologin appuser</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Copiar archivos con dueño correcto</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">COPY</span> <span class="op">--chown=appuser:appuser</span> . /app</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Cambiar a usuario no-root</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="kw">USER</span> appuser</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Exponer puerto no privilegiado</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="kw">EXPOSE</span> 8080</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="capa-3-el-daemon-la-configuración-del-motor" class="level3">
+<h3 class="anchored" data-anchor-id="capa-3-el-daemon-la-configuración-del-motor">Capa 3: el daemon — la configuración del motor</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"icc"</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"userns-remap"</span><span class="fu">:</span> <span class="st">"default"</span><span class="fu">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"no-new-privileges"</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"log-driver"</span><span class="fu">:</span> <span class="st">"json-file"</span><span class="fu">,</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"log-opts"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"max-size"</span><span class="fu">:</span> <span class="st">"10m"</span><span class="fu">,</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"max-file"</span><span class="fu">:</span> <span class="st">"3"</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="warning">
+<p><strong>Advertencia de seguridad:</strong> La opción <code>no-new-privileges: true</code> (notar: <code>true</code>, NO <code>false</code>) impide que un proceso dentro del contenedor gane privilegios adicionales durante su ejecución. El laboratorio usa <code>false</code> deliberadamente para permitir que herramientas como <code>sudo</code> y <code>nmap</code> funcionen correctamente — pero en producción, esta opción debe ser <code>true</code>.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="ejercicios-prácticos-progresivos" class="level2">
+<h2 class="anchored" data-anchor-id="ejercicios-prácticos-progresivos">Ejercicios prácticos progresivos</h2>
+<div class="note">
+<p><strong>Modo nativo (sin Docker):</strong> Los ejercicios E1 y E4 de este módulo están diseñados para auditar el contenedor Docker del laboratorio. En modo nativo, instala Docker con <code>sudo apt-get install -y docker.io docker-compose-v2</code>. Luego ejecuta <code>docker inspect</code> sobre cualquier contenedor que tengas, o usa <code>docker run -it ubuntu:24.04</code> para crear un entorno de prueba equivalente. Los ejercicios E2 (rsync backup) y E3 (Dockerfile hardening) funcionan idénticamente en modo nativo.</p>
+</div>
+<section id="e1-inspeccionar-la-configuración-de-capacidades-del-contenedor" class="level3">
+<h3 class="anchored" data-anchor-id="e1-inspeccionar-la-configuración-de-capacidades-del-contenedor">E1: Inspeccionar la configuración de capacidades del contenedor</h3>
+<p>Este contenedor está configurado con <code>cap_drop: ALL</code> y cuatro capacidades añadidas. Vamos a verificarlo.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Desde el host, inspeccionar las capacidades del contenedor</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> inspect lab-ciberseguridad <span class="at">--format</span> <span class="st">'{{.HostConfig.CapAdd}}'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada:</p>
+<pre><code>[NET_ADMIN NET_RAW SETUID SETGID]</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar que NO tiene SYS_ADMIN (capacidad de escape)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> inspect lab-ciberseguridad <span class="at">--format</span> <span class="st">'{{.HostConfig.CapAdd}}'</span> <span class="kw">|</span> <span class="fu">grep</span> SYS_ADMIN</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada:</p>
+<pre><code>(sin salida — confirmando que SYS_ADMIN NO está presente)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar la red aislada del laboratorio</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> inspect lab-ciberseguridad <span class="at">--format</span> <span class="st">'{{.NetworkSettings.Networks}}'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar los volúmenes montados</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> inspect lab-ciberseguridad <span class="at">--format</span> <span class="st">'{{.Mounts}}'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="note">
+<p><strong>Nota del instructor:</strong> Que <code>SYS_ADMIN</code> no aparezca en la salida es una BUENA señal. Significa que la configuración de defensa en profundidad está funcionando. Si apareciera, tendrías una vulnerabilidad crítica de container escape.</p>
+</div>
+</section>
+<section id="e2-crear-un-backup-incremental-con-rsync" class="level3">
+<h3 class="anchored" data-anchor-id="e2-crear-un-backup-incremental-con-rsync">E2: Crear un backup incremental con rsync</h3>
+<p>Vamos a crear una estructura de trabajo y respaldarla incrementalmente con <code>rsync</code>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Crear estructura de trabajo</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/laboratorio/<span class="dt">{proyectos/scripts</span><span class="op">,</span><span class="dt">evidencias/capturas</span><span class="op">,</span><span class="dt">config}</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"configuracion_sensible"</span> <span class="op">&gt;</span> ~/laboratorio/config/app.conf</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"scan_resultado"</span> <span class="op">&gt;</span> ~/laboratorio/evidencias/capturas/scan1.txt</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">'#!/bin/bash'</span> <span class="op">&gt;</span> ~/laboratorio/proyectos/scripts/audit.sh</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">'echo "auditando..."'</span> <span class="op">&gt;&gt;</span> ~/laboratorio/proyectos/scripts/audit.sh</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Crear directorio de backup</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/backup</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Primer backup completo</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="fu">rsync</span> <span class="at">-avz</span> ~/laboratorio/ ~/backup/laboratorio_backup/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada:</p>
+<pre><code>incremental file list
+config/app.conf
+evidencias/capturas/scan1.txt
+proyectos/scripts/audit.sh
+
+sent 1,234 bytes  received 89 bytes  2,646.00 bytes/sec
+total size is 890  speedup is 0.67</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Simular un cambio (archivo nuevo)</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"nuevo_scan"</span> <span class="op">&gt;</span> ~/laboratorio/evidencias/capturas/scan2.txt</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Backup incremental — solo copia lo que cambió</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="fu">rsync</span> <span class="at">-avz</span> ~/laboratorio/ ~/backup/laboratorio_backup/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada:</p>
+<pre><code>incremental file list
+evidencias/capturas/scan2.txt
+
+sent 345  received 45 bytes  780.00 bytes/sec
+total size is 12  speedup is 0.03</code></pre>
+<p>Observa que el segundo backup solo transfiere <code>scan2.txt</code>. Eso es la eficiencia incremental de rsync.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Verificar integridad del backup con checksums</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> ~/laboratorio <span class="at">-type</span> f <span class="at">-exec</span> md5sum {} <span class="dt">\;</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="op">&gt;</span> /tmp/original.md5</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> ~/backup/laboratorio_backup <span class="at">-type</span> f <span class="at">-exec</span> md5sum {} <span class="dt">\;</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="op">&gt;</span> /tmp/backup.md5</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="fu">diff</span> /tmp/original.md5 /tmp/backup.md5</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada:</p>
+<pre><code>(sin salida — los checksums coinciden, backup íntegro)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 7. Comprimir el backup con tar + gzip</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> <span class="at">-czf</span> ~/backup/backup_<span class="va">$(</span><span class="fu">date</span> +%Y%m%d<span class="va">)</span>.tar.gz ~/laboratorio/</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 8. Verificar el archivo comprimido</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> <span class="at">-tzf</span> ~/backup/backup_<span class="pp">*</span>.tar.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-5</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="e3-construir-un-dockerfile-hardened-con-usuario-no-root" class="level3">
+<h3 class="anchored" data-anchor-id="e3-construir-un-dockerfile-hardened-con-usuario-no-root">E3: Construir un Dockerfile hardened con usuario no-root</h3>
+<p>Vamos a escribir un Dockerfile que sigue las prácticas de hardening aprendidas.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Crear directorio para el ejercicio</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/laboratorio/docker-hardening</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/laboratorio/docker-hardening</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Crear el Dockerfile</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> Dockerfile <span class="op">&lt;&lt; 'DOCKERFILE'</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="st">FROM ubuntu:24.04</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="st"># Instalar solo lo necesario, sin recomendaciones</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="st">RUN apt-get update &amp;&amp; apt-get install -y --no-install-recommends \</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="st">    nginx \</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="st">    &amp;&amp; apt-get clean \</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="st">    &amp;&amp; rm -rf /var/lib/apt/lists/*</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a><span class="st"># Crear usuario no-root explícito</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a><span class="st">RUN groupadd -r webuser &amp;&amp; \</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a><span class="st">    useradd -r -g webuser -u 1000 -d /var/www -s /sbin/nologin webuser</span></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a><span class="st"># Crear directorio de trabajo con dueño correcto</span></span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a><span class="st">RUN mkdir -p /var/www/app &amp;&amp; chown -R webuser:webuser /var/www</span></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a><span class="st"># Copiar configuración personalizada</span></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a><span class="st">COPY --chown=webuser:webuser index.html /var/www/app/</span></span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a><span class="st"># Cambiar a usuario no-root (OBLIGATORIO para hardening)</span></span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a><span class="st">USER webuser</span></span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a><span class="st"># Exponer puerto no privilegiado</span></span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a><span class="st">EXPOSE 8080</span></span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a><span class="st"># Healthcheck simple</span></span>
+<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a><span class="st">HEALTHCHECK --interval=30s --timeout=3s CMD curl -f http://localhost:8080/ || exit 1</span></span>
+<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-34"><a href="#cb21-34" aria-hidden="true" tabindex="-1"></a><span class="st"># Comando por defecto</span></span>
+<span id="cb21-35"><a href="#cb21-35" aria-hidden="true" tabindex="-1"></a><span class="st">CMD ["nginx", "-g", "daemon off;"]</span></span>
+<span id="cb21-36"><a href="#cb21-36" aria-hidden="true" tabindex="-1"></a><span class="op">DOCKERFILE</span></span>
+<span id="cb21-37"><a href="#cb21-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-38"><a href="#cb21-38" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Crear archivo index.html de prueba</span></span>
+<span id="cb21-39"><a href="#cb21-39" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"&lt;h1&gt;Contenedor Hardened&lt;/h1&gt;"</span> <span class="op">&gt;</span> index.html</span>
+<span id="cb21-40"><a href="#cb21-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-41"><a href="#cb21-41" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Verificar el Dockerfile creado</span></span>
+<span id="cb21-42"><a href="#cb21-42" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> Dockerfile</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada:</p>
+<pre><code>FROM ubuntu:24.04
+RUN apt-get update &amp;&amp; apt-get install -y --no-install-recommends \
+    nginx \
+    &amp;&amp; apt-get clean \
+    &amp;&amp; rm -rf /var/lib/apt/lists/*
+RUN groupadd -r webuser &amp;&amp; \
+    useradd -r -g webuser -u 1000 -d /var/www -s /sbin/nologin webuser
+RUN mkdir -p /var/www/app &amp;&amp; chown -R webuser:webuser /var/www
+COPY --chown=webuser:webuser index.html /var/www/app/
+USER webuser
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=3s CMD curl -f http://localhost:8080/ || exit 1
+CMD ["nginx", "-g", "daemon off;"]</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Construir la imagen (requiere grupo docker)</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> build <span class="at">-t</span> lab-hardened:v1 .</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada (parcial):</p>
+<pre><code>Step 1/8 : FROM ubuntu:24.04
+ ---&gt; a04dc4851cbc
+Step 2/8 : RUN apt-get update...
+...
+Successfully built abc123def456
+Successfully tagged lab-hardened:v1</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Verificar que la imagen corre como usuario no-root</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">--rm</span> lab-hardened:v1 id</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada:</p>
+<pre><code>uid=1000(webuser) gid=1000(webuser) groups=1000(webuser)</code></pre>
+<div class="note">
+<p><strong>Nota del instructor:</strong> Si la salida muestra <code>uid=0(root)</code>, el hardening falló. El paso <code>USER webuser</code> es la línea que garantiza esto. Verificar el usuario en tiempo de ejecución es la prueba de que tu hardening funciona — no basta con que el Dockerfile esté bien escrito; hay que comprobarlo.</p>
+</div>
+</section>
+<section id="e4-analizar-capacidades-vs.-cis-docker-benchmark" class="level3">
+<h3 class="anchored" data-anchor-id="e4-analizar-capacidades-vs.-cis-docker-benchmark">E4: Analizar capacidades vs.&nbsp;CIS Docker Benchmark</h3>
+<p>El CIS Docker Benchmark es el estándar de la industria para configurar Docker de forma segura. Vamos a comparar la configuración del laboratorio contra los controles CIS.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Verificar el usuario que ejecuta los procesos dentro del contenedor</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ps</span> aux <span class="kw">|</span> <span class="fu">head</span> <span class="at">-5</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada:</p>
+<pre><code>USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+estudiante    1  0.0  0.0   4624  3456 pts/0    Ss   12:00   0:00 /bin/bash
+estudiante    7  0.0  0.0  10192  3200 pts/0    R+   12:00   0:00 ps aux</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Verificar capacidades del proceso actual</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /proc/self/status <span class="kw">|</span> <span class="fu">grep</span> Cap</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada (parcial):</p>
+<pre><code>CapEff: 00000000a80425fb
+CapPrm: 00000000a80425fb
+CapBnd: 00000000a80425fb</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Listar contenedores en ejecución (desde el host)</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> ps <span class="at">--format</span> <span class="st">"table {{.ID}}\t{{.Image}}\t{{.Status}}"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Verificar la red del contenedor</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> network inspect lab-cyber <span class="at">--format</span> <span class="st">'{{.IPAM.Config}}'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Ahora completa esta tabla de verificación CIS:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 21%">
+<col style="width: 21%">
+<col style="width: 39%">
+<col style="width: 18%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Control CIS</th>
+<th>Descripción</th>
+<th>¿Cumple el laboratorio?</th>
+<th>Evidencia</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>5.1</td>
+<td>Contenedores con usuario no-root</td>
+<td>Sí (estudiante)</td>
+<td><code>whoami</code> = estudiante</td>
+</tr>
+<tr class="even">
+<td>5.2</td>
+<td>No-new-privileges habilitado</td>
+<td>No (false, intencional)</td>
+<td>docker-compose línea 34</td>
+</tr>
+<tr class="odd">
+<td>5.25</td>
+<td>Capacidades limitadas</td>
+<td>Sí (solo 4)</td>
+<td>cap_add restringido</td>
+</tr>
+<tr class="even">
+<td>5.28</td>
+<td>Montajes de filesystem restringidos</td>
+<td>Sí (solo volúmenes definidos)</td>
+<td>volumes en docker-compose</td>
+</tr>
+<tr class="odd">
+<td>5.31</td>
+<td>Filtrado de red habilitado</td>
+<td>Sí (iptables/ufw)</td>
+<td>NET_ADMIN capability</td>
+</tr>
+</tbody>
+</table>
+<div class="warning">
+<p><strong>Advertencia de seguridad:</strong> Encontrar que el laboratorio NO cumple con <code>no-new-privileges</code> puede parecer alarmante, pero es una decisión pedagógica deliberada: necesitas privilegios para aprender herramientas de seguridad. En producción, este control sería obligatorio. Aprender a identificar estos tradeoffs entre seguridad y funcionalidad es parte de ser un profesional competente.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="notas-de-seguridad-el-contenedor-no-es-una-frontera" class="level2">
+<h2 class="anchored" data-anchor-id="notas-de-seguridad-el-contenedor-no-es-una-frontera">Notas de seguridad: el contenedor no es una frontera</h2>
+<p>Docker proporciona aislamiento, NO seguridad perimetral. Un contenedor comprometido con las capacidades correctas puede escapar al host.</p>
+<section id="tabla-de-capacidades-peligrosas" class="level3">
+<h3 class="anchored" data-anchor-id="tabla-de-capacidades-peligrosas">Tabla de capacidades peligrosas</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 22%">
+<col style="width: 47%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Capacidad</th>
+<th>Riesgo</th>
+<th>Por qué importa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>SYS_ADMIN</code></td>
+<td><strong>CRÍTICO</strong></td>
+<td>Permite montar filesystems y modificar namespaces</td>
+</tr>
+<tr class="even">
+<td><code>DAC_READ_SEARCH</code></td>
+<td>Alto</td>
+<td>Puede leer cualquier archivo del host</td>
+</tr>
+<tr class="odd">
+<td><code>NET_ADMIN</code></td>
+<td>Medio</td>
+<td>Puede modificar reglas de red (necesario aquí)</td>
+</tr>
+<tr class="even">
+<td><code>SYS_PTRACE</code></td>
+<td>Alto</td>
+<td>Permite depurar otros procesos</td>
+</tr>
+<tr class="odd">
+<td><code>SYS_MODULE</code></td>
+<td>Crítico</td>
+<td>Permite cargar módulos de kernel</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="principios-de-hardening-para-recordar" class="level3">
+<h3 class="anchored" data-anchor-id="principios-de-hardening-para-recordar">Principios de hardening para recordar</h3>
+<ol type="1">
+<li><strong>Mínimo privilegio</strong>: Solo las capacidades que necesitas, nada más</li>
+<li><strong>Imagen minimalista</strong>: Menos paquetes = menos vulnerabilidades</li>
+<li><strong>Usuario no-root</strong>: Nunca ejecutes aplicaciones como root en un contenedor</li>
+<li><strong>Root filesystem de solo lectura</strong>: Impide que atacantes modifiquen el filesystem</li>
+<li><strong>Escaneo de imágenes</strong>: Usa herramientas como Trivy o Grype para detectar vulnerabilidades</li>
+</ol>
+<div class="warning">
+<p><strong>Advertencia de seguridad:</strong> La seguridad de contenedores NO es configurarla y olvidarla. Requiere monitoreo continuo, actualización de imágenes y auditorías periódicas. Un contenedor que fue seguro ayer puede ser vulnerable hoy si su imagen tiene una CVE recién descubierta. La seguridad es un proceso, no un estado.</p>
+</div>
+<hr>
+</section>
+<section id="e5-hardening-de-nginx-con-nginx.conf-personalizado" class="level3">
+<h3 class="anchored" data-anchor-id="e5-hardening-de-nginx-con-nginx.conf-personalizado">E5: Hardening de Nginx con nginx.conf personalizado</h3>
+<p><strong>Objetivo:</strong> Configurar un servidor Nginx con headers de seguridad, métodos HTTP restringidos y HTTPS con certificado autofirmado.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Crear directorio del ejercicio</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/laboratorio/nginx-hardening</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/laboratorio/nginx-hardening</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Crear nginx.conf con hardening</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> nginx.conf <span class="op">&lt;&lt; 'NGINX'</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="st">server {</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="st">    listen 8080;</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="st">    server_name localhost;</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="st">    # Ocultar versión de Nginx</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a><span class="st">    server_tokens off;</span></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a><span class="st">    # Headers de seguridad</span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a><span class="st">    add_header X-Content-Type-Options "nosniff" always;</span></span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a><span class="st">    add_header X-Frame-Options "SAMEORIGIN" always;</span></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a><span class="st">    add_header X-XSS-Protection "1; mode=block" always;</span></span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a><span class="st">    add_header Referrer-Policy "strict-origin-when-cross-origin" always;</span></span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a><span class="st">    # Métodos HTTP permitidos (bloquear DELETE, PUT, PATCH)</span></span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a><span class="st">    if ($request_method !~ ^(GET|HEAD|POST)$) {</span></span>
+<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a><span class="st">        return 405;</span></span>
+<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
+<span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a><span class="st">    root /var/www/html;</span></span>
+<span id="cb34-22"><a href="#cb34-22" aria-hidden="true" tabindex="-1"></a><span class="st">    index index.html;</span></span>
+<span id="cb34-23"><a href="#cb34-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-24"><a href="#cb34-24" aria-hidden="true" tabindex="-1"></a><span class="st">    location / {</span></span>
+<span id="cb34-25"><a href="#cb34-25" aria-hidden="true" tabindex="-1"></a><span class="st">        try_files $uri $uri/ =404;</span></span>
+<span id="cb34-26"><a href="#cb34-26" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
+<span id="cb34-27"><a href="#cb34-27" aria-hidden="true" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb34-28"><a href="#cb34-28" aria-hidden="true" tabindex="-1"></a><span class="op">NGINX</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Crear Dockerfile</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> Dockerfile <span class="op">&lt;&lt; 'DOCKERFILE'</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="st">FROM nginx:alpine</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="st"># Copiar configuración hardeneada</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a><span class="st">COPY nginx.conf /etc/nginx/conf.d/default.conf</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a><span class="st"># Crear página de prueba</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a><span class="st">RUN echo "&lt;h1&gt;Nginx Hardened&lt;/h1&gt;" &gt; /var/www/html/index.html</span></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a><span class="st">EXPOSE 8080</span></span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a><span class="op">DOCKERFILE</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Construir la imagen</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> build <span class="at">-t</span> lab-nginx-hardened:v1 .</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada (parcial):</p>
+<pre><code>Step 1/4 : FROM nginx:alpine
+ ---&gt; ...
+Step 2/4 : COPY nginx.conf /etc/nginx/conf.d/default.conf
+ ---&gt; ...
+Successfully built abc123def456
+Successfully tagged lab-nginx-hardened:v1</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Ejecutar el contenedor</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">-d</span> <span class="at">--name</span> nginx-harden <span class="at">-p</span> 8080:8080 lab-nginx-hardened:v1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Verificar headers de seguridad</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sI</span> http://localhost:8080 <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-iE</span> <span class="st">"x-content-type|x-frame|x-xss|referrer"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada:</p>
+<pre><code>X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+X-XSS-Protection: 1; mode=block
+Referrer-Policy: strict-origin-when-cross-origin</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 7. Verificar que la versión está oculta</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sI</span> http://localhost:8080 <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-i</span> <span class="st">"server"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>Server: nginx</code></pre>
+<div class="note">
+<p><strong>Nota del instructor:</strong> Sin <code>server_tokens off</code>, Nginx muestra la versión completa (ej. <code>nginx/1.24.0</code>). Ocultar la versión no previene ataques, pero dificulta la fingerprinting del servidor por un atacante.</p>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 8. Verificar que métodos restringidos son bloqueados</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-X</span> DELETE http://localhost:8080</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>405 Not Allowed</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 9. Limpiar</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> stop nginx-harden <span class="kw">&amp;&amp;</span> <span class="ex">docker</span> rm nginx-harden</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="warning">
+<p><strong>Advertencia de seguridad:</strong> Este exercise usa HTTP en puerto 8080 para simplificar. En producción, Nginx debe servir exclusivamente sobre HTTPS con certificados válidos de una CA confiable. La combinación <code>server_tokens off</code> + headers de seguridad + HTTPS es la base mínima para un servidor web seguro.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="checklist-de-autoevaluación" class="level2">
+<h2 class="anchored" data-anchor-id="checklist-de-autoevaluación">Checklist de autoevaluación</h2>
+<p>Antes de avanzar al Módulo 5, verifica que puedes:</p>
+<ul class="task-list">
+<li><label><input type="checkbox">Explicar la diferencia entre un contenedor y una máquina virtual</label></li>
+<li><label><input type="checkbox">Describir qué son las capabilities de Linux y por qué importan en Docker</label></li>
+<li><label><input type="checkbox">Explicar por qué <code>SYS_ADMIN</code> está ausente en este laboratorio</label></li>
+<li><label><input type="checkbox">Describir la estrategia <code>cap_drop: ALL</code> + <code>cap_add</code> selectivo</label></li>
+<li><label><input type="checkbox">Crear un backup incremental con <code>rsync</code></label></li>
+<li><label><input type="checkbox">Comprimir y verificar un backup con <code>tar</code> y <code>gzip</code></label></li>
+<li><label><input type="checkbox">Configurar un <code>nginx.conf</code> con headers de seguridad y <code>server_tokens off</code></label></li>
+<li><label><input type="checkbox">Restringir métodos HTTP no permitidos en Nginx</label></li>
+<li><label><input type="checkbox">Construir y ejecutar un contenedor Docker con configuración personalizada</label></li>
+<li><label><input type="checkbox">Escribir un Dockerfile con usuario no-root explícito</label></li>
+<li><label><input type="checkbox">Construir una imagen Docker y verificar el usuario en runtime</label></li>
+<li><label><input type="checkbox">Identificar al menos 3 controles del CIS Docker Benchmark</label></li>
+<li><label><input type="checkbox">Explicar por qué <code>no-new-privileges</code> es <code>false</code> en este laboratorio</label></li>
+<li><label><input type="checkbox">Describir la arquitectura de red <code>lab-cyber</code> y su configuración de IP</label></li>
+<li><label><input type="checkbox">Aplicar el principio de mínimo privilegio en la configuración de un contenedor</label></li>
+</ul>
+<div class="note">
+<p><strong>Nota del instructor:</strong> Si no puedes marcar al menos 10 de estos 15 ítems, repasa los ejercicios del módulo. Docker es el estándar de la industria para despliegue de aplicaciones — entender su seguridad es tan importante como saber usarlo. Los wargames del Módulo 5 requieren que comprendas aislamiento: no avances con dudas.</p>
+</div>
+</section>
+<section id="próximo-paso" class="level2">
+<h2 class="anchored" data-anchor-id="próximo-paso">Próximo paso</h2>
+<p>En el <strong><a href="modulo-05-wargames.qmd">Módulo 5 — Wargames y Ataques Controlados</a></strong> pondrás a prueba tus contenedores en entornos de ataque reales. Todo lo que has construido y aislado se convierte en objetivo controlado: ataca para defender.</p>
+<blockquote class="blockquote">
+<p><em>“El cuarto principio de la ciberseguridad es: no puedes defender lo que no puedes atacar. Los wargames son tu academia de ataque ético.”</em></p>
+</blockquote>
+<p><a href="./index.qmd">← Volver al índice de la guía</a></p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

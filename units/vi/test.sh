@@ -1,28 +1,29 @@
 #!/bin/bash
 # Unit VI: Storage Management — test.sh
 # Automated validation of 10 challenges
+# Estandarizado: usa /shared/validators.sh y /shared/sudo-wrappers.sh
 
 source /shared/common.sh
+source /shared/validators.sh
+source /shared/sudo-wrappers.sh
 
 UNIT_NAME="unit-VI"
 TOTAL_RETOS=10
 
 reto1() {
     # Verificar que lsblk funciona
-    output=$(lsblk 2>/dev/null)
-    [ -n "$output" ]
+    assert_command_ok lsblk
 }
 
 reto2() {
-    # Verificar que fdisk funciona
-    output=$(sudo fdisk -l 2>/dev/null | head -5)
-    [ -n "$output" ]
+    # Verificar que puede ver tabla de particiones
+    assert_sudo_ok fdisk -l
 }
 
 reto3() {
     # Verificar que puede crear archivo de disco virtual
-    dd if=/dev/zero of=/tmp/test_disk.img bs=1M count=5 2>/dev/null
-    [ -f "/tmp/test_disk.img" ]
+    assert_command_ok dd if=/dev/zero of=/tmp/test_disk.img bs=1M count=5 2>/dev/null
+    assert_file_exists /tmp/test_disk.img
     size=$(stat -c%s /tmp/test_disk.img 2>/dev/null || stat -f%z /tmp/test_disk.img 2>/dev/null)
     [ "$size" -gt 4000000 ]
     rm -f /tmp/test_disk.img
@@ -30,64 +31,62 @@ reto3() {
 
 reto4() {
     # Verificar que puede formatear disco virtual
-    dd if=/dev/zero of=/tmp/test_disk.img bs=1M count=5 2>/dev/null
-    sudo mkfs.ext4 /tmp/test_disk.img 2>/dev/null | grep -q "ext4"
+    assert_command_ok dd if=/dev/zero of=/tmp/test_disk.img bs=1M count=5 2>/dev/null
+    assert_sudo_ok mkfs.ext4 /tmp/test_disk.img
     rm -f /tmp/test_disk.img
 }
 
 reto5() {
     # Verificar que puede montar disco virtual
-    dd if=/dev/zero of=/tmp/test_disk.img bs=1M count=5 2>/dev/null
-    sudo mkfs.ext4 /tmp/test_disk.img 2>/dev/null
+    assert_command_ok dd if=/dev/zero of=/tmp/test_disk.img bs=1M count=5 2>/dev/null
+    assert_sudo_ok mkfs.ext4 /tmp/test_disk.img
     mkdir -p /tmp/test_mount
-    sudo mount /tmp/test_disk.img /tmp/test_mount 2>/dev/null
-    mount | grep -q "test_mount"
-    sudo umount /tmp/test_mount 2>/dev/null
+    assert_sudo_ok mount /tmp/test_disk.img /tmp/test_mount
+    assert_mount_active /tmp/test_mount
+    assert_sudo_ok umount /tmp/test_mount
     rm -f /tmp/test_disk.img
     rmdir /tmp/test_mount 2>/dev/null || true
 }
 
 reto6() {
     # Verificar que puede copiar archivos a disco montado
-    dd if=/dev/zero of=/tmp/test_disk.img bs=1M count=5 2>/dev/null
-    sudo mkfs.ext4 /tmp/test_disk.img 2>/dev/null
+    assert_command_ok dd if=/dev/zero of=/tmp/test_disk.img bs=1M count=5 2>/dev/null
+    assert_sudo_ok mkfs.ext4 /tmp/test_disk.img
     mkdir -p /tmp/test_mount
-    sudo mount /tmp/test_disk.img /tmp/test_mount 2>/dev/null
+    assert_sudo_ok mount /tmp/test_disk.img /tmp/test_mount
     echo "test" > /tmp/test_mount/test.txt
-    [ -f "/tmp/test_mount/test.txt" ]
-    sudo umount /tmp/test_mount 2>/dev/null
+    assert_file_exists /tmp/test_mount/test.txt
+    assert_sudo_ok umount /tmp/test_mount
     rm -f /tmp/test_disk.img
     rmdir /tmp/test_mount 2>/dev/null || true
 }
 
 reto7() {
     # Verificar que puede desmontar disco
-    dd if=/dev/zero of=/tmp/test_disk.img bs=1M count=5 2>/dev/null
-    sudo mkfs.ext4 /tmp/test_disk.img 2>/dev/null
+    assert_command_ok dd if=/dev/zero of=/tmp/test_disk.img bs=1M count=5 2>/dev/null
+    assert_sudo_ok mkfs.ext4 /tmp/test_disk.img
     mkdir -p /tmp/test_mount
-    sudo mount /tmp/test_disk.img /tmp/test_mount 2>/dev/null
-    sudo umount /tmp/test_mount 2>/dev/null
-    ! mount | grep -q "test_mount"
+    assert_sudo_ok mount /tmp/test_disk.img /tmp/test_mount
+    assert_sudo_ok umount /tmp/test_mount
+    ! assert_mount_active /tmp/test_mount
     rm -f /tmp/test_disk.img
     rmdir /tmp/test_mount 2>/dev/null || true
 }
 
 reto8() {
     # Verificar que puede ver espacio en disco
-    output=$(df -h 2>/dev/null)
-    [ -n "$output" ]
+    assert_command_ok df -h
 }
 
 reto9() {
     # Verificar que puede medir tamaño de directorio
-    output=$(du -sh ~/laboratorio/ 2>/dev/null)
-    [ -n "$output" ]
+    assert_command_ok du -sh ~/laboratorio/
 }
 
 reto10() {
     # Verificar que puede limpiar disco virtual
     rm -f ~/laboratorio/storage/disco_virtual.img 2>/dev/null
-    [ ! -f ~/laboratorio/storage/disco_virtual.img ]
+    assert_file_not_exists ~/laboratorio/storage/disco_virtual.img
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10)
@@ -103,6 +102,8 @@ challenge_names=(
     "Medir tamaño de directorio"
     "Limpiar disco virtual"
 )
+
+ICONOS=("💾" "📋" "🟢" "🔄" "📂" "📝" "⭕" "📊" "📏" "🗑️")
 
 reto1_info() {
     separador
@@ -193,3 +194,35 @@ reto10_info() {
     echo "Comando útil: rm ~/laboratorio/storage/disco_virtual.img"
     separador
 }
+
+# ── Standalone execution mode ────────────────────────────────
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit VI: Storage Management — Retos"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    PASSED=0
+    FAILED=0
+
+    for i in $(seq 1 "$TOTAL_RETOS"); do
+        validator="${validators[$((i-1))]}"
+        name="${challenge_names[$((i-1))]}"
+        icon="${ICONOS[$((i-1))]}"
+
+        if $validator >/dev/null 2>&1; then
+            echo "  [PASS] Reto $i: $name $icon"
+            PASSED=$((PASSED + 1))
+        else
+            echo "  [FAIL] Reto $i: $name"
+            FAILED=$((FAILED + 1))
+        fi
+    done
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit VI Results: $PASSED/$TOTAL_RETOS passed, $FAILED failed"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    [ "$FAILED" -eq 0 ]
+fi

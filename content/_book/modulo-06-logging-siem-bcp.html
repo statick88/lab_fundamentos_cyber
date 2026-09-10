@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Diego Saavedra, Mg. Sc. | Abacom">
+
+<title>Módulo 6 — Logging, SIEM y BCP</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="modulo-06-logging-siem-bcp_files/libs/clipboard/clipboard.min.js"></script>
+<script src="modulo-06-logging-siem-bcp_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="modulo-06-logging-siem-bcp_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="modulo-06-logging-siem-bcp_files/libs/quarto-html/popper.min.js"></script>
+<script src="modulo-06-logging-siem-bcp_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="modulo-06-logging-siem-bcp_files/libs/quarto-html/anchor.min.js"></script>
+<link href="modulo-06-logging-siem-bcp_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="modulo-06-logging-siem-bcp_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="modulo-06-logging-siem-bcp_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="modulo-06-logging-siem-bcp_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="modulo-06-logging-siem-bcp_files/libs/bootstrap/bootstrap-8ffd5f67044e5306d9846f29df41dda5.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#módulo-6-logging-siem-y-bcp" id="toc-módulo-6-logging-siem-y-bcp" class="nav-link active" data-scroll-target="#módulo-6-logging-siem-y-bcp">Módulo 6 — Logging, SIEM y BCP</a>
+  <ul class="collapse">
+  <li><a href="#introducción-los-logs-son-la-memoria-de-tu-sistema" id="toc-introducción-los-logs-son-la-memoria-de-tu-sistema" class="nav-link" data-scroll-target="#introducción-los-logs-son-la-memoria-de-tu-sistema">Introducción: los logs son la memoria de tu sistema</a></li>
+  <li><a href="#captura-y-análisis-de-tráfico-de-red" id="toc-captura-y-análisis-de-tráfico-de-red" class="nav-link" data-scroll-target="#captura-y-análisis-de-tráfico-de-red">Captura y análisis de tráfico de red</a>
+  <ul class="collapse">
+  <li><a href="#por-qué-capturar-paquetes" id="toc-por-qué-capturar-paquetes" class="nav-link" data-scroll-target="#por-qué-capturar-paquetes">¿Por qué capturar paquetes?</a></li>
+  <li><a href="#tcpdump-el-estándar-de-captura" id="toc-tcpdump-el-estándar-de-captura" class="nav-link" data-scroll-target="#tcpdump-el-estándar-de-captura">tcpdump: el estándar de captura</a></li>
+  <li><a href="#sintaxis-esencial" id="toc-sintaxis-esencial" class="nav-link" data-scroll-target="#sintaxis-esencial">Sintaxis esencial</a></li>
+  <li><a href="#análisis-con-openssl-s_client" id="toc-análisis-con-openssl-s_client" class="nav-link" data-scroll-target="#análisis-con-openssl-s_client">Análisis con openssl s_client</a></li>
+  </ul></li>
+  <li><a href="#gestión-de-logs-con-logrotate" id="toc-gestión-de-logs-con-logrotate" class="nav-link" data-scroll-target="#gestión-de-logs-con-logrotate">Gestión de logs con logrotate</a>
+  <ul class="collapse">
+  <li><a href="#el-problema-los-logs-crecen-sin-parar" id="toc-el-problema-los-logs-crecen-sin-parar" class="nav-link" data-scroll-target="#el-problema-los-logs-crecen-sin-parar">El problema: los logs crecen sin parar</a></li>
+  <li><a href="#analogía-del-archivo-físico" id="toc-analogía-del-archivo-físico" class="nav-link" data-scroll-target="#analogía-del-archivo-físico">Analogía del archivo físico</a></li>
+  <li><a href="#configuración-básica" id="toc-configuración-básica" class="nav-link" data-scroll-target="#configuración-básica">Configuración básica</a></li>
+  <li><a href="#comandos-de-gestión" id="toc-comandos-de-gestión" class="nav-link" data-scroll-target="#comandos-de-gestión">Comandos de gestión</a></li>
+  </ul></li>
+  <li><a href="#siem-security-information-and-event-management" id="toc-siem-security-information-and-event-management" class="nav-link" data-scroll-target="#siem-security-information-and-event-management">SIEM: Security Information and Event Management</a>
+  <ul class="collapse">
+  <li><a href="#qué-es-un-siem" id="toc-qué-es-un-siem" class="nav-link" data-scroll-target="#qué-es-un-siem">¿Qué es un SIEM?</a></li>
+  <li><a href="#componentes-de-un-siem" id="toc-componentes-de-un-siem" class="nav-link" data-scroll-target="#componentes-de-un-siem">Componentes de un SIEM</a></li>
+  <li><a href="#tabla-comparativa-logging-vs-siem" id="toc-tabla-comparativa-logging-vs-siem" class="nav-link" data-scroll-target="#tabla-comparativa-logging-vs-siem">Tabla comparativa: logging vs SIEM</a></li>
+  <li><a href="#bcp-business-continuity-plan" id="toc-bcp-business-continuity-plan" class="nav-link" data-scroll-target="#bcp-business-continuity-plan">BCP: Business Continuity Plan</a></li>
+  </ul></li>
+  <li><a href="#ejercicios-prácticos-progresivos" id="toc-ejercicios-prácticos-progresivos" class="nav-link" data-scroll-target="#ejercicios-prácticos-progresivos">Ejercicios prácticos progresivos</a>
+  <ul class="collapse">
+  <li><a href="#e1-capturar-y-analizar-tráfico-de-red-con-tcpdump" id="toc-e1-capturar-y-analizar-tráfico-de-red-con-tcpdump" class="nav-link" data-scroll-target="#e1-capturar-y-analizar-tráfico-de-red-con-tcpdump">E1: Capturar y analizar tráfico de red con tcpdump</a></li>
+  <li><a href="#e2-configurar-logrotate-para-una-aplicación-personalizada" id="toc-e2-configurar-logrotate-para-una-aplicación-personalizada" class="nav-link" data-scroll-target="#e2-configurar-logrotate-para-una-aplicación-personalizada">E2: Configurar logrotate para una aplicación personalizada</a></li>
+  <li><a href="#e3-escribir-un-informe-de-seguridad-usando-plantilla.md" id="toc-e3-escribir-un-informe-de-seguridad-usando-plantilla.md" class="nav-link" data-scroll-target="#e3-escribir-un-informe-de-seguridad-usando-plantilla.md">E3: Escribir un informe de seguridad usando plantilla.md</a></li>
+  <li><a href="#e4-analizar-handshake-tls-con-openssl-s_client" id="toc-e4-analizar-handshake-tls-con-openssl-s_client" class="nav-link" data-scroll-target="#e4-analizar-handshake-tls-con-openssl-s_client">E4: Analizar handshake TLS con openssl s_client</a></li>
+  <li><a href="#e5-generar-certificados-tls-autofirmados-con-openssl-req" id="toc-e5-generar-certificados-tls-autofirmados-con-openssl-req" class="nav-link" data-scroll-target="#e5-generar-certificados-tls-autofirmados-con-openssl-req">E5: Generar certificados TLS autofirmados con openssl req</a></li>
+  </ul></li>
+  <li><a href="#notas-de-seguridad-el-valor-de-la-evidencia" id="toc-notas-de-seguridad-el-valor-de-la-evidencia" class="nav-link" data-scroll-target="#notas-de-seguridad-el-valor-de-la-evidencia">Notas de seguridad: el valor de la evidencia</a>
+  <ul class="collapse">
+  <li><a href="#cadena-de-custodia-digital" id="toc-cadena-de-custodia-digital" class="nav-link" data-scroll-target="#cadena-de-custodia-digital">Cadena de custodia digital</a></li>
+  <li><a href="#el-principio-de-defensa-en-profundidad" id="toc-el-principio-de-defensa-en-profundidad" class="nav-link" data-scroll-target="#el-principio-de-defensa-en-profundidad">El principio de defensa en profundidad</a></li>
+  </ul></li>
+  <li><a href="#checklist-de-autoevaluación" id="toc-checklist-de-autoevaluación" class="nav-link" data-scroll-target="#checklist-de-autoevaluación">Checklist de autoevaluación</a></li>
+  <li><a href="#próximo-paso" id="toc-próximo-paso" class="nav-link" data-scroll-target="#próximo-paso">Próximo paso</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Módulo 6 — Logging, SIEM y BCP</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Diego Saavedra, Mg. Sc. | Abacom </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="módulo-6-logging-siem-y-bcp" class="level1">
+<h1>Módulo 6 — Logging, SIEM y BCP</h1>
+<hr>
+<section id="introducción-los-logs-son-la-memoria-de-tu-sistema" class="level2">
+<h2 class="anchored" data-anchor-id="introducción-los-logs-son-la-memoria-de-tu-sistema">Introducción: los logs son la memoria de tu sistema</h2>
+<p><strong>Si tu sistema fuera un edificio, los logs serían las cámaras de seguridad, el libro de visitas y el registro de apertura de puertas — todo en uno.</strong></p>
+<p>Imagina que ocurre un incidente de seguridad. Un atacante entra, explota una vulnerabilidad y extrae datos. Sin logs, es como si el atacante hubiera caminado por un corredor oscuro sin cámaras, sin testigos, sin rastro. <strong>No puedes defender lo que no puedes ver.</strong></p>
+<p>En ciberseguridad, los <strong>logs</strong> (registros) son la evidencia fundamental. Cada conexión, cada intento de inicio de sesión, cada archivo accedido deja una huella. El problema no es recoger huellas — es saber leerlas.</p>
+<p>En este módulo aprenderás a capturar tráfico de red con <code>tcpdump</code>, a gestionar logs con <code>logrotate</code>, a entender qué es un SIEM y cómo se escribe un informe de seguridad que realmente sirva.</p>
+<div class="note">
+<p><strong>Nota del instructor:</strong> Muchos técnicos piensan que “más logs = más seguridad”. Falso. Logs que no revisas son como alarmas que nadie escucha. La seguridad está en el <strong>análisis</strong>, no en la acumulación.</p>
+</div>
+<hr>
+</section>
+<section id="captura-y-análisis-de-tráfico-de-red" class="level2">
+<h2 class="anchored" data-anchor-id="captura-y-análisis-de-tráfico-de-red">Captura y análisis de tráfico de red</h2>
+<section id="por-qué-capturar-paquetes" class="level3">
+<h3 class="anchored" data-anchor-id="por-qué-capturar-paquetes">¿Por qué capturar paquetes?</h3>
+<p>Cuando un atacante escanea tu red, intenta conectarse a puertos o extrae datos, todo eso viaja en paquetes TCP/IP. Si puedes <strong>capturar y leer esos paquetes</strong>, puedes ver el ataque en tiempo real.</p>
+<p>Es como tener un micrófono en cada pasillo de tu edificio. No solo sabes que alguien entró — sabes <strong>qué dijo, a qué hora y con quién habló</strong>.</p>
+</section>
+<section id="tcpdump-el-estándar-de-captura" class="level3">
+<h3 class="anchored" data-anchor-id="tcpdump-el-estándar-de-captura">tcpdump: el estándar de captura</h3>
+<p><code>tcpdump</code> es una herramienta de línea de comandos que captura paquetes que pasan por una interfaz de red. Es la base del análisis de tráfico.</p>
+<pre><code>    ┌─────────────────────────────────────────────────────────────┐
+    │              FLUJO DE CAPTURA CON tcpdump                  │
+    │                                                             │
+    │   Red externa                                               │
+    │       │                                                     │
+    │       ▼                                                     │
+    │   ┌──────────┐                                              │
+    │   │ Interfaz │  eth0 / ens33                                │
+    │   └────┬─────┘                                              │
+    │        │                                                    │
+    │        ▼                                                    │
+    │   ┌──────────────┐                                          │
+    │   │   tcpdump    │  ← captura cada paquete                 │
+    │   └──────┬───────┘                                          │
+    │          │                                                  │
+    │          ▼                                                  │
+    │   ┌──────────────┐                                          │
+    │   │ capture.pcap │  ← archivo analizable                    │
+    │   └──────────────┘                                          │
+    │                                                             │
+    └─────────────────────────────────────────────────────────────┘</code></pre>
+</section>
+<section id="sintaxis-esencial" class="level3">
+<h3 class="anchored" data-anchor-id="sintaxis-esencial">Sintaxis esencial</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Capturar tráfico en interfaz eth0 y guardar en archivo</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">tcpdump</span> <span class="at">-i</span> eth0 <span class="at">-w</span> capture.pcap</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Capturar solo 100 paquetes y mostrarlos en pantalla</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">tcpdump</span> <span class="at">-i</span> eth0 <span class="at">-c</span> 100</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Capturar tráfico de un puerto específico (ej: HTTP)</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="ex">tcpdump</span> <span class="at">-i</span> eth0 port 80</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Leer un archivo de captura guardado</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="ex">tcpdump</span> <span class="at">-r</span> capture.pcap</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Mostrar contenido ASCII de los paquetes (para debug)</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="ex">tcpdump</span> <span class="at">-i</span> eth0 <span class="at">-A</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="análisis-con-openssl-s_client" class="level3">
+<h3 class="anchored" data-anchor-id="análisis-con-openssl-s_client">Análisis con openssl s_client</h3>
+<p>Para verificar la seguridad de las conexiones TLS/SSL, puedes usar <code>openssl s_client</code> para inspeccionar el handshake:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Conectar a un servidor y ver detalles del certificado TLS</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> s_client <span class="at">-connect</span> ejemplo.com:443</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver fechas de validez del certificado</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> s_client <span class="at">-connect</span> ejemplo.com:443 <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">|</span> <span class="ex">openssl</span> x509 <span class="at">-noout</span> <span class="at">-dates</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>notBefore=Jan  1 00:00:00 2025 GMT
+notAfter=Dec 31 23:59:59 2025 GMT</code></pre>
+<div class="warning">
+<p><strong>Advertencia de seguridad:</strong> Capturar tráfico en redes que no te pertenecen o sin autorización es <strong>ilegal</strong>. Usa tcpdump SOLO en tu laboratorio, en redes propias o con autorización explícita. La herramienta no hace distinciones éticas — tú debes hacerlas.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="gestión-de-logs-con-logrotate" class="level2">
+<h2 class="anchored" data-anchor-id="gestión-de-logs-con-logrotate">Gestión de logs con logrotate</h2>
+<section id="el-problema-los-logs-crecen-sin-parar" class="level3">
+<h3 class="anchored" data-anchor-id="el-problema-los-logs-crecen-sin-parar">El problema: los logs crecen sin parar</h3>
+<p>Imagina un servidor web que registra cada visita. En un día: 10,000 líneas. En un mes: 300,000 líneas. En un año: tu disco está lleno y no puedes escribir más logs — justo cuando más los necesitas.</p>
+<p><strong>logrotate</strong> resuelve esto: rota, comprime y elimina logs automáticamente.</p>
+</section>
+<section id="analogía-del-archivo-físico" class="level3">
+<h3 class="anchored" data-anchor-id="analogía-del-archivo-físico">Analogía del archivo físico</h3>
+<p>Piensa en un archivo de biblioteca:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 26%">
+<col style="width: 36%">
+<col style="width: 36%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Situación</th>
+<th>Sin logrotate</th>
+<th>Con logrotate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Un mes de logs</td>
+<td>Un solo archivo enorme de 2 GB</td>
+<td>30 archivos diarios de 67 MB</td>
+</tr>
+<tr class="even">
+<td>Buscar un evento de hace 3 meses</td>
+<td>Imposible sin herramientas</td>
+<td>Archivo comprimido, listo para buscar</td>
+</tr>
+<tr class="odd">
+<td>Disco lleno</td>
+<td>El sistema falla</td>
+<td>Logs antiguos se eliminan automáticamente</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="configuración-básica" class="level3">
+<h3 class="anchored" data-anchor-id="configuración-básica">Configuración básica</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Archivo de configuración de logrotate</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nano /etc/logrotate.d/mi-aplicacion</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>/var/log/mi-app/*.log {
+    daily           # Rotar cada día
+    missingok       # No fallar si el archivo no existe
+    rotate 7        # Mantener 7 rotaciones
+    compress        # Comprimir logs rotados
+    delaycompress   # No comprimir el más reciente
+    notifempty      # No rotar si está vacío
+    create 0640 estudiante estudiante  # Permisos del nuevo archivo
+}</code></pre>
+</section>
+<section id="comandos-de-gestión" class="level3">
+<h3 class="anchored" data-anchor-id="comandos-de-gestión">Comandos de gestión</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Probar configuración (modo debug, no hace cambios)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> logrotate <span class="at">-d</span> /etc/logrotate.d/mi-aplicacion</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Forzar rotación inmediata</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> logrotate <span class="at">-f</span> /etc/logrotate.d/mi-aplicacion</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver estado de rotaciones anteriores</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /var/lib/logrotate/status</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="note">
+<p><strong>Nota del laboratorio:</strong> <code>logrotate</code> ya está instalado en tu contenedor (Dockerfile línea 55). Puedes verificarlo con <code>which logrotate</code>.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="siem-security-information-and-event-management" class="level2">
+<h2 class="anchored" data-anchor-id="siem-security-information-and-event-management">SIEM: Security Information and Event Management</h2>
+<section id="qué-es-un-siem" class="level3">
+<h3 class="anchored" data-anchor-id="qué-es-un-siem">¿Qué es un SIEM?</h3>
+<p>Un <strong>SIEM</strong> (Security Information and Event Management) es un sistema que recoge logs de múltiples fuentes, los correlaciona y genera alertas cuando detecta patrones soschosos.</p>
+<p>Es como centralizar todas las cámaras de seguridad de un edificio en una sola sala de monitoreo, donde un operador (o un algoritmo) detecta comportamientos anómalos.</p>
+</section>
+<section id="componentes-de-un-siem" class="level3">
+<h3 class="anchored" data-anchor-id="componentes-de-un-siem">Componentes de un SIEM</h3>
+<pre><code>    ┌─────────────────────────────────────────────────────────────┐
+    │                    ARQUITECTURA SIEM                        │
+    │                                                             │
+    │   Fuentes de datos                                          │
+    │   ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐              │
+    │   │ Servidor│ │ Firewall│ │  IDS   │ │  Apps  │              │
+    │   └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘              │
+    │       │          │          │          │                    │
+    │       ▼          ▼          ▼          ▼                    │
+    │   ┌───────────────────────────────────────┐                │
+    │   │         MOTOR DE CORRELACIÓN          │                │
+    │   │   (reglas + machine learning)         │                │
+    │   └──────────────────┬────────────────────┘                │
+    │                      │                                      │
+    │                      ▼                                      │
+    │   ┌───────────────────────────────────────┐                │
+    │   │          DASHBOARD Y ALERTAS          │                │
+    │   └───────────────────────────────────────┘                │
+    │                                                             │
+    └─────────────────────────────────────────────────────────────┘</code></pre>
+</section>
+<section id="tabla-comparativa-logging-vs-siem" class="level3">
+<h3 class="anchored" data-anchor-id="tabla-comparativa-logging-vs-siem">Tabla comparativa: logging vs SIEM</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 37%">
+<col style="width: 48%">
+<col style="width: 13%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Característica</th>
+<th>Logging tradicional</th>
+<th>SIEM</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Alcance</td>
+<td>Un solo sistema</td>
+<td>Múltiples fuentes</td>
+</tr>
+<tr class="even">
+<td>Correlación</td>
+<td>Manual (tu cerebro)</td>
+<td>Automatizada</td>
+</tr>
+<tr class="odd">
+<td>Tiempo de detección</td>
+<td>Días o semanas</td>
+<td>Minutos</td>
+</tr>
+<tr class="even">
+<td>Coste</td>
+<td>Bajo (herramientas nativas)</td>
+<td>Alto (licencias + infraestructura)</td>
+</tr>
+<tr class="odd">
+<td>Uso típico</td>
+<td>Servidor único, debugging</td>
+<td>Empresas, SOC</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="bcp-business-continuity-plan" class="level3">
+<h3 class="anchored" data-anchor-id="bcp-business-continuity-plan">BCP: Business Continuity Plan</h3>
+<p>El <strong>BCP</strong> (Plan de Continuidad del Negocio) es un documento que define cómo una organización continuará operando durante y después de un incidente.</p>
+<p><strong>No es lo mismo que un plan de respuesta a incidentes.</strong> El IRP dice “qué hacer cuando atacan”. El BCP dice “cómo seguimos funcionando mientras nos atacan y después”.</p>
+<p>Elementos clave de un BCP:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 43%">
+<col style="width: 56%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Elemento</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Análisis de impacto</strong></td>
+<td>¿Qué sistemas son críticos? ¿Cuánto tiempo podemos estar sin ellos?</td>
+</tr>
+<tr class="even">
+<td><strong>RTO</strong> (Recovery Time Objective)</td>
+<td>Tiempo máximo para recuperar un sistema</td>
+</tr>
+<tr class="odd">
+<td><strong>RPO</strong> (Recovery Point Objective)</td>
+<td>Cuánta pérdida de datos es aceptable</td>
+</tr>
+<tr class="even">
+<td><strong>Procedimientos</strong></td>
+<td>Pasos específicos para cada escenario</td>
+</tr>
+<tr class="odd">
+<td><strong>Comunicación</strong></td>
+<td>Quién notifica a quién, en qué orden</td>
+</tr>
+</tbody>
+</table>
+<div class="note">
+<p><strong>Nota del instructor:</strong> Un BCP sin probar es un deseo. Los planes que no se simulan fallan cuando más se necesitan. Si alguna vez diseñas un BCP, exige que se haga un tabletop exercise al menos una vez al año.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="ejercicios-prácticos-progresivos" class="level2">
+<h2 class="anchored" data-anchor-id="ejercicios-prácticos-progresivos">Ejercicios prácticos progresivos</h2>
+<div class="note">
+<p><strong>Modo nativo (sin Docker):</strong> En el contenedor, <code>tcpdump</code> funciona con NOPASSWD sudo y la interfaz se llama <code>eth0</code>. En modo nativo, <code>tcpdump</code> requiere <code>sudo</code> para acceder a la interfaz de red, y el nombre de tu interfaz probablemente sea diferente (<code>enp0s3</code>, <code>wlan0</code>, <code>ens33</code>, etc.). Usa <code>ip link</code> para identificar tu interfaz principal, por ejemplo: <code>sudo tcpdump -i $(ip -o link show | awk -F': ' '/state UP/ {print $2; exit}') -c 10</code>. Además, <code>john</code> y <code>logrotate</code> deben instalarse con <code>sudo apt-get install -y john logrotate</code>.</p>
+</div>
+<section id="e1-capturar-y-analizar-tráfico-de-red-con-tcpdump" class="level3">
+<h3 class="anchored" data-anchor-id="e1-capturar-y-analizar-tráfico-de-red-con-tcpdump">E1: Capturar y analizar tráfico de red con tcpdump</h3>
+<p><strong>Objetivo:</strong> Capturar paquetes en tu interfaz de red y analizar el contenido.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Verificar que tcpdump está instalado</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">which</span> tcpdump</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>/usr/sbin/tcpdump</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Listar interfaces de red disponibles</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">tcpdump</span> <span class="at">-D</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>1.eth0 [Up, Running]
+2.lo [Up, Running, Loopback]</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Capturar 50 paquetes en la interfaz de loopback y guardar</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">tcpdump</span> <span class="at">-i</span> lo <span class="at">-c</span> 50 <span class="at">-w</span> ~/laboratorio/evidencias/capture.pcap</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Leer la captura y mostrar resumen</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">tcpdump</span> <span class="at">-r</span> ~/laboratorio/evidencias/capture.pcap <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada:</p>
+<pre><code>reading from file capture.pcap, link-type EN10MB (Ethernet)
+10:00:01.123456 IP localhost.43210 &gt; localhost.8080: Flags [S], seq 123456, win 65495
+10:00:01.123789 IP localhost.8080 &gt; localhost.43210: Flags [S.], seq 654321, ack 123457</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Filtrar solo tráfico ICMP (ping) de una captura existente</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">tcpdump</span> <span class="at">-r</span> ~/laboratorio/evidencias/capture.pcap icmp</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="note">
+<p><strong>Nota del laboratorio:</strong> Si no tienes tráfico en loopback, genera algo con <code>ping localhost</code> en otra terminal mientras capturas.</p>
+</div>
+<hr>
+</section>
+<section id="e2-configurar-logrotate-para-una-aplicación-personalizada" class="level3">
+<h3 class="anchored" data-anchor-id="e2-configurar-logrotate-para-una-aplicación-personalizada">E2: Configurar logrotate para una aplicación personalizada</h3>
+<p><strong>Objetivo:</strong> Crear una configuración de logrotate para los logs de tu laboratorio.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Crear directorio de logs de la aplicación</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/laboratorio/logs</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Generar logs de ejemplo (simulando una app)</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">$(</span><span class="fu">date</span><span class="va">)</span><span class="st"> — Inicio de aplicación"</span> <span class="op">&gt;&gt;</span> ~/laboratorio/logs/app.log</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">$(</span><span class="fu">date</span><span class="va">)</span><span class="st"> — Usuario autenticado"</span> <span class="op">&gt;&gt;</span> ~/laboratorio/logs/app.log</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">$(</span><span class="fu">date</span><span class="va">)</span><span class="st"> — Error: timeout de conexión"</span> <span class="op">&gt;&gt;</span> ~/laboratorio/logs/app.log</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Crear archivo de configuración de logrotate</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nano /etc/logrotate.d/laboratorio-app</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Contenido del archivo:</p>
+<pre><code>/home/estudiante/laboratorio/logs/*.log {
+    daily
+    missingok
+    rotate 5
+    compress
+    delaycompress
+    notifempty
+    create 0640 estudiante estudiante
+}</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Verificar sintaxis de configuración</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> logrotate <span class="at">-d</span> /etc/logrotate.d/laboratorio-app</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada:</p>
+<pre><code>reading config file /etc/logrotate.d/laboratorio-app
+Rotating: /home/estudiante/laboratorio/logs/*.log</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Forzar una rotación para probar</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> logrotate <span class="at">-f</span> /etc/logrotate.d/laboratorio-app</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Verificar que se creó el archivo rotado</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span> ~/laboratorio/logs/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada:</p>
+<pre><code>-rw-r--r-- 1 estudiante estudiante  89 Jan 1 11:00 app.log
+-rw-r--r-- 1 estudiante estudiante 156 Jan 1 10:59 app.log.1</code></pre>
+<hr>
+</section>
+<section id="e3-escribir-un-informe-de-seguridad-usando-plantilla.md" class="level3">
+<h3 class="anchored" data-anchor-id="e3-escribir-un-informe-de-seguridad-usando-plantilla.md">E3: Escribir un informe de seguridad usando plantilla.md</h3>
+<p><strong>Objetivo:</strong> Documentar un hallazgo de seguridad siguiendo la estructura de <code>plantilla.md</code>.</p>
+<p>La plantilla de respuestas (<code>plantilla.md</code>) tiene una estructura específica que debes seguir. Cada reto incluye estas secciones:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 59%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Sección</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Objetivo</strong></td>
+<td>Qué se busca lograr con el ejercicio</td>
+</tr>
+<tr class="even">
+<td><strong>Comandos utilizados</strong></td>
+<td>Los comandos ejecutados (en bloque de código)</td>
+</tr>
+<tr class="odd">
+<td><strong>Salida obtenida</strong></td>
+<td>La salida real de los comandos (en bloque de código)</td>
+</tr>
+<tr class="even">
+<td><strong>Respuesta</strong></td>
+<td>Tu interpretación o conclusión</td>
+</tr>
+<tr class="odd">
+<td><strong>Frase revelada</strong></td>
+<td>Tabla de progreso del reto</td>
+</tr>
+</tbody>
+</table>
+<p>Ejemplo aplicado a un análisis de logs:</p>
+<p><strong>Objetivo:</strong> Identificar intentos de acceso no autorizado en logs del sistema.</p>
+<p><strong>Comandos utilizados:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">"Failed password"</span> /var/log/auth.log <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-20</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Salida obtenida:</strong></p>
+<pre><code>Jan 1 10:30:01 lab sshd[1234]: Failed password for root from 192.168.1.50 port 54321
+Jan 1 10:30:03 lab sshd[1235]: Failed password for root from 192.168.1.50 port 54322
+Jan 1 10:30:05 lab sshd[1236]: Failed password for invalid user admin from 192.168.1.50</code></pre>
+<p><strong>Respuesta:</strong> Se detectaron 3 intentos fallidos de SSH desde la IP 192.168.1.50 en un intervalo de 4 segundos, lo que indica un ataque de fuerza bruta automatizado. Se recomienda bloquear la IP con <code>iptables</code> o <code>fail2ban</code>.</p>
+<p><strong>Frase revelada:</strong> ⬜ ⬜ ⬜ ⬜ ✅</p>
+<div class="note">
+<p><strong>Nota del instructor:</strong> Un informe de seguridad no es un copy-paste de logs. Es tu <strong>interpretación</strong> de lo que los logs significan. La sección “Respuesta” es donde demuestras que entiendes, no solo que ejecutaste comandos.</p>
+</div>
+<hr>
+</section>
+<section id="e4-analizar-handshake-tls-con-openssl-s_client" class="level3">
+<h3 class="anchored" data-anchor-id="e4-analizar-handshake-tls-con-openssl-s_client">E4: Analizar handshake TLS con openssl s_client</h3>
+<p><strong>Objetivo:</strong> Verificar la configuración TLS de un servidor remoto y extraer información del certificado.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Verificar que openssl está instalado</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">which</span> openssl</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>/usr/bin/openssl</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Conectar a un servidor y ver el certificado</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> s_client <span class="at">-connect</span> ejemplo.com:443 <span class="at">-servername</span> ejemplo.com <span class="op">&lt;</span> /dev/null <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">|</span> <span class="fu">head</span> <span class="at">-20</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada:</p>
+<pre><code>CONNECTED(00000003)
+---
+Certificate chain
+ 0 s:CN = ejemplo.com
+   i:CN = Let's Encrypt Authority X3
+---</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Extraer fechas de validez del certificado</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> s_client <span class="at">-connect</span> ejemplo.com:443 <span class="op">&lt;</span> /dev/null <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">|</span> <span class="ex">openssl</span> x509 <span class="at">-noout</span> <span class="at">-dates</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>notBefore=Jan  1 00:00:00 2025 GMT
+notAfter=Dec 31 23:59:59 2025 GMT</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Verificar versión TLS soportada</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> s_client <span class="at">-connect</span> ejemplo.com:443 <span class="at">-tls1_2</span> <span class="op">&lt;</span> /dev/null <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="st">"Protocol"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>Protocol  : TLSv1.2</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Guardar resultados en un archivo para el informe</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> s_client <span class="at">-connect</span> ejemplo.com:443 <span class="op">&lt;</span> /dev/null <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">|</span> <span class="ex">openssl</span> x509 <span class="at">-noout</span> <span class="at">-text</span> <span class="op">&gt;</span> ~/laboratorio/evidencias/certificado.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="warning">
+<p><strong>Advertencia de seguridad:</strong> Analizar servidores sin autorización puede ser considerado reconocimiento activo. Usa este conocimiento SOLO contra servidores que te pertenezcan o en entornos de laboratorio autorizados.</p>
+</div>
+<hr>
+</section>
+<section id="e5-generar-certificados-tls-autofirmados-con-openssl-req" class="level3">
+<h3 class="anchored" data-anchor-id="e5-generar-certificados-tls-autofirmados-con-openssl-req">E5: Generar certificados TLS autofirmados con openssl req</h3>
+<p><strong>Objetivo:</strong> Crear un par de claves y certificado autofirmado para proteger servicios internos o de laboratorio.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Crear directorio para certificados</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/laboratorio/certificados</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/laboratorio/certificados</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Generar clave privada RSA de 2048 bits</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> genrsa <span class="at">-out</span> servidor.key 2048</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada:</p>
+<pre><code>Generating RSA private key, 2048 bit long modulus
+.......................................+++
+..............+++
+e is 65537 (0x10001)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Generar certificado autofirmado (válido 365 días)</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> req <span class="at">-x509</span> <span class="at">-new</span> <span class="at">-nodes</span> <span class="at">-key</span> servidor.key <span class="at">-sha256</span> <span class="at">-days</span> 365 <span class="dt">\</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-out</span> servidor.crt <span class="dt">\</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-subj</span> <span class="st">"/C=EC/ST=Pichincha/L=Quito/O=Lab/CN=localhost"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Verificar el certificado generado</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> x509 <span class="at">-in</span> servidor.crt <span class="at">-noout</span> <span class="at">-text</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-20</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada (parcial):</p>
+<pre><code>Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            ab:cd:ef:...
+        Signature Algorithm: sha256WithRSAEncryption
+        Issuer: C = EC, ST = Pichincha, L = Quito, O = Lab, CN = localhost
+        Validity
+            Not Before: ...
+            Not After : ...
+        Subject: C = EC, ST = Pichincha, L = Quito, O = Lab, CN = localhost</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Verificar fechas de validez</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> x509 <span class="at">-in</span> servidor.crt <span class="at">-noout</span> <span class="at">-dates</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>notBefore=Jan  1 00:00:00 2025 GMT
+notAfter=Dec 31 23:59:59 2025 GMT</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Verificar la clave pública correspondiente</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> x509 <span class="at">-in</span> servidor.crt <span class="at">-noout</span> <span class="at">-pubkey</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
+-----END PUBLIC KEY-----</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 7. Verificar que la clave y certificado coinciden</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">diff</span> <span class="op">&lt;(</span><span class="ex">openssl</span> x509 <span class="at">-in</span> servidor.crt <span class="at">-noout</span> <span class="at">-pubkey</span><span class="op">)</span> <span class="dt">\</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>     <span class="op">&lt;(</span><span class="ex">openssl</span> rsa <span class="at">-in</span> servidor.key <span class="at">-pubout</span> <span class="dv">2</span><span class="op">&gt;</span>/dev/null<span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>(sin salida — las claves coinciden)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 8. Guardar evidencia del certificado</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> x509 <span class="at">-in</span> servidor.crt <span class="at">-noout</span> <span class="at">-text</span> <span class="op">&gt;</span> ~/laboratorio/evidencias/certificado_generado.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="note">
+<p><strong>Nota del instructor:</strong> Un certificado autofirmado NO es válido para producción — los navegantes y clientes lo rechazarán porque no está firmado por una CA confiable. Para servicios internos, laboratorios y entornos de desarrollo es perfecto. En producción, usa Let’s Encrypt o una CA organizacional.</p>
+</div>
+<div class="warning">
+<p><strong>Advertencia de seguridad:</strong> La clave privada (<code>servidor.key</code>) es el activo más sensible de tu infraestructura TLS. Si un atacante obtiene tu clave privada, puede impersonar tu servidor. Protege permisos: <code>chmod 600 servidor.key</code> y nunca la compartas.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="notas-de-seguridad-el-valor-de-la-evidencia" class="level2">
+<h2 class="anchored" data-anchor-id="notas-de-seguridad-el-valor-de-la-evidencia">Notas de seguridad: el valor de la evidencia</h2>
+<section id="cadena-de-custodia-digital" class="level3">
+<h3 class="anchored" data-anchor-id="cadena-de-custodia-digital">Cadena de custodia digital</h3>
+<p>Cuando analizas un incidente, tus logs y capturas son evidencia. Si no puedes demostrar que no fueron manipulados, la evidencia pierde valor.</p>
+<p>Principios básicos:</p>
+<ol type="1">
+<li><strong>Integridad:</strong> Calcula hashes (SHA-256) de tus capturas al obtenerlas</li>
+<li><strong>Documentación:</strong> Registra quién, cuándo y cómo se obtuvo la evidencia</li>
+<li><strong>Almacenamiento seguro:</strong> Las evidencias no deben estar en el mismo sistema comprometido</li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calcular hash de una captura para verificar integridad</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sha256sum</span> ~/laboratorio/evidencias/capture.pcap</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>a1b2c3d4e5f6...  /home/estudiante/laboratorio/evidencias/capture.pcap</code></pre>
+</section>
+<section id="el-principio-de-defensa-en-profundidad" class="level3">
+<h3 class="anchored" data-anchor-id="el-principio-de-defensa-en-profundidad">El principio de defensa en profundidad</h3>
+<p>Ninguna herramienta por sí sola te protege. La seguridad efectiva combina capas:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Capa</th>
+<th>Herramienta/Concepto</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Perímetro</td>
+<td>Firewall, iptables</td>
+</tr>
+<tr class="even">
+<td>Detección</td>
+<td>IDS, SIEM</td>
+</tr>
+<tr class="odd">
+<td>Respuesta</td>
+<td>IRP, BCP</td>
+</tr>
+<tr class="even">
+<td>Evidencia</td>
+<td>Logs, tcpdump, logrotate</td>
+</tr>
+</tbody>
+</table>
+<div class="warning">
+<p><strong>Advertencia de seguridad:</strong> Un SIEM sin analistas es decoración. Un BCP sin probar es un deseo. Las herramientas no protegen — las <strong>personas que las usan correctamente</strong> protegen.</p>
+</div>
+<hr>
+</section>
+</section>
+<section id="checklist-de-autoevaluación" class="level2">
+<h2 class="anchored" data-anchor-id="checklist-de-autoevaluación">Checklist de autoevaluación</h2>
+<p>Antes de finalizar este módulo, verifica que puedes:</p>
+<ul class="task-list">
+<li><label><input type="checkbox">Explicar qué es un log y por qué es fundamental en ciberseguridad</label></li>
+<li><label><input type="checkbox">Capturar tráfico de red con <code>tcpdump</code> y guardar en archivo <code>.pcap</code></label></li>
+<li><label><input type="checkbox">Leer y filtrar capturas guardadas con <code>tcpdump -r</code></label></li>
+<li><label><input type="checkbox">Configurar <code>logrotate</code> para rotar, comprimir y eliminar logs automáticamente</label></li>
+<li><label><input type="checkbox">Explicar qué es un SIEM y qué problema resuelve</label></li>
+<li><label><input type="checkbox">Diferenciar logging tradicional de un SIEM</label></li>
+<li><label><input type="checkbox">Describir los componentes clave de un BCP (RTO, RPO, análisis de impacto)</label></li>
+<li><label><input type="checkbox">Analizar un handshake TLS con <code>openssl s_client</code></label></li>
+<li><label><input type="checkbox">Estructurar un informe de seguridad usando plantilla.md (objetivo, comandos, salida, respuesta)</label></li>
+<li><label><input type="checkbox">Generar una clave privada RSA y un certificado autofirmado con <code>openssl req -x509</code></label></li>
+<li><label><input type="checkbox">Verificar un certificado con <code>openssl x509</code> (fechas, emisor, clave pública)</label></li>
+<li><label><input type="checkbox">Calcular el hash de un archivo de evidencia para verificar integridad</label></li>
+<li><label><input type="checkbox">Aplicar el principio de defensa en profundidad al diseñar una arquitectura de seguridad</label></li>
+<li><label><input type="checkbox">Entender por qué la cadena de custodia digital importa en incidentes de seguridad</label></li>
+</ul>
+<div class="note">
+<p><strong>Nota del instructor:</strong> Si no puedes marcar al menos 10 de estos 14 ítems, repasa los ejercicios. Los logs y la documentación son lo que separa a un técnico de un profesional. No avances con dudas.</p>
+</div>
+<hr>
+</section>
+<section id="próximo-paso" class="level2">
+<h2 class="anchored" data-anchor-id="próximo-paso">Próximo paso</h2>
+<p>Has completado el último módulo temático de esta guía. Ahora tienes las bases para capturar tráfico, gestionar logs, entender SIEMs y documentar incidentes. El siguiente paso es <strong>practicar</strong>: vuelve a los ejercicios, modifica los parámetros, rompe cosas en tu laboratorio y repara lo que rompas.</p>
+<blockquote class="blockquote">
+<p><strong>“El conocimiento sin práctica es teoría. La práctica sin conocimiento es peligro. La combinación de ambos es ciberseguridad.”</strong></p>
+</blockquote>
+<div class="center">
+<p><a href="./index.qmd">← Volver al índice de la guía</a></p>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

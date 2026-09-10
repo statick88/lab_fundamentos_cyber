@@ -3,26 +3,49 @@
 # Este archivo elimina la duplicación de mapeos en common.sh, unidad.sh, menu.sh e interactive.sh
 
 # === MANIFIESTO DE UNIDADES ===
-# Índices: 1..18 (cada directorio en units/ tiene su propia entrada)
-# Total: 175 retos (60 CORE + 115 OPTATIVOS) — alineado con test.sh reales
+# Índices: 1..20 (cada directorio en units/ tiene su propia entrada)
+# Total: 188 retos (73 CORE + 115 OPTATIVOS) — alineado con test.sh reales
+#
+# Orden de unidades (índices 1..20):
+#   1  i                        unit-I            Principios y Gestión de Riesgo          M1
+#   2  ii-firewalls-redes       unit-II           Filtrado de Red y Firewalls            M2
+#   3  ii-ids-intrusion-detect  unit-II-ids       Detección de Intrusos con Suricata     M2
+#   4  ii                       unit-ii           Redes y Protocolos (legacy)            M1
+#   5  iii-iam-mfa              unit-III          IAM, MFA y Control de Acceso           M2
+#   6  iii                      unit-iii          Scripting Bash (legacy)                M2
+#   7  iv-criptografia-cvss     unit-IV           Criptografía y CVSS                    M3
+#   8  iv                       unit-iv           Criptografía Aplicada (legacy)         M3
+#   9  v-logging-siem-bcp       unit-V            Logging, SIEM y BCP                    M4
+#  10  v                        unit-v            Procesos y Servicios (legacy)          M4
+#  11  vi                       unit-VI           Almacenamiento y LVM                  M1
+#  12  vii                      unit-VII          Hardening y CIS Benchmarks            M3
+#  13  viii                     unit-VIII         Docker                                 M3
+#  14  ix                       unit-IX           Nginx                                  M4
+#  15  x                        unit-X            SSL/TLS y Criptografía Aplicada       M4
+#  16  xi                       unit-XI           Backup y Recuperación                 M4
+#  17  checkpoint-ii            checkpoint-II     Checkpoint Módulo II                   M2
+#  18  checkpoint-iv            checkpoint-IV     Checkpoint Módulo IV                   M4
+#  19  checkpoint-v             checkpoint-V      Checkpoint Módulo V                    M5
+#  20  i-risk-assessment        unit-I-risk       Evaluación de Riesgos (ISO 31000)      M1
 
 UNIT_NAMES=(
-  "unit-I"            "unit-II"            "unit-ii"            "unit-III"           "unit-iii"
-  "unit-IV"           "unit-iv"            "unit-V"             "unit-V-processes"   "unit-VI"
-  "unit-VII"          "unit-VIII"          "unit-IX"            "unit-X"             "unit-XI"
-  "checkpoint-II"     "checkpoint-IV"      "checkpoint-V"
+  "unit-I"            "unit-II"            "unit-II-ids"        "unit-ii"            "unit-III"
+  "unit-iii"          "unit-IV"            "unit-iv"            "unit-V"             "unit-v"
+  "unit-VI"           "unit-VII"           "unit-VIII"          "unit-IX"            "unit-X"
+  "unit-XI"           "checkpoint-II"      "checkpoint-IV"      "checkpoint-V"       "unit-I-risk"
 )
 
 UNIT_DIRS=(
-  "i"                 "ii-firewalls-redes" "ii"                 "iii-iam-mfa"        "iii"
-  "iv-criptografia-cvss" "iv"              "v-logging-siem-bcp" "v"                  "vi"
-  "vii"               "viii"              "ix"                 "x"                  "xi"
-  "checkpoint-ii"     "checkpoint-iv"     "checkpoint-v"
+  "i"                 "ii-firewalls-redes" "ii-ids-intrusion-detection" "ii"                 "iii-iam-mfa"
+  "iii"               "iv-criptografia-cvss" "iv"              "v-logging-siem-bcp" "v"
+  "vi"                "vii"               "viii"              "ix"                 "x"
+  "xi"                "checkpoint-ii"     "checkpoint-iv"     "checkpoint-v"       "i-risk-assessment"
 )
 
 UNIT_TITLES=(
   "Principios y Gestión de Riesgo"
   "Filtrado de Red y Firewalls"
+  "Detección de Intrusos con Suricata"
   "Redes y Protocolos"
   "IAM, MFA y Control de Acceso"
   "Scripting Bash"
@@ -35,51 +58,54 @@ UNIT_TITLES=(
   "Docker"
   "Nginx"
   "SSL/TLS y Criptografía Aplicada"
-  "Docker Compose + DB"
+  "Backup y Recuperación"
   "Checkpoint Módulo II"
   "Checkpoint Módulo IV"
   "Checkpoint Módulo V"
+  "Evaluación de Riesgos (ISO 31000)"
 )
 
 UNIT_ICONOS=(
-  "🛡️" "🔥" "🌐" "👤" "💻"
-  "🔐" "🔬" "📊" "⚙️" "💾"
-  "🛡️" "🐳" "🌐" "🔒" "🐘"
-  "✅" "✅" "✅"
+  "🛡️" "🔥" "🔍" "🌐" "👤"
+  "💻" "🔐" "🔬" "📊" "⚙️"
+  "💾" "🛡️" "🐳" "🌐" "🔒"
+  "🐘" "✅" "✅" "✅" "📋"
 )
 
-# Cantidad de retos por unidad (175 total, alineado con test.sh reales)
+# Cantidad de retos por unidad (188 total, alineado con test.sh reales)
+# CORE: unit-I(10)+unit-II(10)+unit-II-ids(3)+unit-III(5)+unit-IV(10)+unit-V(10)+checkpoints(15)+i-risk-assessment(10) = 73
+# OPT: 188 - 73 = 115
 UNIT_RETOS=(
-  10   10   10   5   15
-  10   10   10   10  10
-  15   10   10  15  10
-   5    5    5
+  10   10    3   10    5
+  15   10   10   10   10
+  10   15   10   10   15
+  10    5    5    5   10
 )
 
 # Clasificación pedagógica: 1 = CORE obligatorio, 0 = OPTATIVO/exploratorio
-# Total CORE: 60 retos. Total OPT: 115 retos.
-# CORE: unit-I(10)+unit-II(10)+unit-III-iam-mfa(5)+unit-IV(10)+unit-V(10)+checkpoints(15) = 60
+# Total CORE: 73 retos. Total OPT: 115 retos.
+# CORE: unit-I(10)+unit-II(10)+unit-II-ids(3)+unit-III-iam-mfa(5)+unit-IV(10)+unit-V(10)+checkpoints(15)+i-risk-assessment(10) = 73
 UNIT_CORE=(
-  1   1   0    1    0
-  1   0    1    0    0
-  0    0    0    0    0
-  1    1    1
+  1   1   1   0   1
+  0   1   0   1   0
+  0   0   0   0   0
+  0   1   1   1   1
 )
 
 # Módulo curricular al que pertenece cada unidad
-# M1: unit-I(1), unit-ii(3), unit-VI(9)
-# M2: unit-II(2), unit-III(4), unit-iii(5), checkpoint-II(16)
-# M3: unit-IV(6), unit-iv(7), unit-VII(10), unit-VIII(11)
-# M4: unit-V(8), unit-IX(12), unit-X(13), checkpoint-IV(17)
-# M5: unit-XI(14), unit-V-processes(9), checkpoint-V(17)
+# M1: unit-I(1), unit-ii(4), unit-VI(11), i-risk-assessment(20)
+# M2: unit-II(2), unit-II-ids(3), unit-III(5), unit-iii(6), checkpoint-II(17)
+# M3: unit-IV(7), unit-iv(8), unit-VII(12), unit-VIII(13)
+# M4: unit-V(9), unit-v(10), unit-IX(14), unit-X(15), unit-XI(16), checkpoint-IV(18)
+# M5: checkpoint-V(19)
 UNIT_MODULE=(
-  1   2   1    2    2
-  3   3    4    5    1
-  3    3    4    4    5
-  2    4    5
+  1   2   2   1   2
+  2   3   3   4   4
+  1   3   3   4   4
+  4   2   4   5   1
 )
 
-UNIT_COUNT=18
+UNIT_COUNT=20
 
 # === FUNCIONES DE CONSULTA ===
 
@@ -143,14 +169,13 @@ is_reto_core() {
     local unit_idx="$1"
     local reto_num="$2"
     if [ "$unit_idx" -lt 1 ] || [ "$unit_idx" -gt "$UNIT_COUNT" ]; then
-        echo 0
-        return
+        return 1
     fi
     local core_flag="${UNIT_CORE[$((unit_idx-1))]}"
     if [ "$core_flag" = "1" ]; then
-        echo 1
+        return 0
     else
-        echo 0
+        return 1
     fi
 }
 

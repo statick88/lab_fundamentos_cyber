@@ -1,6 +1,8 @@
 # Laboratorio Interactivo: Fundamentos de Ciberseguridad (ABC-CYB-101)
 
-18 unidades progresivas · 175 retos (60 CORE + 115 OPT) · evaluación automática · frase secreta oculta. Todo corre en Docker.
+19 unidades progresivas · 178 retos (63 CORE + 115 OPT) · evaluación automática · frase secreta oculta. Todo corre en Docker.
+
+## Ebook interactivo: 11 módulos teóricos alineados con las 18 unidades del contenedor.
 
 ## Quick path
 
@@ -12,32 +14,35 @@ docker compose up -d
 docker compose exec lab-linux bash
 ```
 
+Usuario: `estudiante` / Contraseña: `lab123`
+
 Dentro del contenedor: `menu` · `jugar` · `retos` · `evaluar` · `progreso`
 
 ## Alineación Curricular ABC-CYB-101
 
 | Módulo | Tema | Unidad | Retos |
 |--------|------|:------:|:-----:|
-| I | Principios y Gestión de Riesgo | 1 (unit-I) | 10 |
+| I | Linux para Ciberseguridad: Consola, Permisos y Errores | 1 (unit-I) | 10 |
 | I | Redes y Protocolos | 3 (unit-ii) | 10 |
+| I | Firewalls y Filtrado de Red | 2 (unit-II) | 10 |
+| II | Detección de Intrusos con Suricata | 2 (unit-II-ids) | 3 |
 | I | Almacenamiento y LVM (ampliación) | 9 (unit-VI) | 10 |
-| II | Filtrado de Red y Firewalls | 2 (unit-II) | 10 |
 | II | IAM, MFA y Control de Acceso | 4 (unit-III / iii-iam-mfa) | 5 |
 | II | Scripting Bash | 5 (unit-iii) | 15 |
 | II | Checkpoint Módulo II | 16 (checkpoint-ii) | 5 |
 | III | Criptografía y CVSS | 6 (unit-IV) | 10 |
 | III | Criptografía Aplicada | 7 (unit-iv) | 10 |
 | III | Logging, SIEM y BCP | 8 (unit-V) | 10 |
-| III | Procesos y Servicios | 9 (unit-V-processes) | 10 |
+| III | Procesos y Servicios | 9 (unit-V / v) | 10 |
 | III | Hardening y CIS Benchmarks | 10 (unit-VII) | 15 |
 | III | Docker (contenedores) | 11 (unit-VIII) | 10 |
-| IV | Nginx | 12 (unit-IX) | 10 |
+| IV | Nginx: Hardening de Servidores Web | 12 (unit-IX) | 10 |
 | IV | SSL/TLS y Criptografía Aplicada | 13 (unit-X) | 15 |
-| IV | Docker Compose + DB | 14 (unit-XI) | 10 |
+| IV | Backup y Recuperación ante Incidentes | 14 (unit-XI) | 10 |
 | IV | Checkpoint Módulo IV | 17 (checkpoint-iv) | 5 |
 | V | Checkpoint Módulo V | 18 (checkpoint-v) | 5 |
 
-**Total: 18 unidades · 175 retos (60 CORE + 115 OPT).**
+**Total: 19 unidades · 178 retos (63 CORE + 115 OPT).**
 
 ## Comandos del contenedor
 
@@ -182,9 +187,10 @@ lab-linux/
 │   ├── colors.sh           # Colores de terminal
 │   ├── banner.sh           # Banners visuales
 │   └── unidad.sh           # Cambiar unidad (1-18)
-├── units/                  # 18 directorios (14 nuevas + 4 legacy)
+├── units/                  # 18+ directorios (14 nuevas + 4 legacy)
 │   ├── i/                  # Principios y Gestión de Riesgo (10 retos, CORE)
 │   ├── ii-firewalls-redes/ # Filtrado de Red y Firewalls (10 retos, CORE)
+│   ├── ii-ids-intrusion-detection/ # Detección de Intrusos con Suricata (3 retos, CORE)
 │   ├── iii-iam-mfa/        # IAM, MFA y Control de Acceso (5 retos, CORE)
 │   ├── iii/                # Scripting Bash (15 retos, OPT)
 │   ├── iv-criptografia-cvss/ # Criptografía y CVSS (10 retos, CORE)
@@ -194,7 +200,7 @@ lab-linux/
 │   ├── viii/               # Docker (10 retos, OPT)
 │   ├── ix/                 # Nginx (10 retos, OPT)
 │   ├── x/                  # SSL/TLS y Criptografía Aplicada (15 retos, OPT)
-│   ├── xi/                 # Docker Compose + DB (10 retos, OPT)
+│   ├── xi/                 # Backup y Recuperación (10 retos, OPT)
 │   ├── ii/                 # Redes y Protocolos (legacy, 10 retos, OPT)
 │   ├── iv/                 # Criptografía Aplicada (legacy, 10 retos, OPT)
 │   ├── v/                  # Procesos y Servicios (legacy, 10 retos, OPT)
@@ -224,31 +230,42 @@ quarto render content/ebook-guia/
 open content/ebook-guia/index.html
 ```
 
-El ebook cubre 6 módulos temáticos:
+El ebook cubre 11 módulos temáticos:
 
 | Módulo | Contenido | Archivo |
 |--------|-----------|---------|
-| 1 | Principios y Gestión de Riesgo | `modulo-01-principios-riesgo.qmd` |
-| 2 | Redes, Firewalls y Servicios | `modulo-02-redes-firewalls.qmd` |
-| 3 | Scripting y Control de Acceso | `modulo-03-scripting-acceso.qmd` |
-| 4 | Docker y Contenedores | `modulo-04-docker-contenedores.qmd` |
-| 5 | Wargames y Ataques Controlados | `modulo-05-wargames.qmd` |
-| 6 | Logging, SIEM y BCP | `modulo-06-logging-siem-bcp.qmd` |
+| **0** | Guía de Estudio — Diagnóstico y método | `index.qmd` |
+| **1** | Linux para Ciberseguridad: Consola, Permisos y Errores | `modulo-01-linux-consola.qmd` |
+| **2** | Reconocimiento de Red y Superficie de Ataque | `modulo-02-reconocimiento-redes.qmd` |
+| **3** | Scripting y Control de Acceso | `modulo-03-git.qmd` |
+| **4** | Docker y Contenedores | `modulo-04-docker-contenedores.qmd` |
+| **5** | Wargames y Ataques Controlados | `modulo-05-wargames.qmd` |
+| **6** | Logging, SIEM y BCP | `modulo-06-logging-siem-bcp.qmd` |
+| **7** | Almacenamiento Cifrado y Protección de Datos | `modulo-07-almacenamiento-cifrado.qmd` |
+| **8** | Security Hardening y CIS Benchmarks | `modulo-08-security-hardening.qmd` |
+| **9** | Nginx: Hardening de Servidores Web | `modulo-09-nginx.qmd` |
+| **10** | SSL/TLS: Certificados y Cifrado en Tránsito | `modulo-10-ssl-tls.qmd` |
+| **11** | Backup y Recuperación ante Incidentes | `modulo-11-backup-recuperacion.qmd` |
+| **—** | IAM, MFA y Control de Acceso (complementario) | `modulo-iam-mfa-control-acceso.qmd` |
+| **—** | Firewalls y Filtrado de Red (complementario) | `modulo-firewalls-filtrado-red.qmd` |
+| **—** | Criptografía y CVSS (complementario) | `modulo-criptografia-cvss.qmd` |
+| **—** | Procesos y Servicios (complementario) | `modulo-procesos-servicios.qmd` |
 
 Cada módulo incluye ejercicios prácticos con evidencia, advertencias de seguridad, notas del instructor y checklist de autoevaluación.
 
-## Novedades v2.0
+## Novedades v2.1
 
 - **Alineación curricular ABC-CYB-101**: 18 unidades organizadas en 5 módulos
-- **Ebook interactivo**: 6 módulos en Quarto con ejercicios, evidencias y checklist
-- **Nuevas unidades**: Firewalls, IAM/MFA, Criptografía/CVSS, Logging/SIEM/BCP
+- **Ebook interactivo**: 11 módulos core + 4 módulos complementarios en Quarto
+- **Módulos complementarios**: IAM/MFA, Firewalls, Criptografía/CVSS, Procesos y Servicios
+- **Contenido cybersecurity-first**: módulos reenfocados a ciberseguridad, no Linux server admin
 - **Checkpoints**: Evaluaciones formativas automáticas por módulo
 - **Hardening CIS**: Referencias a CIS Benchmarks en unidad VII
 - **Scripting criptográfico**: Hashes SHA-256, SHA-3, firmas digitales
 - **SSL/TLS ampliado**: RSA 4096, ECC secp384r1, verificación de cadena
 - **Reset script**: Limpia configuraciones entre clases
-- **175 retos prácticos** con evaluación automática
-- **Clasificación CORE/OPT**: 60 retos obligatorios + 115 optativos para sesiones de 24h
+- **178 retos prácticos** con evaluación automática
+- **Clasificación CORE/OPT**: 63 retos obligatorios + 115 optativos para sesiones de 24h
 - **Anti-tampering**: Progreso en /var/lab-state (root-owned, no escribible por estudiante)
 - **Validadores estrictos**: CVSS requiere script Python con anti-bypass; logs verifican archivos reales; firewall valida estado ufw/iptables con sudo
 - **Red aislada**: driver_opts sin IP masquerade, bind a 127.0.0.1
