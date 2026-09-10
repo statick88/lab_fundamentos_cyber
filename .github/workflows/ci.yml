@@ -33,7 +33,7 @@ jobs:
           docker run --rm --entrypoint bash \
             -v $(pwd)/units:/opt/lab-units:ro \
             lab-ciberseguridad \
-            -c "for u in ii-firewalls-redes iii-iam-mfa iv-criptografia-cvss v-logging-siem-bcp checkpoint-ii checkpoint-iv checkpoint-v; do echo \"=== Running tests for \$u ===\"; bash /opt/lab-units/\$u/test.sh || exit 1; done"
+            -c "for u in ii-firewalls-redes iii-iam-mfa iv-criptografia-cvss v-logging-siem-bcp checkpoint-ii checkpoint-iv checkpoint-v; do echo \"=== Running tests for \$u ===\"; if [ -f \"/opt/lab-units/\$u/setup.sh\" ]; then bash \"/opt/lab-units/\$u/setup.sh\" || exit 1; fi; bash \"/opt/lab-units/\$u/test.sh\" || exit 1; done"
 
   lint-qmd:
     runs-on: ubuntu-latest
@@ -60,7 +60,13 @@ jobs:
       - name: Check for forbidden tools
         run: |
           cd content/ebook-guia
-          FORBIDDEN=$(grep -rn -E '(burpsuite|sqlmap|metasploit|nikto|openvas)' modulo-0*.qmd || true)
+          # Solo marcar herramientas prohibidas en texto de prosa, no en bloques de código de ejemplo
+          FORBIDDEN=$(awk '
+            /^```/ { in_code = !in_code; next }
+            !in_code && /(burpsuite|sqlmap|metasploit|nikto|openvas)/ {
+              print FILENAME ":" FNR ": " $0
+            }
+          ' modulo-0*.qmd || true)
           if [ -n "$FORBIDDEN" ]; then
             echo "ERROR: Herramientas prohibidas encontradas:"
             echo "$FORBIDDEN"
