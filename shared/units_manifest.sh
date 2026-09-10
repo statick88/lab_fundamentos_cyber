@@ -3,10 +3,10 @@
 # Este archivo elimina la duplicación de mapeos en common.sh, unidad.sh, menu.sh e interactive.sh
 
 # === MANIFIESTO DE UNIDADES ===
-# Índices: 1..20 (cada directorio en units/ tiene su propia entrada)
-# Total: 188 retos (73 CORE + 115 OPTATIVOS) — alineado con test.sh reales
+# Índices: 1..21 (cada directorio en units/ tiene su propia entrada)
+# Total: 198 retos (83 CORE + 115 OPTATIVOS) — alineado con test.sh reales
 #
-# Orden de unidades (índices 1..20):
+# Orden de unidades (índices 1..21):
 #   1  i                        unit-I            Principios y Gestión de Riesgo          M1
 #   2  ii-firewalls-redes       unit-II           Filtrado de Red y Firewalls            M2
 #   3  ii-ids-intrusion-detect  unit-II-ids       Detección de Intrusos con Suricata     M2
@@ -27,12 +27,15 @@
 #  18  checkpoint-iv            checkpoint-IV     Checkpoint Módulo IV                   M4
 #  19  checkpoint-v             checkpoint-V      Checkpoint Módulo V                    M5
 #  20  i-risk-assessment        unit-I-risk       Evaluación de Riesgos (ISO 31000)      M1
+#  21  i-asset-classification   unit-I-asset      Clasificación de Activos / CSF 2.0    M1
+#   21  i-asset-classification   unit-I-asset      Clasificación de Activos / CSF 2.0    M1
 
 UNIT_NAMES=(
   "unit-I"            "unit-II"            "unit-II-ids"        "unit-ii"            "unit-III"
   "unit-iii"          "unit-IV"            "unit-iv"            "unit-V"             "unit-v"
   "unit-VI"           "unit-VII"           "unit-VIII"          "unit-IX"            "unit-X"
   "unit-XI"           "checkpoint-II"      "checkpoint-IV"      "checkpoint-V"       "unit-I-risk"
+  "unit-I-asset"
 )
 
 UNIT_DIRS=(
@@ -40,6 +43,7 @@ UNIT_DIRS=(
   "iii"               "iv-criptografia-cvss" "iv"              "v-logging-siem-bcp" "v"
   "vi"                "vii"               "viii"              "ix"                 "x"
   "xi"                "checkpoint-ii"     "checkpoint-iv"     "checkpoint-v"       "i-risk-assessment"
+  "i-asset-classification"
 )
 
 UNIT_TITLES=(
@@ -63,6 +67,7 @@ UNIT_TITLES=(
   "Checkpoint Módulo IV"
   "Checkpoint Módulo V"
   "Evaluación de Riesgos (ISO 31000)"
+  "Clasificación de Activos / CSF 2.0"
 )
 
 UNIT_ICONOS=(
@@ -70,30 +75,33 @@ UNIT_ICONOS=(
   "💻" "🔐" "🔬" "📊" "⚙️"
   "💾" "🛡️" "🐳" "🌐" "🔒"
   "🐘" "✅" "✅" "✅" "📋"
+  "🏷️"
 )
 
-# Cantidad de retos por unidad (188 total, alineado con test.sh reales)
-# CORE: unit-I(10)+unit-II(10)+unit-II-ids(3)+unit-III(5)+unit-IV(10)+unit-V(10)+checkpoints(15)+i-risk-assessment(10) = 73
-# OPT: 188 - 73 = 115
+# Cantidad de retos por unidad (198 total, alineado con test.sh reales)
+# CORE: unit-I(10)+unit-II(10)+unit-II-ids(3)+unit-III(5)+unit-IV(10)+unit-V(10)+checkpoints(15)+i-risk-assessment(10)+i-asset-classification(10) = 83
+# OPT: 198 - 83 = 115
 UNIT_RETOS=(
   10   10    3   10    5
   15   10   10   10   10
   10   15   10   10   15
   10    5    5    5   10
+  10
 )
 
 # Clasificación pedagógica: 1 = CORE obligatorio, 0 = OPTATIVO/exploratorio
-# Total CORE: 73 retos. Total OPT: 115 retos.
-# CORE: unit-I(10)+unit-II(10)+unit-II-ids(3)+unit-III-iam-mfa(5)+unit-IV(10)+unit-V(10)+checkpoints(15)+i-risk-assessment(10) = 73
+# Total CORE: 83 retos. Total OPT: 115 retos.
+# CORE: unit-I(10)+unit-II(10)+unit-II-ids(3)+unit-III-iam-mfa(5)+unit-IV(10)+unit-V(10)+checkpoints(15)+i-risk-assessment(10)+i-asset-classification(10) = 83
 UNIT_CORE=(
   1   1   1   0   1
   0   1   0   1   0
   0   0   0   0   0
   0   1   1   1   1
+  1
 )
 
 # Módulo curricular al que pertenece cada unidad
-# M1: unit-I(1), unit-ii(4), unit-VI(11), i-risk-assessment(20)
+# M1: unit-I(1), unit-ii(4), unit-VI(11), i-risk-assessment(20), i-asset-classification(21)
 # M2: unit-II(2), unit-II-ids(3), unit-III(5), unit-iii(6), checkpoint-II(17)
 # M3: unit-IV(7), unit-iv(8), unit-VII(12), unit-VIII(13)
 # M4: unit-V(9), unit-v(10), unit-IX(14), unit-X(15), unit-XI(16), checkpoint-IV(18)
@@ -103,9 +111,10 @@ UNIT_MODULE=(
   2   3   3   4   4
   1   3   3   4   4
   4   2   4   5   1
+  1
 )
 
-UNIT_COUNT=20
+UNIT_COUNT=21
 
 # === FUNCIONES DE CONSULTA ===
 

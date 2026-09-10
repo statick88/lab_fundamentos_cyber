@@ -12,7 +12,7 @@ init_state
 CURRENT_UNIT=""
 FRASES_OCULTAS=("Toda" "revolution" "comienza" "con" "un" "pass"
                 "Los" "administradores" "nunca" "duermen" "!"
-                "Ciberseguridad" "es" "todos")
+                "Ciberseguridad" "es" "todos" "Clasificación" "es" "la" "base" "de" "la" "seguridad")
 
 get_frase_for_unit() {
     local idx=$1

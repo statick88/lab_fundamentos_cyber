@@ -9,6 +9,7 @@ get_unit_num_romano() {
         1) echo "I" ;;2) echo "II" ;;3) echo "III" ;;4) echo "IV" ;;5) echo "V" ;;
         6) echo "VI" ;;7) echo "VII" ;;8) echo "VIII" ;;9) echo "IX" ;;10) echo "X" ;;
         11) echo "XI" ;;12) echo "XII" ;;13) echo "XIII" ;;14) echo "XIV" ;;15) echo "XV" ;;16) echo "XVI" ;;17) echo "XVII" ;;18) echo "XVIII" ;;19) echo "XIX" ;;
+        20) echo "XX" ;;21) echo "XXI" ;;
     esac
 }
 
