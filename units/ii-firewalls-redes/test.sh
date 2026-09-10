@@ -47,12 +47,10 @@ reto9() {
 
 reto10() {
     if [ -f "$HOME/laboratorio/redes/captura_scan.pcapng" ]; then
-        if command -v tcpdump >/dev/null 2>&1; then
-            tcpdump -nn -r "$HOME/laboratorio/redes/captura_scan.pcapng" 2>/dev/null | grep -c "SYN" >/dev/null 2>&1 && return 0
-        fi
-        local size
-        size=$(stat -c %s "$HOME/laboratorio/redes/captura_scan.pcapng" 2>/dev/null || stat -f %z "$HOME/laboratorio/redes/captura_scan.pcapng" 2>/dev/null || echo 0)
-        [ "$size" -gt 1024 ]
+        # setup.sh genera un dump de texto hex de la captura (mismo formato que los retos 1 y 3).
+        # Un paquete SYN de escaneo de puertos lleva la bandera TCP SYN (0x02),
+        # que aparece como "50 02 20 00" en el dump (offset 0x2c: puerto + flags).
+        grep -q "50 02 20 00" "$HOME/laboratorio/redes/captura_scan.pcapng" 2>/dev/null
     else
         return 1
     fi

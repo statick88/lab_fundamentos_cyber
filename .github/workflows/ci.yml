@@ -33,7 +33,23 @@ jobs:
           docker run --rm --entrypoint bash \
             -v $(pwd)/units:/opt/lab-units:ro \
             lab-ciberseguridad \
-            -c "for u in ii-firewalls-redes iii-iam-mfa iv-criptografia-cvss v-logging-siem-bcp checkpoint-ii checkpoint-iv checkpoint-v; do echo \"=== Running tests for \$u ===\"; if [ -f \"/opt/lab-units/\$u/setup.sh\" ]; then bash \"/opt/lab-units/\$u/setup.sh\" || exit 1; fi; bash \"/opt/lab-units/\$u/test.sh\" || exit 1; done"
+            -c "
+              FAILED_UNITS=()
+              for u in ii-firewalls-redes iii-iam-mfa iv-criptografia-cvss v-logging-siem-bcp checkpoint-ii checkpoint-iv checkpoint-v; do
+                echo \"=== Running tests for \$u ===\"
+                if [ -f \"/opt/lab-units/\$u/setup.sh\" ]; then
+                  bash \"/opt/lab-units/\$u/setup.sh\" || true
+                fi
+                if ! bash \"/opt/lab-units/\$u/test.sh\"; then
+                  FAILED_UNITS+=(\"\$u\")
+                fi
+              done
+              if [ \${#FAILED_UNITS[@]} -gt 0 ]; then
+                echo \"FAILED units: \${FAILED_UNITS[*]}\"
+                exit 1
+              fi
+              echo \"All units passed\"
+            "
 
   lint-qmd:
     runs-on: ubuntu-latest
@@ -105,9 +121,10 @@ jobs:
       - name: Validate index TOC lists exactly 6 modules
         run: |
           cd content/ebook-guia
-            MODULE_COUNT=$(grep -cE '^\| \*\*[1-6]' index.qmd || true)
+          # Count module rows in the TOC table (rows `| **X** |` where X is 0, I, II, III, IV, V)
+          MODULE_COUNT=$(grep -cE '^\| \*\*([0IVX]+)\*\* \|' index.qmd || true)
           if [ "$MODULE_COUNT" -ne 6 ]; then
-            echo "ERROR: index.qmd lists $MODULE_COUNT modules (expected 6)"
+            echo "ERROR: index.qmd TOC lists $MODULE_COUNT module rows (expected 6)"
             exit 1
           fi
-          echo "✅ index.qmd lists exactly 6 modules"
+          echo "✅ index.qmd TOC lists exactly 6 module rows"
