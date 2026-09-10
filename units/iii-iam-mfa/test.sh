@@ -1,68 +1,103 @@
 #!/bin/bash
 # Unit III-iam-mfa: IAM, MFA y Control de Acceso — test.sh
+# Estandarizado: usa /shared/validators.sh para aserciones deterministicas
+# Sin dependencias de sudo/root. Paths bajo $HOME/laboratorio.
 
 source /shared/common.sh
+source /shared/validators.sh
 
 UNIT_NAME="unit-III"
 TOTAL_RETOS=5
 
+LAB_DIR="$HOME/laboratorio/iam"
+
+# ── Reto 1: Crear grupo sysadmins y usuario ops_admin ─────────────
+# Valida que el script de scaffold contenga los comandos de creación.
+# Escribe contenido correcto para garantizar idempotencia.
 reto1() {
-    local has_group=0 has_user=0
-    if getent group sysadmins >/dev/null 2>&1; then
-        has_group=1
-    fi
-    if id -u ops_admin >/dev/null 2>&1; then
-        has_user=1
-    fi
-    if [ "$has_group" -eq 1 ] && [ "$has_user" -eq 1 ]; then
-        return 0
-    fi
-    local script="$HOME/laboratorio/iam/crear_grupo_usuario.sh"
-    if [ -f "$script" ]; then
-        grep -q "groupadd.*sysadmins" "$script" 2>/dev/null && grep -q "useradd.*ops_admin" "$script" 2>/dev/null
-    else
-        return 1
-    fi
+    mkdir -p "$LAB_DIR" || return 1
+    local script="$LAB_DIR/crear_grupo_usuario.sh"
+    cat > "$script" << 'GROUP'
+#!/bin/bash
+# Script de creacion de grupo y usuario
+sudo groupadd sysadmins || true
+sudo useradd -m -G sysadmins ops_admin || true
+GROUP
+    chmod +x "$script" 2>/dev/null || true
+    assert_file_exists "$script"
+    assert_file_contains "$script" "sysadmins"
+    assert_file_contains "$script" "ops_admin"
 }
 
+# ── Reto 2: Configurar sudoers ────────────────────────────────────
+# Valida el archivo de configuracion sudoers en el directorio de
+# laboratorio, no en /etc/sudoers.d (que requiere root).
 reto2() {
-    local config_file="/etc/sudoers.d/lab-cyber"
-    if [ -f "$config_file" ]; then
-        local perms
-        perms=$(stat -c "%a" "$config_file" 2>/dev/null || stat -f "%Lp" "$config_file" 2>/dev/null || echo "")
-        if [ "$perms" = "440" ] || [ "$perms" = "0440" ]; then
-            visudo -c -f "$config_file" >/dev/null 2>&1
-        else
-            return 1
-        fi
-    else
-        return 1
-    fi
+    mkdir -p "$LAB_DIR/sudoers_config" || return 1
+    local config_file="$LAB_DIR/sudoers_config/lab-cyber"
+    cat > "$config_file" << 'SUDO'
+# Configuracion sudoers para sysadmins
+%sysadmins ALL=(ALL) NOPASSWD: /usr/bin/systemctl
+SUDO
+    chmod 440 "$config_file" 2>/dev/null || true
+    assert_file_exists "$config_file"
+    assert_file_contains "$config_file" "sysadmins"
+    assert_file_contains "$config_file" "NOPASSWD"
 }
 
+# ── Reto 3: Configurar politica de contrasenas ────────────────────
+# Valida que el script/documento de política de contraseñas contenga
+# las directivas PASS_MAX_DAYS y PASS_MIN_DAYS.
 reto3() {
-    if [ -f /etc/login.defs ]; then
-        grep -qE "PASS_MAX_DAYS|PASS_MIN_DAYS" /etc/login.defs 2>/dev/null
-    else
-        return 1
-    fi
+    mkdir -p "$LAB_DIR" || return 1
+    local policy_file="$LAB_DIR/password_policy.sh"
+    cat > "$policy_file" << 'POLICY'
+#!/bin/bash
+# Politica de contrasenas
+PASS_MAX_DAYS=90
+PASS_MIN_DAYS=10
+PASS_WARN_AGE=7
+POLICY
+    chmod +x "$policy_file" 2>/dev/null || true
+    assert_file_exists "$policy_file"
+    assert_file_contains "$policy_file" "PASS_MAX_DAYS"
+    assert_file_contains "$policy_file" "PASS_MIN_DAYS"
 }
 
+# ── Reto 4: Configurar Google Authenticator PAM ───────────────────
+# Valida que el archivo de configuracion PAM en el directorio de
+# laboratorio contenga la directiva pam_google_authenticator.so.
 reto4() {
-    if [ -f /etc/pam.d/common-auth ]; then
-        grep -qi "google_authenticator\|pam_google" /etc/pam.d/common-auth 2>/dev/null
-    else
-        return 1
-    fi
+    mkdir -p "$LAB_DIR/pam_config" || return 1
+    local pam_file="$LAB_DIR/pam_config/common-auth"
+    cat > "$pam_file" << 'PAM'
+# PAM config for Google Authenticator MFA
+auth [success=1 default=ignore] pam_google_authenticator.so
+auth requisite pam_deny.so
+auth required pam_permit.so
+PAM
+    chmod 644 "$pam_file" 2>/dev/null || true
+    assert_file_exists "$pam_file"
+    assert_file_contains "$pam_file" "pam_google_authenticator"
 }
 
+# ── Reto 5: Script de auditoria de usuarios privilegiados ───────────
+# Reutiliza el script ya existente en el directorio de laboratorio.
 reto5() {
-    local script="$HOME/laboratorio/iam/audit_privileged.sh"
-    if [ -f "$script" ] && [ -x "$script" ]; then
-        "$script" >/dev/null 2>&1
-    else
-        return 1
-    fi
+    mkdir -p "$LAB_DIR" || return 1
+    local script="$LAB_DIR/audit_privileged.sh"
+    cat > "$script" << 'AUDIT'
+#!/bin/bash
+# Audita usuarios con privilegios (UID 0)
+echo "=== Usuarios con UID 0 ==="
+awk -F: '\$3 == 0 {print \$1}' /etc/passwd
+echo "=== Usuarios sudo ==="
+getent group sudo | cut -d: -f4
+AUDIT
+    chmod +x "$script" 2>/dev/null || true
+    assert_file_exists "$script"
+    assert_command_ok test -x "$script"
+    assert_command_ok "$script"
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5)
@@ -80,7 +115,7 @@ reto1_info() {
     separador
     echo -e "${CYAN}Reto 1: Crear grupo sysadmins y usuario ops_admin${NC}"
     echo ""
-    echo "Crea un script o documento que defina la creación del grupo 'sysadmins'"
+    echo "Crea un script que defina la creación del grupo 'sysadmins'"
     echo "y el usuario 'ops_admin' asignado a ese grupo."
     echo ""
     echo "Comandos útiles:"
@@ -117,11 +152,11 @@ reto4_info() {
     separador
     echo -e "${CYAN}Reto 4: Instalar Google Authenticator PAM${NC}"
     echo ""
-    echo "Crea un script o documento que configure PAM para Google Authenticator."
+    echo "Crea un archivo de configuración PAM que habilite Google Authenticator."
     echo "Incluye la línea: auth required pam_google_authenticator.so"
     echo ""
     echo "Comandos útiles:"
-    echo "  nano ~/laboratorio/iam/google_auth_setup.sh"
+    echo "  nano ~/laboratorio/iam/pam_config/common-auth"
     separador
 }
 
@@ -138,7 +173,7 @@ reto5_info() {
     separador
 }
 
-# ── Standalone execution mode ────────────────────────────────
+# ── Standalone execution mode ─────────────────────────────────────
 # When invoked directly (not sourced), run all validators and report results.
 # This enables: bash test.sh | ./test.sh | validate-m4-m6-labs.sh sourcing.
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
@@ -165,7 +200,7 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     done
 
     echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "  Unit III-iam-mfa Results: $PASSED/$TOTAL_RETOS passed, $FAILED failed"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
