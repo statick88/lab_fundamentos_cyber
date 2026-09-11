@@ -21,20 +21,20 @@ LAB_DIR="$HOME/laboratorio/integrador"
 reto1() {
     # risk-incident.md — assert contains "Risk" or "Riesgo"
     assert_file_exists "$LAB_DIR/risk-incident.md"
-    assert_file_contains "$LAB_DIR/risk-incident.md" "Risk\|Riesgo"
+    assert_file_contains "$LAB_DIR/risk-incident.md" "Risk" || assert_file_contains "$LAB_DIR/risk-incident.md" "Riesgo"
 }
 
 reto2() {
     # network-forensics.sh — assert executable, contains "Forensics" or "Forense"
     assert_file_exists "$LAB_DIR/network-forensics.sh"
     [ -x "$LAB_DIR/network-forensics.sh" ]
-    assert_file_contains "$LAB_DIR/network-forensics.sh" "Forensics\|Forense"
+    assert_file_contains "$LAB_DIR/network-forensics.sh" "Forensics" || assert_file_contains "$LAB_DIR/network-forensics.sh" "Forense"
 }
 
 reto3() {
     # crypto-analysis.md — assert contains "Crypto" or "Cripto"
     assert_file_exists "$LAB_DIR/crypto-analysis.md"
-    assert_file_contains "$LAB_DIR/crypto-analysis.md" "Crypto\|Cripto"
+    assert_file_contains "$LAB_DIR/crypto-analysis.md" "Crypto" || assert_file_contains "$LAB_DIR/crypto-analysis.md" "Cripto"
 }
 
 reto4() {
@@ -47,13 +47,13 @@ reto4() {
 reto5() {
     # incident-playbook.md — assert contains "Incident" or "Incidente"
     assert_file_exists "$LAB_DIR/incident-playbook.md"
-    assert_file_contains "$LAB_DIR/incident-playbook.md" "Incident\|Incidente"
+    assert_file_contains "$LAB_DIR/incident-playbook.md" "Incident" || assert_file_contains "$LAB_DIR/incident-playbook.md" "Incidente"
 }
 
 reto6() {
     # perimeter-audit.md — assert contains "Perimeter" or "Perimetral"
     assert_file_exists "$LAB_DIR/perimeter-audit.md"
-    assert_file_contains "$LAB_DIR/perimeter-audit.md" "Perimeter\|Perimetral"
+    assert_file_contains "$LAB_DIR/perimeter-audit.md" "Perimeter" || assert_file_contains "$LAB_DIR/perimeter-audit.md" "Perimetral"
 }
 
 reto7() {
@@ -65,19 +65,19 @@ reto7() {
 reto8() {
     # defense-report.md — assert contains "Defense" or "Defensa"
     assert_file_exists "$LAB_DIR/defense-report.md"
-    assert_file_contains "$LAB_DIR/defense-report.md" "Defense\|Defensa"
+    assert_file_contains "$LAB_DIR/defense-report.md" "Defense" || assert_file_contains "$LAB_DIR/defense-report.md" "Defensa"
 }
 
 reto9() {
     # remediation-plan.md — assert contains "Remediation" or "Remediación"
     assert_file_exists "$LAB_DIR/remediation-plan.md"
-    assert_file_contains "$LAB_DIR/remediation-plan.md" "Remediation\|Remediación"
+    assert_file_contains "$LAB_DIR/remediation-plan.md" "Remediation" || assert_file_contains "$LAB_DIR/remediation-plan.md" "Remediación"
 }
 
 reto10() {
     # final-assessment.md — assert contains "Assessment" or "Evaluación"
     assert_file_exists "$LAB_DIR/final-assessment.md"
-    assert_file_contains "$LAB_DIR/final-assessment.md" "Assessment\|Evaluación"
+    assert_file_contains "$LAB_DIR/final-assessment.md" "Assessment" || assert_file_contains "$LAB_DIR/final-assessment.md" "Evaluación"
 }
 
 # Array de funciones de evaluación (para compatibilidad con evaluación batch)
