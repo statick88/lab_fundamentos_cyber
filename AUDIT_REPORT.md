@@ -11,13 +11,13 @@
 
 | Pilar | PASS | FAIL | Tasa de Éxito |
 |-------|------|------|---------------|
-| Ergonomía Linux | 5 | 20 | 20% |
+| Ergonomía Linux | 6 | 19 | 24% |
 | Calidad Pedagógica | 23 | 2 | 92% |
-| Rigurosidad del Validador | 17 | 8 | 68% |
+| Rigurosidad del Validador | 18 | 7 | 72% |
 | Gamificación y Feedback | 14 | 11 | 56% |
-| **4/4 PASS** | **4** | — | **16%** |
+| **4/4 PASS** | **5** | — | **20%** |
 
-**Unidades con 4/4 PASS:** `ii-arquitectura-perimetral`, `iii-compliance-iso27001`, `iv-malware-sandbox`, `i-asset-classification` (parcial — gamificación FAIL)
+**Unidades con 4/4 PASS:** `ii-arquitectura-perimetral`, `iii-compliance-iso27001`, `iv-malware-sandbox`, `iv-lab-integrador`, `i-asset-classification` (parcial — gamificación FAIL)
 
 ---
 
@@ -45,9 +45,9 @@
 | 18 | `ii-firewalls-redes/` | 10 | FAIL | PASS | FAIL | FAIL | 1/4 |
 | 19 | `ii-ids-intrusion-detection/` | 3 | FAIL | PASS | PASS | PASS | 3/4 |
 | 20 | `iii-compliance-iso27001/` | 5 | PASS | PASS | PASS | PASS | **4/4** |
-| 21 | `iii-iam-mfa/` | 5 | FAIL | PASS | PARTIAL | PASS | 2.5/4 |
+| 21 | `iii-iam-mfa/` | 5 | PASS | PASS | PARTIAL | PASS | 3.0/4 |
 | 22 | `iv-criptografia-cvss/` | 10 | FAIL | PASS | PASS | FAIL | 2/4 |
-| 23 | `iv-lab-integrador/` | 10 | PASS | PASS | PARTIAL | PASS | 3.5/4 |
+| 23 | `iv-lab-integrador/` | 10 | PASS | PASS | PASS | PASS | **4/4** |
 | 24 | `iv-malware-sandbox/` | 10 | PASS | PASS | PASS | PASS | **4/4** |
 | 25 | `v-logging-siem-bcp/` | 10 | FAIL | PASS | FAIL | FAIL | 1/4 |
 
@@ -88,7 +88,6 @@ fi
 
 **PARTIAL (checks superficiales):**
 - `iii-iam-mfa/` — 14 validators pero algunos usan `grep` sin validación estricta
-- `iv-lab-integrador/` — 21 validators, algunos verifican keywords genéricas (`"Risk\|Riesgo"`)
 
 ### 4. Gamificación y Feedback (11 FAIL)
 
@@ -152,9 +151,9 @@ Aplicar patrón dual-path a todas las unidades que hardcodean `source /shared/co
 
 Agregar `retoN_info()`, `ICONOS[]`, `challenge_names[]` a unidades que les falta.
 
-### Fase 4 — BAJO (Validator refinement, 2 PARTIAL)
+### Fase 4 — BAJO (Validator refinement, 1 PARTIAL)
 
-Mejorar validators superficiales en `iii-iam-mfa/` y `iv-lab-integrador/`.
+Mejorar validators superficiales en `iii-iam-mfa/`.
 
 ---
 
