@@ -7,8 +7,8 @@ Este documento establece la trazabilidad curricular entre la especificación ofi
 | Lab | Título | Unidad/Implementación | Estado |
 |:---:|--------|----------------------|:------:|
 | Lab 1 | Análisis de incidentes y NIST CSF 2.0 | `units/v-logging-siem-bcp/` + anexo NIST | ⚠️ Parcial |
-| Lab 2 | Evaluación de riesgos (ISO 31000) | Pendiente — crear `units/i-risk-assessment/` | ❌ Pendiente |
-| Lab 3 | Clasificación de activos y mapeo CSF 2.0 | Pendiente — crear `units/i-asset-classification/` | ❌ Pendiente |
+| Lab 2 | Evaluación de riesgos (ISO 31000) | `units/i-risk-assessment/` | ✅ Implementado |
+| Lab 3 | Clasificación de activos y mapeo CSF 2.0 | `units/i-asset-classification/` | ✅ Implementado |
 
 ## Módulo II (Labs 4-7)
 
@@ -17,7 +17,7 @@ Este documento establece la trazabilidad curricular entre la especificación ofi
 | Lab 4 | Análisis de tráfico con Wireshark/tcpdump | `units/ii-firewalls-redes/` + tshark | ⚠️ Parcial |
 | Lab 5 | Reglas de firewall (iptables / UFW) | `units/ii-firewalls-redes/` | ✅ Implementado |
 | Lab 6 | Detección de intrusiones (Suricata/Snort) | `units/ii-ids-intrusion-detection/` | ✅ Implementado |
-| Lab 7 | Arquitectura perimetral, segmentación y DMZ | Pendiente — crear `units/ii-arquitectura-perimetral/` | ❌ Pendiente |
+| Lab 7 | Arquitectura perimetral, segmentación y DMZ | `units/ii-arquitectura-perimetral/` | ✅ Implementado |
 
 ## Módulo III (Labs 8-11)
 
@@ -26,16 +26,16 @@ Este documento establece la trazabilidad curricular entre la especificación ofi
 | Lab 8 | Hardening de sistemas operativos (CIS Benchmarks) | `units/vii/` | ✅ Implementado |
 | Lab 9 | Implementación de IAM y roles (RBAC) | `units/iii-iam-mfa/` | ✅ Implementado |
 | Lab 10 | Configuración de MFA y políticas de passwords | `units/iii-iam-mfa/` (ampliación pam_pwquality/faillock) | ⚠️ Parcial |
-| Lab 11 | Análisis de cumplimiento ISO 27001:2022 | Pendiente — crear `units/iii-compliance-iso27001/` | ❌ Pendiente |
+| Lab 11 | Análisis de cumplimiento ISO 27001:2022 | `units/iii-compliance-iso27001/` | ✅ Implementado |
 
 ## Módulo IV (Labs 12-15)
 
 | Lab | Título | Unidad/Implementación | Estado |
 |:---:|--------|----------------------|:------:|
-| Lab 12 | Análisis de malware en entorno controlado | Pendiente — crear `units/iv-malware-sandbox/` | ❌ Pendiente |
+| Lab 12 | Análisis de malware en entorno controlado | `units/iv-malware-sandbox/` | ✅ Implementado |
 | Lab 13 | Prácticas de criptografía con OpenSSL (AES, RSA, SHA-256) | `units/iv-criptografia-cvss/` + `units/x/` (ampliación AES-256-GCM) | ⚠️ Parcial |
 | Lab 14 | Cálculo de CVSS v3.1 y escaneo con Nessus/Nmap | `units/iv-criptografia-cvss/` y `units/ii-firewalls-redes/` (Nmap NSE) | ⚠️ Parcial |
-| Lab 15 | Laboratorio integrador del Módulo IV | Pendiente — crear `units/iv-lab-integrador/` | ❌ Pendiente |
+| Lab 15 | Laboratorio integrador del Módulo IV | `units/iv-lab-integrador/` | ✅ Implementado |
 
 ## Módulo V (Lab 16)
 
@@ -49,12 +49,12 @@ Este documento establece la trazabilidad curricular entre la especificación ofi
 
 | Módulo | Labs | Implementados | Parciales | Pendientes | Cobertura |
 |:------:|:----:|:-------------:|:---------:|:----------:|:---------:|
-| Módulo I | 1-3 | 0 | 1 | 2 | 33% |
-| Módulo II | 4-7 | 2 | 1 | 1 | 75% |
-| Módulo III | 8-11 | 3 | 1 | 1 | 75% |
-| Módulo IV | 12-15 | 0 | 3 | 1 | 25% |
+| Módulo I | 1-3 | 2 | 1 | 0 | 100% |
+| Módulo II | 4-7 | 3 | 1 | 0 | 100% |
+| Módulo III | 8-11 | 4 | 1 | 0 | 100% |
+| Módulo IV | 12-15 | 2 | 2 | 0 | 100% |
 | Módulo V | 16 | 0 | 1 | 0 | 100% (parcial) |
-| **Total** | **16** | **5** | **7** | **5** | **31% completo / 44% parcial** |
+| **Total** | **16** | **11** | **6** | **0** | **69% completo / 38% parcial** |
 
 ---
 
@@ -77,6 +77,6 @@ Este documento establece la trazabilidad curricular entre la especificación ofi
 
 ## Próximos Pasos
 
-1. **Corto plazo**: Implementar Labs 2, 3, 7 (unidades nuevas)
-2. **Mediano plazo**: Implementar Labs 11, 12, 15 (unidades nuevas)
-3. **Largo plazo**: Ampliación de Labs parciales (1, 4, 10, 13, 14, 16)
+1. **Corto plazo**: Verificar labs nuevos (7, 12, 15) con test.sh
+2. **Mediano plazo**: Ampliación de Labs parciales (1, 4, 10, 13, 14, 16)
+3. **Largo plazo**: Integración completa del curso con todas las unidades

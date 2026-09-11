@@ -10,7 +10,7 @@ if [ -z "$CURRENT_UNIT" ]; then
 fi
 
 if [ -z "$CURRENT_UNIT" ]; then
-    advertencia "No hay unidad seleccionada. Usa 'unidad <1-11>' para seleccionar una."
+    advertencia "No hay unidad seleccionada. Usa 'unidad <1-25>' para seleccionar una."
     exit 1
 fi
 
@@ -33,6 +33,9 @@ case "$UNIT_ROMAN_LC" in
     xi) UNIT_DIR="xi" ;;
     i-risk) UNIT_DIR="i-risk-assessment" ;;
     i-asset) UNIT_DIR="i-asset-classification" ;;
+    ii-arp) UNIT_DIR="ii-arquitectura-perimetral" ;;
+    iv-malware) UNIT_DIR="iv-malware-sandbox" ;;
+    iv-integrador) UNIT_DIR="iv-lab-integrador" ;;
     *) UNIT_DIR="" ;;
 esac
 

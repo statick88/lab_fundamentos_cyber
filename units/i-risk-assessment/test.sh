@@ -2,8 +2,14 @@
 # Unit: i-risk-assessment — Evaluación de Riesgos con matriz ISO 31000 (Lab 2)
 # Standard pattern: defines retoN() validators + retoN_info() for menu-driven execution
 
-source /shared/common.sh
-source /shared/validators.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+    source /shared/validators.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+    source "$(dirname "$0")/../../shared/validators.sh"
+fi
 
 UNIT_NAME="unit-i-risk-assessment"
 TOTAL_RETOS=10

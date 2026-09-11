@@ -3,10 +3,10 @@
 # Este archivo elimina la duplicación de mapeos en common.sh, unidad.sh, menu.sh e interactive.sh
 
 # === MANIFIESTO DE UNIDADES ===
-# Índices: 1..21 (cada directorio en units/ tiene su propia entrada)
-# Total: 198 retos (83 CORE + 115 OPTATIVOS) — alineado con test.sh reales
+# Índices: 1..22 (cada directorio en units/ tiene su propia entrada)
+# Total: 203 retos (88 CORE + 115 OPTATIVOS) — alineado con test.sh reales
 #
-# Orden de unidades (índices 1..21):
+# Orden de unidades (índices 1..22):
 #   1  i                        unit-I            Principios y Gestión de Riesgo          M1
 #   2  ii-firewalls-redes       unit-II           Filtrado de Red y Firewalls            M2
 #   3  ii-ids-intrusion-detect  unit-II-ids       Detección de Intrusos con Suricata     M2
@@ -28,14 +28,17 @@
 #  19  checkpoint-v             checkpoint-V      Checkpoint Módulo V                    M5
 #  20  i-risk-assessment        unit-I-risk       Evaluación de Riesgos (ISO 31000)      M1
 #  21  i-asset-classification   unit-I-asset      Clasificación de Activos / CSF 2.0    M1
-#   21  i-asset-classification   unit-I-asset      Clasificación de Activos / CSF 2.0    M1
+#  22  iii-compliance-iso27001  unit-III-compliance  Cumplimiento ISO 27001 / NIST CSF 2.0  M3
+#  23  ii-arquitectura-perimetral  unit-II-arp    Arquitectura Perimetral y DMZ          M2
+#  24  iv-malware-sandbox       unit-IV-malware   Análisis de Malware en Sandbox         M4
+#  25  iv-lab-integrador        unit-IV-integrador  Laboratorio Integrador Módulo IV       M4
 
 UNIT_NAMES=(
   "unit-I"            "unit-II"            "unit-II-ids"        "unit-ii"            "unit-III"
   "unit-iii"          "unit-IV"            "unit-iv"            "unit-V"             "unit-v"
   "unit-VI"           "unit-VII"           "unit-VIII"          "unit-IX"            "unit-X"
   "unit-XI"           "checkpoint-II"      "checkpoint-IV"      "checkpoint-V"       "unit-I-risk"
-  "unit-I-asset"
+  "unit-I-asset"      "unit-III-compliance" "unit-II-arp"       "unit-IV-malware"    "unit-IV-integrador"
 )
 
 UNIT_DIRS=(
@@ -43,7 +46,7 @@ UNIT_DIRS=(
   "iii"               "iv-criptografia-cvss" "iv"              "v-logging-siem-bcp" "v"
   "vi"                "vii"               "viii"              "ix"                 "x"
   "xi"                "checkpoint-ii"     "checkpoint-iv"     "checkpoint-v"       "i-risk-assessment"
-  "i-asset-classification"
+  "i-asset-classification"  "iii-compliance-iso27001" "ii-arquitectura-perimetral" "iv-malware-sandbox" "iv-lab-integrador"
 )
 
 UNIT_TITLES=(
@@ -68,6 +71,10 @@ UNIT_TITLES=(
   "Checkpoint Módulo V"
   "Evaluación de Riesgos (ISO 31000)"
   "Clasificación de Activos / CSF 2.0"
+  "Cumplimiento ISO 27001 / NIST CSF 2.0"
+  "Arquitectura Perimetral y DMZ"
+  "Análisis de Malware en Sandbox"
+  "Laboratorio Integrador Módulo IV"
 )
 
 UNIT_ICONOS=(
@@ -75,46 +82,46 @@ UNIT_ICONOS=(
   "💻" "🔐" "🔬" "📊" "⚙️"
   "💾" "🛡️" "🐳" "🌐" "🔒"
   "🐘" "✅" "✅" "✅" "📋"
-  "🏷️"
+  "🏷️" "📋" "🏰" "🦠" "🔬"
 )
 
-# Cantidad de retos por unidad (198 total, alineado con test.sh reales)
-# CORE: unit-I(10)+unit-II(10)+unit-II-ids(3)+unit-III(5)+unit-IV(10)+unit-V(10)+checkpoints(15)+i-risk-assessment(10)+i-asset-classification(10) = 83
-# OPT: 198 - 83 = 115
+# Cantidad de retos por unidad (233 total, alineado con test.sh reales)
+# CORE: unit-I(10)+unit-II(10)+unit-II-ids(3)+unit-III(5)+unit-IV(10)+unit-V(10)+checkpoints(15)+i-risk-assessment(10)+i-asset-classification(10)+iii-compliance-iso27001(5) = 88
+# OPT: 233 - 88 = 145
 UNIT_RETOS=(
   10   10    3   10    5
   15   10   10   10   10
   10   15   10   10   15
   10    5    5    5   10
-  10
+  10    5   10   10   10
 )
 
 # Clasificación pedagógica: 1 = CORE obligatorio, 0 = OPTATIVO/exploratorio
-# Total CORE: 83 retos. Total OPT: 115 retos.
-# CORE: unit-I(10)+unit-II(10)+unit-II-ids(3)+unit-III-iam-mfa(5)+unit-IV(10)+unit-V(10)+checkpoints(15)+i-risk-assessment(10)+i-asset-classification(10) = 83
+# Total CORE: 88 retos. Total OPT: 145 retos.
+# CORE: unit-I(10)+unit-II(10)+unit-II-ids(3)+unit-III-iam-mfa(5)+unit-IV(10)+unit-V(10)+checkpoints(15)+i-risk-assessment(10)+i-asset-classification(10)+iii-compliance-iso27001(5) = 88
 UNIT_CORE=(
   1   1   1   0   1
   0   1   0   1   0
   0   0   0   0   0
   0   1   1   1   1
-  1
+  1   1   0   0   0
 )
 
 # Módulo curricular al que pertenece cada unidad
 # M1: unit-I(1), unit-ii(4), unit-VI(11), i-risk-assessment(20), i-asset-classification(21)
-# M2: unit-II(2), unit-II-ids(3), unit-III(5), unit-iii(6), checkpoint-II(17)
+# M2: unit-II(2), unit-II-ids(3), unit-III(5), unit-iii(6), checkpoint-II(17), ii-arquitectura-perimetral(23)
 # M3: unit-IV(7), unit-iv(8), unit-VII(12), unit-VIII(13)
-# M4: unit-V(9), unit-v(10), unit-IX(14), unit-X(15), unit-XI(16), checkpoint-IV(18)
+# M4: unit-V(9), unit-v(10), unit-IX(14), unit-X(15), unit-XI(16), checkpoint-IV(18), iv-malware-sandbox(24), iv-lab-integrador(25)
 # M5: checkpoint-V(19)
 UNIT_MODULE=(
   1   2   2   1   2
   2   3   3   4   4
   1   3   3   4   4
   4   2   4   5   1
-  1
+  1   3   2   4   4
 )
 
-UNIT_COUNT=21
+UNIT_COUNT=25
 
 # === FUNCIONES DE CONSULTA ===
 
