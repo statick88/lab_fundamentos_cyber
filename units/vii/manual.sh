@@ -2,7 +2,12 @@
 # Unit VII: Security Hardening — manual.sh
 # Interactive guide for learning security
 
-source /shared/common.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+fi
 
 UNIT_NAME="unit-VII"
 banner_unidad 7 "Seguridad del Sistema"
@@ -64,7 +69,7 @@ cat << 'EOF'
 🎯 RETOS
 ══════════
 
-  Los retos estan en ~/laboratorio/security/reto[1-10].sh
+  Los retos estan en ~/laboratorio/security/reto[1-15].sh
   Ejecuta cada reto con: bash reto1.sh
   Usa 'evaluar' para verificar tu progreso.
 
@@ -86,7 +91,7 @@ cat << 'EOF'
   find / -perm -4000 -type f 2>/dev/null
 
 📌 BUENAS PRACTICAS
-══════════════════════
+════════════════════
 
   • Usar claves SSH en vez de contraseñas
   • Deshabilitar login de root por SSH
@@ -96,23 +101,22 @@ cat << 'EOF'
   • Usar contraseñas fuertes (minimo 12 caracteres)
   • Limitar acceso con sudoers
 
-EOF
+🔒 CIS BENCHMARKS — Center for Internet Security
+═══════════════════════════════════════════════════
 
-echo -e "\n${AMARILLO}Escribe ${CYAN}'evaluar'${AMARILLO} para verificar tu progreso o ${CYAN}'retos'${AMARILLO} para ver los retos.${RESET}"
-
-  CIS BENCHMARKS - Center for Internet Security
-  ---------------------------------------------
   Referencias CIS Ubuntu Lvl 1:
-  - /tmp montado con noexec,nosuid,nodev
-  - /var montado con nosuid,nodev
-  - /var/log montado con nodev
-  - PermitRootLogin no en sshd_config
-  - Protocol 2 en sshd_config
-  - iptables instalado
-  - ufw instalado y activo
+  • /tmp montado con noexec,nosuid,nodev (1.1.1.1)
+  • /var montado con nosuid,nodev (1.1.1.2)
+  • /var/log montado con nodev (1.1.1.3)
+  • PermitRootLogin no en sshd_config (3.4.1.1)
+  • Protocol 2 en sshd_config (3.4.2.1)
 
   Comandos CIS:
   sudo apt install -y ufw iptables
   sudo ufw enable
   sudo ufw default deny incoming
   sudo ufw allow ssh
+
+EOF
+
+echo -e "\n${AMARILLO}Escribe ${CYAN}'evaluar'${AMARILLO} para verificar tu progreso o ${CYAN}'retos'${AMARILLO} para ver los retos.${RESET}"

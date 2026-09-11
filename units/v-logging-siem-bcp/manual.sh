@@ -1,7 +1,12 @@
 #!/bin/bash
 # Unit V: Logging, SIEM y BCP — manual.sh
 
-source /shared/common.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+fi
 
 banner_unidad 5 "Logging, SIEM y BCP"
 
@@ -63,7 +68,7 @@ cat << 'EOF'
   10. Crear playbook IR
 
 💡 COMANDOS PARA EL LAB
-═══════════════════════
+══════════════════════
 
 EOF
 

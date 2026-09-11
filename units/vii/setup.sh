@@ -1,18 +1,24 @@
 #!/bin/bash
 # Unit VII: Security Hardening — setup.sh
-# Creates the environment and 10 challenges for learning security
+# Creates the environment and 15 challenges for learning security
 
 set -e
-source /shared/common.sh
+
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+fi
 
 UNIT_NAME="unit-VII"
 UNIT_NUM=7
-export TOTAL_RETOS=10
+export TOTAL_RETOS=15
 
 banner_unidad "$UNIT_NUM" "Seguridad del Sistema"
 
 echo -e "${CYAN}Esta unidad ensena a proteger un servidor Linux.${RESET}"
-echo -e "${AMARILLO}Completarás 10 retos progresivos.${RESET}\n"
+echo -e "${AMARILLO}Completarás 15 retos progresivos.${RESET}\n"
 
 mkdir -p "$HOME/laboratorio/security"
 cd "$HOME/laboratorio/security"
@@ -107,5 +113,58 @@ find / -perm -4000 -type f 2>/dev/null | head -15
 EOF
 chmod +x reto10.sh
 
-exito "Entorno de Unit VII preparado con 10 retos"
+# Reto 11: CIS 1.1.1.1 — Verificar /tmp montado con noexec,nosuid,nodev
+cat > reto11.sh << 'EOF'
+#!/bin/bash
+# Reto 11: Verificar opciones de montaje de /tmp (CIS 1.1.1.1)
+echo "Verificando montaje de /tmp..."
+echo "Opciones esperadas: noexec, nosuid, nodev"
+mount | grep /tmp
+grep /tmp /etc/fstab
+EOF
+chmod +x reto11.sh
+
+# Reto 12: CIS 1.1.1.2 — Verificar /var montado con nosuid,nodev
+cat > reto12.sh << 'EOF'
+#!/bin/bash
+# Reto 12: Verificar opciones de montaje de /var (CIS 1.1.1.2)
+echo "Verificando montaje de /var..."
+echo "Opciones esperadas: nosuid, nodev"
+mount | grep " /var "
+grep " /var " /etc/fstab
+EOF
+chmod +x reto12.sh
+
+# Reto 13: CIS 1.1.1.3 — Verificar /var/log montado con nodev
+cat > reto13.sh << 'EOF'
+#!/bin/bash
+# Reto 13: Verificar opciones de montaje de /var/log (CIS 1.1.1.3)
+echo "Verificando montaje de /var/log..."
+echo "Opciones esperadas: nodev"
+mount | grep "/var/log"
+grep "/var/log" /etc/fstab
+EOF
+chmod +x reto13.sh
+
+# Reto 14: CIS 3.4.1.1 — PermitRootLogin deshabilitado
+cat > reto14.sh << 'EOF'
+#!/bin/bash
+# Reto 14: Verificar PermitRootLogin en sshd_config (CIS 3.4.1.1)
+echo "Verificando configuracion SSH..."
+echo "PermitRootLogin debe estar en 'no'"
+grep -i "PermitRootLogin" /etc/ssh/sshd_config 2>/dev/null
+EOF
+chmod +x reto14.sh
+
+# Reto 15: CIS 3.4.2.1 — SSH Protocol 2
+cat > reto15.sh << 'EOF'
+#!/bin/bash
+# Reto 15: Verificar Protocol 2 en sshd_config (CIS 3.4.2.1)
+echo "Verificando Protocol SSH..."
+echo "Protocol debe ser 2"
+grep -i "Protocol" /etc/ssh/sshd_config 2>/dev/null
+EOF
+chmod +x reto15.sh
+
+exito "Entorno de Unit VII preparado con 15 retos"
 echo -e "${AMARILLO}Escribe ${CYAN}'manual'${AMARILLO} para ver las instrucciones o ${CYAN}'evaluar'${AMARILLO} para evaluar.${RESET}"

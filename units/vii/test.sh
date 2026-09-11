@@ -3,9 +3,16 @@
 # Automated validation of 15 challenges
 # Estandarizado: usa /shared/validators.sh y /shared/sudo-wrappers.sh
 
-source /shared/common.sh
-source /shared/validators.sh
-source /shared/sudo-wrappers.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+    source /shared/validators.sh
+    source /shared/sudo-wrappers.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+    source "$(dirname "$0")/../../shared/validators.sh"
+    source "$(dirname "$0")/../../shared/sudo-wrappers.sh"
+fi
 
 UNIT_NAME="unit-VII"
 TOTAL_RETOS=15
@@ -32,12 +39,12 @@ reto4() {
 
 reto5() {
     # Verificar que puede ver puertos abiertos
-    assert_command_ok ss -tuln 2>/dev/null || assert_command_ok netstat -tuln 2>/dev/null || true
+    assert_command_ok ss -tuln
 }
 
 reto6() {
     # Verificar que puede ver estado del firewall
-    assert_ufw_active || assert_sudo_ok iptables -L || true
+    assert_ufw_active
 }
 
 reto7() {
@@ -87,12 +94,12 @@ reto13() {
 
 reto14() {
     # CIS 3.4.1.1: PermitRootLogin deshabilitado
-    assert_file_contains /etc/ssh/sshd_config "PermitRootLogin no" 2>/dev/null || true
+    assert_file_contains /etc/ssh/sshd_config "PermitRootLogin no" 2>/dev/null
 }
 
 reto15() {
     # CIS 3.4.2.1: SSH usa protocolo 2
-    assert_file_contains /etc/ssh/sshd_config "Protocol 2" 2>/dev/null || true
+    assert_file_contains /etc/ssh/sshd_config "Protocol 2" 2>/dev/null
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10 reto11 reto12 reto13 reto14 reto15)

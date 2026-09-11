@@ -2,7 +2,12 @@
 # Checkpoint II: Evaluación Módulo II — setup.sh
 
 set -e
-source /shared/common.sh
+# Dual-path sourcing
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+fi
 
 UNIT_NAME="checkpoint-II"
 UNIT_NUM=12
@@ -26,3 +31,4 @@ cat > captura_checkpoint.pcapng << 'EOF'
 EOF
 
 exito "Checkpoint II preparado"
+echo -e "${AMARILLO}Escribe ${CYAN}'manual'${AMARILLO} para ver la guía o ${CYAN}'evaluar'${AMARILLO} para evaluar.${RESET}"

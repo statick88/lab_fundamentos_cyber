@@ -1,128 +1,118 @@
 #!/bin/bash
 # Unit VIII: Docker Containers — test.sh
 # Automated validation of 10 challenges
+# Estandarizado: usa /shared/validators.sh
 
-source /shared/common.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+    source /shared/validators.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+    source "$(dirname "$0")/../../shared/validators.sh"
+fi
 
 UNIT_NAME="unit-VIII"
 TOTAL_RETOS=10
 
 reto1() {
     # Verificar que Docker esta instalado
-    docker --version 2>/dev/null | grep -q "Docker"
+    assert_command_ok docker --version
 }
 
 reto2() {
-    # Verificar que puede ejecutar contenedor basico
-    output=$(docker run --rm ubuntu:latest echo "test" 2>/dev/null)
-    [ "$output" = "test" ]
+    # Verificar que puede ejecutar hello-world
+    assert_command_ok docker run --rm hello-world
 }
 
 reto3() {
     # Verificar que puede listar contenedores
-    docker run -d --name test_ps ubuntu:latest sleep 300 2>/dev/null
-    output=$(docker ps 2>/dev/null)
-    docker stop test_ps 2>/dev/null && docker rm test_ps 2>/dev/null
-    echo "$output" | grep -q "test_ps\|CONTAINER ID"
+    output=$(docker ps -a 2>&1)
+    [ -n "$output" ]
 }
 
 reto4() {
-    # Verificar que puede ejecutar comandos en contenedor
-    output=$(docker run --rm ubuntu:latest echo "exec_test" 2>/dev/null)
-    [ "$output" = "exec_test" ]
+    # Verificar que puede ejecutar Ubuntu
+    assert_command_ok docker run --rm ubuntu echo "test"
 }
 
 reto5() {
-    # Verificar que puede ver logs
-    docker run -d --name test_logs ubuntu:latest bash -c "echo logtest" 2>/dev/null
-    sleep 2
-    output=$(docker logs test_logs 2>/dev/null)
-    docker stop test_logs 2>/dev/null && docker rm test_logs 2>/dev/null
-    echo "$output" | grep -q "logtest"
+    # Verificar que existe un Dockerfile
+    assert_file_exists ~/laboratorio/docker/app/Dockerfile
+    assert_file_contains ~/laboratorio/docker/app/Dockerfile "FROM"
 }
 
 reto6() {
-    # Verificar que puede inspeccionar contenedor
-    docker run -d --name test_inspect ubuntu:latest sleep 300 2>/dev/null
-    output=$(docker inspect test_inspect 2>/dev/null | head -5)
-    docker stop test_inspect 2>/dev/null && docker rm test_inspect 2>/dev/null
-    [ -n "$output" ]
+    # Verificar que puede construir una imagen
+    cd ~/laboratorio/docker/app 2>/dev/null
+    assert_command_ok docker build -t mi-app-test:latest .
 }
 
 reto7() {
-    # Verificar que puede crear redes
-    docker network create test_network 2>/dev/null
-    output=$(docker network ls 2>/dev/null)
-    docker network rm test_network 2>/dev/null
-    echo "$output" | grep -q "test_network"
+    # Verificar que puede crear y listar un volume
+    docker volume create test-vol 2>/dev/null
+    output=$(docker volume ls 2>&1)
+    echo "$output" | grep -q "test-vol"
+    docker volume rm test-vol 2>/dev/null
 }
 
 reto8() {
-    # Verificar que puede crear volumenes
-    docker volume create test_volume 2>/dev/null
-    output=$(docker volume ls 2>/dev/null)
-    docker volume rm test_volume 2>/dev/null
-    echo "$output" | grep -q "test_volume"
+    # Verificar que puede listar redes
+    output=$(docker network ls 2>&1)
+    echo "$output" | grep -q "bridge"
 }
 
 reto9() {
-    # Verificar que puede crear imagen
-    mkdir -p /tmp/build_test
-    cat > /tmp/build_test/Dockerfile << 'EOF'
-FROM ubuntu:latest
-RUN echo "test"
-CMD ["echo", "image_test"]
-EOF
-    docker build -t test_image /tmp/build_test/ 2>/dev/null
-    output=$(docker run --rm test_image 2>/dev/null)
-    docker rmi test_image 2>/dev/null
-    rm -rf /tmp/build_test
-    [ "$output" = "image_test" ]
+    # Verificar que puede ver logs
+    docker run -d --name test-log-container alpine sleep 5 2>/dev/null
+    output=$(docker logs test-log-container 2>&1)
+    docker rm -f test-log-container 2>/dev/null
+    [ -n "$output" ] || true  # Logs may be empty for sleep, just verify command works
+    assert_command_ok docker logs test-log-container
 }
 
 reto10() {
-    # Verificar que puede limpiar recursos
-    docker ps -aq 2>/dev/null | xargs docker rm -f 2>/dev/null || true
-    docker volume ls -q 2>/dev/null | xargs docker volume rm 2>/dev/null || true
-    output=$(docker ps -a 2>/dev/null)
-    [ -n "$output" ]
+    # Verificar que existe un docker-compose.yml
+    assert_file_exists ~/laboratorio/docker/compose/docker-compose.yml
+    assert_file_contains ~/laboratorio/docker/compose/docker-compose.yml "services"
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10)
 challenge_names=(
-    "Verificar Docker"
-    "Ejecutar contenedor basico"
+    "Docker instalado"
+    "Contenedor hello-world"
     "Listar contenedores"
-    "Ejecutar comandos en contenedor"
-    "Ver logs de contenedor"
-    "Inspeccionar contenedor"
-    "Gestionar redes"
-    "Gestionar volumenes"
-    "Crear imagen con Dockerfile"
-    "Limpiar recursos"
+    "Ubuntu interactivo"
+    "Crear Dockerfile"
+    "Construir imagen"
+    "Gestionar volumes"
+    "Redes Docker"
+    "Logs de contenedor"
+    "Docker Compose"
 )
+
+ICONOS=("🐳" "📦" "📋" "🐧" "📄" "🔨" "💾" "🌐" "📜" "🔧")
 
 reto1_info() {
     separador
-    echo -e "${CYAN}Reto 1: Verificar Docker${NC}"
+    echo -e "${CYAN}Reto 1: Verificar Docker instalado${NC}"
     echo ""
-    echo "Verifica que Docker esta instalado correctamente en tu sistema."
+    echo "Confirma que Docker está instalado y el daemon está corriendo."
     echo ""
-    echo "Comandos utiles:"
-    echo "  docker --version    -- Muestra la version de Docker instalada"
-    echo "  docker info         -- Muestra informacion general del demonio Docker"
+    echo "Comandos útiles: docker --version, docker info"
+    echo "Ejemplo: docker --version"
     separador
 }
 
 reto2_info() {
     separador
-    echo -e "${CYAN}Reto 2: Ejecutar contenedor basico${NC}"
+    echo -e "${CYAN}Reto 2: Contenedor hello-world${NC}"
     echo ""
-    echo "Ejecuta un contenedor basico de Ubuntu y verifica que funciona."
+    echo "Ejecuta el contenedor de prueba hello-world de Docker."
+    echo "Si no existe localmente, Docker lo descargará automáticamente."
     echo ""
-    echo "Comandos utiles:"
-    echo "  docker run --rm ubuntu:latest echo 'hola'  -- Ejecuta un comando en un contenedor temporal"
-    echo "  docker ps                                  -- Lista contenedores en ejecucion"
+    echo "Comandos útiles: docker run"
+    echo "Ejemplo: docker run --rm hello-world"
     separador
 }
 
@@ -130,120 +120,130 @@ reto3_info() {
     separador
     echo -e "${CYAN}Reto 3: Listar contenedores${NC}"
     echo ""
-    echo "Crea un contenedor en segundo plano y listalo con docker ps."
-    echo "El contenedor debe aparecer en la lista de contenedores activos."
+    echo "Lista todos los contenedores, tanto activos como detenidos."
     echo ""
-    echo "Comandos utiles:"
-    echo "  docker run -d --name mi_contenedor ubuntu:latest sleep 300"
-    echo "  docker ps                        -- Lista contenedores en ejecucion"
-    echo "  docker stop mi_contenedor        -- Detiene un contenedor"
-    echo "  docker rm mi_contenedor          -- Elimina un contenedor"
+    echo "Comandos útiles: docker ps -a"
+    echo "Ejemplo: docker ps -a"
     separador
 }
 
 reto4_info() {
     separador
-    echo -e "${CYAN}Reto 4: Ejecutar comandos en contenedor${NC}"
+    echo -e "${CYAN}Reto 4: Ubuntu interactivo${NC}"
     echo ""
-    echo "Ejecuta un comando dentro de un contenedor en ejecucion."
-    echo "Demuestra que puedes interactuar con un contenedor activo."
+    echo "Ejecuta un contenedor Ubuntu con shell interactivo."
+    echo "Usa -it para modo interactivo y --rm para eliminar al salir."
     echo ""
-    echo "Comandos utiles:"
-    echo "  docker exec mi_contenedor ls           -- Ejecuta un comando en un contenedor activo"
-    echo "  docker exec mi_contenedor bash          -- Abre una sesion bash en el contenedor"
-    echo "  docker run --rm ubuntu:latest echo test -- Ejecuta un comando directamente"
+    echo "Comandos útiles: docker run -it"
+    echo "Ejemplo: docker run -it --rm ubuntu bash"
     separador
 }
 
 reto5_info() {
     separador
-    echo -e "${CYAN}Reto 5: Ver logs de contenedor${NC}"
+    echo -e "${CYAN}Reto 5: Crear Dockerfile${NC}"
     echo ""
-    echo "Genera y consulta los logs de un contenedor."
-    echo "El contenedor debe producir algun mensaje que puedas ver con docker logs."
+    echo "Crea un Dockerfile que defina una imagen personalizada."
+    echo "Un Dockerfile contiene instrucciones para construir una imagen."
     echo ""
-    echo "Comandos utiles:"
-    echo "  docker run -d --name log_test ubuntu:latest bash -c 'echo hola'"
-    echo "  docker logs log_test             -- Muestra los logs del contenedor"
-    echo "  docker logs -f log_test          -- Sigue los logs en tiempo real"
+    echo "Comandos útiles: touch, cat"
+    echo "Ejemplo: FROM ubuntu:latest"
+    echo "         RUN apt-get update"
+    echo "         CMD [\"echo\", \"Hola\"]"
     separador
 }
 
 reto6_info() {
     separador
-    echo -e "${CYAN}Reto 6: Inspeccionar contenedor${NC}"
+    echo -e "${CYAN}Reto 6: Construir imagen${NC}"
     echo ""
-    echo "Usa docker inspect para obtener informacion detallada de un contenedor."
-    echo "Debes poder ver la configuracion de red, volumenes y estado."
+    echo "Construye una imagen Docker a partir de un Dockerfile."
+    echo "La imagen se crea con un tag (nombre:versión)."
     echo ""
-    echo "Comandos utiles:"
-    echo "  docker inspect mi_contenedor              -- Muestra toda la configuracion JSON"
-    echo "  docker inspect --format '{{.State.Status}}' mi_contenedor  -- Campo especifico"
-    echo "  docker inspect --format '{{.NetworkSettings.IPAddress}}' mi_contenedor"
+    echo "Comandos útiles: docker build"
+    echo "Ejemplo: docker build -t mi-app:latest ."
     separador
 }
 
 reto7_info() {
     separador
-    echo -e "${CYAN}Reto 7: Gestionar redes${NC}"
+    echo -e "${CYAN}Reto 7: Gestionar volumes${NC}"
     echo ""
-    echo "Crea una red Docker personalizada y listalas."
-    echo "Demuestra que puedes administrar redes de contenedores."
+    echo "Crea y gestiona volumes para persistir datos entre contenedores."
+    echo "Los volumes son la forma recomendada de almacenar datos en Docker."
     echo ""
-    echo "Comandos utiles:"
-    echo "  docker network create mi_red     -- Crea una nueva red"
-    echo "  docker network ls                -- Lista todas las redes"
-    echo "  docker network inspect mi_red    -- Detalles de una red"
-    echo "  docker network rm mi_red         -- Elimina una red"
+    echo "Comandos útiles: docker volume create, docker volume ls"
+    echo "Ejemplo: docker volume create mis-datos"
     separador
 }
 
 reto8_info() {
     separador
-    echo -e "${CYAN}Reto 8: Gestionar volumenes${NC}"
+    echo -e "${CYAN}Reto 8: Redes Docker${NC}"
     echo ""
-    echo "Crea un volumen Docker y listalos."
-    echo "Los volumenes permiten persistir datos mas alla del ciclo de vida de los contenedores."
+    echo "Explora las redes Docker para comunicar contenedores entre sí."
+    echo "Docker crea redes automáticamente (bridge, host, none)."
     echo ""
-    echo "Comandos utiles:"
-    echo "  docker volume create mi_volumen   -- Crea un nuevo volumen"
-    echo "  docker volume ls                  -- Lista todos los volumenes"
-    echo "  docker volume inspect mi_volumen  -- Detalles de un volumen"
-    echo "  docker volume rm mi_volumen       -- Elimina un volumen"
+    echo "Comandos útiles: docker network ls, docker network create"
+    echo "Ejemplo: docker network ls"
     separador
 }
 
 reto9_info() {
     separador
-    echo -e "${CYAN}Reto 9: Crear imagen con Dockerfile${NC}"
+    echo -e "${CYAN}Reto 9: Logs de contenedor${NC}"
     echo ""
-    echo "Crea un Dockerfile y construye una imagen personalizada."
-    echo "El Dockerfile debe definir al menos FROM, RUN y CMD."
+    echo "Consulta los logs de salida de un contenedor en ejecución o detenido."
+    echo "Los logs son útiles para depurar problemas."
     echo ""
-    echo "Comandos utiles:"
-    echo "  touch Dockerfile                              -- Crea el archivo Dockerfile"
-    echo "  docker build -t mi_imagen .                   -- Construye la imagen desde el Dockerfile"
-    echo "  docker run --rm mi_imagen                     -- Ejecuta un contenedor con la imagen"
-    echo "  docker images                                 -- Lista las imagenes disponibles"
-    echo ""
-    echo "Estructura minima de un Dockerfile:"
-    echo "  FROM ubuntu:latest"
-    echo "  RUN echo 'Hola Mundo'"
-    echo '  CMD ["echo", "imagen_creada"]'
+    echo "Comandos útiles: docker logs, docker logs -f"
+    echo "Ejemplo: docker logs nombre-contenedor"
     separador
 }
 
 reto10_info() {
     separador
-    echo -e "${CYAN}Reto 10: Limpiar recursos${NC}"
+    echo -e "${CYAN}Reto 10: Docker Compose${NC}"
     echo ""
-    echo "Limpia todos los recursos Docker utilizados: contenedores, imagenes y volumenes."
-    echo "Demuestra que puedes liberar espacio en tu sistema."
+    echo "Crea un archivo docker-compose.yml para orquestar múltiples servicios."
+    echo "Docker Compose permite definir y ejecutar apps multi-contenedor."
     echo ""
-    echo "Comandos utiles:"
-    echo "  docker ps -aq | xargs docker rm -f    -- Elimina todos los contenedores"
-    echo "  docker images -q | xargs docker rmi    -- Elimina todas las imagenes"
-    echo "  docker volume ls -q | xargs docker volume rm  -- Elimina todos los volumenes"
-    echo "  docker system prune -a                 -- Limpia todo de una vez"
+    echo "Comandos útiles: docker-compose up, docker-compose down"
+    echo "Ejemplo: version: '3.8'"
+    echo "         services:"
+    echo "           web:"
+    echo "             image: nginx:alpine"
     separador
 }
+
+# ── Standalone execution mode ────────────────────────────────
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit VIII: Docker Containers — Retos"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    PASSED=0
+    FAILED=0
+
+    for i in $(seq 1 "$TOTAL_RETOS"); do
+        validator="${validators[$((i-1))]}"
+        name="${challenge_names[$((i-1))]}"
+        icon="${ICONOS[$((i-1))]}"
+
+        if $validator >/dev/null 2>&1; then
+            echo "  [PASS] Reto $i: $name $icon"
+            PASSED=$((PASSED + 1))
+        else
+            echo "  [FAIL] Reto $i: $name"
+            FAILED=$((FAILED + 1))
+        fi
+    done
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit VIII Results: $PASSED/$TOTAL_RETOS passed, $FAILED failed"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    [ "$FAILED" -eq 0 ]
+fi

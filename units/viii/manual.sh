@@ -2,7 +2,12 @@
 # Unit VIII: Docker Containers — manual.sh
 # Interactive guide for learning Docker
 
-source /shared/common.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+fi
 
 UNIT_NAME="unit-VIII"
 banner_unidad 8 "Contenedores Docker"
@@ -16,54 +21,56 @@ cat << 'EOF'
 📚 CONCEPTOS CLAVE
 ═══════════════════
 
-  Docker permite empaquetar aplicaciones con sus dependencias
-  en contenedores portables y aislados.
+  Docker permite empaquetar aplicaciones en contenedores:
+  • Contenedor — instancia de una imagen en ejecución
+  • Imagen — plantilla de solo lectura con el código y dependencias
+  • Dockerfile — instrucciones para construir una imagen
+  • Volume — almacenamiento persistente fuera del contenedor
+  • Network — comunicación entre contenedores
+  • Docker Compose — orquestación multi-contenedor
 
-  • Imagen — Plantilla de solo lectura
-  • Contenedor — Instancia en ejecucion de una imagen
-  • Dockerfile — Receta para construir imagenes
-  • Volumen — Almacenamiento persistente
-  • Red — Comunicacion entre contenedores
-
-🔧 COMANDOS ESENCIALES
-══════════════════════════
-
-  Imagenes
-  ─────────
-  docker pull imagen          # Descargar imagen
-  docker images               # Listar imagenes locales
-  docker rmi imagen           # Eliminar imagen
-  docker build -t nombre .    # Construir desde Dockerfile
-  docker tag imagen nueva     # Renombrar imagen
-  docker push imagen          # Subir a registro
+🔧 COMANDOS DE DOCKER
+══════════════════════════════
 
   Contenedores
   ──────────────
-  docker run -d --name nom imagen  # Ejecutar en background
-  docker run --rm imagen           # Ejecutar y eliminar al salir
-  docker run -it imagen bash       # Ejecutar con terminal interactiva
-  docker ps                        # Ver contenedores activos
-  docker ps -a                     # Ver todos los contenedores
-  docker stop nombre               # Detener contenedor
-  docker rm nombre                 # Eliminar contenedor
-  docker exec -it nombre bash      # Entrar a contenedor corriendo
+  docker run -it ubuntu bash    # Ejecutar contenedor interactivo
+  docker run -d nginx           # Ejecutar en background (detached)
+  docker run --rm alpine echo hi # Ejecutar y eliminar al salir
+  docker ps                     # Ver contenedores activos
+  docker ps -a                  # Ver todos los contenedores
+  docker stop <id>              # Detener contenedor
+  docker rm <id>                # Eliminar contenedor
+  docker exec -it <id> bash     # Entrar a un contenedor
 
-  Dockerfile
-  ────────────
-  FROM ubuntu:latest        # Imagen base
-  RUN apt-get update        # Ejecutar comandos
-  COPY archivo /ruta        # Copiar archivos
-  WORKDIR /ruta             # Directorio de trabajo
-  EXPOSE 80                 # Exponer puerto
-  CMD ["comando"]           # Comando por defecto
+  Imagenes
+  ──────────
+  docker images                 # Listar imagenes
+  docker pull ubuntu            # Descargar imagen
+  docker build -t mi-app:1.0 .  # Construir desde Dockerfile
+  docker rmi <imagen>           # Eliminar imagen
+  docker tag <img> <nuevo-tag>  # Renombrar imagen
 
-  Redes y volumenes
-  ───────────────────
-  docker network create red       # Crear red
-  docker network ls               # Listar redes
-  docker volume create volumen    # Crear volumen
-  docker volume ls                # Listar volumenes
-  docker run -v vol:/ruta img     # Montar volumen
+  Volumes
+  ─────────
+  docker volume create datos    # Crear volume
+  docker volume ls              # Listar volumes
+  docker volume rm <nombre>     # Eliminar volume
+  docker run -v datos:/data img # Montar volume en contenedor
+
+  Redes
+  ──────
+  docker network ls             # Listar redes
+  docker network create mi-red  # Crear red
+  docker run --network mi-red img # Conectar a red
+
+  Docker Compose
+  ────────────────
+  docker-compose up -d          # Levantar servicios
+  docker-compose down           # Detener servicios
+  docker-compose ps             # Ver estado
+  docker-compose logs -f        # Ver logs
+  docker-compose pull           # Actualizar imagenes
 
 🎯 RETOS
 ══════════
@@ -75,37 +82,35 @@ cat << 'EOF'
 💡 EJEMPLOS UTILES
 ════════════════════
 
-  # Ejecutar Ubuntu con terminal
-  docker run -it ubuntu:latest bash
-
-  # Ejecutar contenedor web
-  docker run -d -p 8080:80 nginx:latest
-
-  # Ver logs en tiempo real
-  docker logs -f nombre
-
-  # Copiar archivos desde contenedor
-  docker cp nombre:/ruta/archivo.txt .
-
-  # Ver uso de recursos
-  docker stats
-
-📌 DOCKERFILE EJEMPLO
-═══════════════════════
-
-  # Crear archivo Dockerfile
-  cat > Dockerfile << 'DOCKERFILE'
-  FROM python:3.9-slim
+  # Crear Dockerfile
+  FROM ubuntu:latest
+  RUN apt-get update && apt-get install -y curl
+  COPY ./app /app
   WORKDIR /app
-  COPY requirements.txt .
-  RUN pip install -r requirements.txt
-  COPY . .
   CMD ["python", "app.py"]
-  DOCKERFILE
 
-  # Construir y ejecutar
-  docker build -t mi_app .
-  docker run -p 5000:5000 mi_app
+  # docker-compose.yml
+  version: '3.8'
+  services:
+    web:
+      image: nginx:alpine
+      ports:
+        - "8080:80"
+    db:
+      image: mysql:8.0
+      environment:
+        MYSQL_ROOT_PASSWORD: secret
+
+📌 BUENAS PRACTICAS
+════════════════════
+
+  • Usar imagenes oficiales de Docker Hub
+  • No ejecutar contenedores como root cuando sea posible
+  • Usar multi-stage builds para reducir tamaño de imagenes
+  • No almacenar datos sensibles en variables de entorno
+  • Usar docker-compose para apps multi-servicio
+  • Configurar healthchecks en los servicios
+  • Limpiar contenedores e imagenes no usadas (docker system prune)
 
 EOF
 

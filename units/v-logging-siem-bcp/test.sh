@@ -1,64 +1,152 @@
 #!/bin/bash
 # Unit V: Logging, SIEM y BCP — test.sh
+# Estandarizado: usa /shared/validators.sh para aserciones deterministicas
+# Sin dependencias de sudo/root. Paths bajo $HOME/laboratorio.
 
-source /shared/common.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+    source /shared/validators.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+    source "$(dirname "$0")/../../shared/validators.sh"
+fi
 
 UNIT_NAME="unit-V"
 TOTAL_RETOS=10
 
+LAB_DIR="$HOME/laboratorio/logging"
+
+# ── Reto 1: Generar log con logger ─────────────────────────────────
+# Valida que el estudiante haya generado un log personalizado con logger.
 reto1() {
-    logger -p local0.info "test-lab-log-v-ret1" 2>/dev/null || true
-    grep -q "test-lab-log-v-ret1" /var/log/syslog 2>/dev/null || grep -q "test-lab-log-v-ret1" /var/log/user.log 2>/dev/null
+    # Buscar en los archivos de log del sistema la entrada del estudiante
+    local found=0
+    for logfile in /var/log/syslog /var/log/user.log /var/log/messages; do
+        if [ -f "$logfile" ] && grep -q "test-lab-log-v-ret1" "$logfile" 2>/dev/null; then
+            found=1
+            break
+        fi
+    done
+    # Fallback: verificar si el estudiante creó un archivo de log custom
+    if [ "$found" -eq 0 ] && [ -f "$LAB_DIR/custom.log" ]; then
+        assert_file_contains "$LAB_DIR/custom.log" "test-lab-log-v-ret1"
+        return $?
+    fi
+    if [ "$found" -eq 1 ]; then
+        return 0
+    fi
+    echo "FAIL: No se encontró entrada de log generada con logger" >&2
+    return 1
 }
 
+# ── Reto 2: Configurar logrotate ───────────────────────────────────
+# Valida que exista una configuración de logrotate para archivo custom.
 reto2() {
-    [ -f /etc/logrotate.d ] || mkdir -p /etc/logrotate.d
-    # Verify logrotate config can be created for custom file
-    echo "/var/log/mi_app.log {" > /tmp/test_logrotate.conf
-    echo "  daily" >> /tmp/test_logrotate.conf
-    echo "  rotate 7" >> /tmp/test_logrotate.conf
-    echo "  compress" >> /tmp/test_logrotate.conf
-    echo "}" >> /tmp/test_logrotate.conf
-    grep -q "mi_app.log" /tmp/test_logrotate.conf
+    # Buscar en ubicaciones estándar del estudiante
+    local config=""
+    if [ -f "$LAB_DIR/logrotate_mi_app.conf" ]; then
+        config="$LAB_DIR/logrotate_mi_app.conf"
+    elif [ -f "$LAB_DIR/logrotate_custom.conf" ]; then
+        config="$LAB_DIR/logrotate_custom.conf"
+    elif [ -f "$LAB_DIR/logrotate.conf" ]; then
+        config="$LAB_DIR/logrotate.conf"
+    fi
+    if [ -n "$config" ]; then
+        assert_file_exists "$config"
+        assert_file_contains "$config" "rotate"
+        return $?
+    fi
+    echo "FAIL: No se encontró configuración de logrotate en $LAB_DIR" >&2
+    return 1
 }
 
+# ── Reto 3: Analizar logs con grep ─────────────────────────────────
+# Valida que el estudiante haya encontrado errores en mi_app.log con grep.
 reto3() {
-    eval_log_analysis "$HOME/laboratorio/logging/mi_app.log" "error|fail|critical" 1 student
+    eval_log_analysis "$LAB_DIR/mi_app.log" "error|fail|critical" 1 student
 }
 
+# ── Reto 4: Extraer campos con awk ─────────────────────────────────
+# Valida que el estudiante haya extraído campos de apache_access.log.
 reto4() {
-    eval_log_analysis "$HOME/laboratorio/logging/apache_access.log" "192.168.1" 1 student
+    eval_log_analysis "$LAB_DIR/apache_access.log" "192.168.1" 1 student
 }
 
+# ── Reto 5: Transformar logs con sed ───────────────────────────────
+# Valida que el estudiante haya enmascarado IPs en apache_access.log.
 reto5() {
-    eval_log_analysis "$HOME/laboratorio/logging/apache_access.log" "192.168" 1 student
+    eval_log_analysis "$LAB_DIR/apache_access.log" "192.168" 1 student
 }
 
+# ── Reto 6: Correlacionar logs ─────────────────────────────────────
+# Valida que el estudiante haya correlacionado auth_sys.log y mi_app.log.
 reto6() {
-    eval_log_analysis "$HOME/laboratorio/logging/auth_sys.log" "13:55:38.*systemd" 1 student
+    eval_log_analysis "$LAB_DIR/auth_sys.log" "13:55:38.*systemd" 1 student
 }
 
+# ── Reto 7: Script de monitoreo de procesos ────────────────────────
+# Valida que exista un script ejecutable que monitoree procesos.
 reto7() {
-    [ -f "$HOME/laboratorio/logging/monitor_procesos.sh" ] && [ -x "$HOME/laboratorio/logging/monitor_procesos.sh" ]
-    [ -f "$HOME/laboratorio/logging/monitor_procesos.sh" ] && grep -qi "ps\|ss\|netstat\|awk" "$HOME/laboratorio/logging/monitor_procesos.sh" 2>/dev/null
+    local script="$LAB_DIR/monitor_procesos.sh"
+    assert_file_exists "$script"
+    assert_command_ok test -x "$script"
+    assert_file_contains "$script" "ps\|ss\|netstat\|awk\|/proc"
 }
 
+# ── Reto 8: Backup 3-2-1 ──────────────────────────────────────────
+# Valida que exista un script ejecutable de backup 3-2-1.
 reto8() {
-    [ -f "$HOME/laboratorio/logging/backup_script.sh" ] && [ -x "$HOME/laboratorio/logging/backup_script.sh" ]
-    [ -f "$HOME/laboratorio/logging/backup_script.sh" ] && grep -qi "tar\|rsync\|3.*2.*1\|offsite" "$HOME/laboratorio/logging/backup_script.sh" 2>/dev/null
+    local script="$LAB_DIR/backup_script.sh"
+    assert_file_exists "$script"
+    assert_command_ok test -x "$script"
+    assert_file_contains "$script" "tar\|rsync\|3.*2.*1\|offsite\|backup"
 }
 
+# ── Reto 9: Calcular RTO/RPO ──────────────────────────────────────
+# Valida que exista un documento con definición de RTO y RPO.
 reto9() {
-    [ -f "$HOME/laboratorio/logging/rto_rpo.md" ] || [ -f "$HOME/laboratorio/logging/rto_rpo.txt" ] || \
-    find "$HOME/laboratorio/logging" -maxdepth 1 -type f \( -name "*rto*" -o -name "*rpo*" \) 2>/dev/null | head -1 | grep -q "."
+    local file=""
+    if [ -f "$LAB_DIR/rto_rpo.md" ]; then
+        file="$LAB_DIR/rto_rpo.md"
+    elif [ -f "$LAB_DIR/rto_rpo.txt" ]; then
+        file="$LAB_DIR/rto_rpo.txt"
+    else
+        # Buscar archivos que contengan rto o rpo en el nombre
+        file=$(find "$LAB_DIR" -maxdepth 1 -type f \( -name "*rto*" -o -name "*rpo*" \) 2>/dev/null | head -1)
+    fi
+    if [ -z "$file" ]; then
+        echo "FAIL: No se encontró documento RTO/RPO en $LAB_DIR" >&2
+        return 1
+    fi
+    assert_file_exists "$file"
+    assert_file_contains "$file" "RTO\|Recovery Time"
+    assert_file_contains "$file" "RPO\|Recovery Point"
 }
 
+# ── Reto 10: Playbook IR ───────────────────────────────────────────
+# Valida que exista un playbook de Incident Response con las fases.
 reto10() {
-    [ -f "$HOME/laboratorio/logging/playbook_ir.md" ] || [ -f "$HOME/laboratorio/logging/playbook_ir.txt" ] || \
-    find "$HOME/laboratorio/logging" -maxdepth 1 -type f \( -name "*ir*" -o -name "*playbook*" \) 2>/dev/null | head -1 | grep -q "."
-    grep -qi "preparación\|detección\|contención\|erradicación\|recuperación" "$HOME/laboratorio/logging/playbook_ir.md" 2>/dev/null || grep -qi "preparacion\|deteccion\|contencion\|erradicacion\|recuperacion" "$HOME/laboratorio/logging/playbook_ir.txt" 2>/dev/null
+    local file=""
+    if [ -f "$LAB_DIR/playbook_ir.md" ]; then
+        file="$LAB_DIR/playbook_ir.md"
+    elif [ -f "$LAB_DIR/playbook_ir.txt" ]; then
+        file="$LAB_DIR/playbook_ir.txt"
+    else
+        # Buscar archivos que contengan ir o playbook en el nombre
+        file=$(find "$LAB_DIR" -maxdepth 1 -type f \( -name "*ir*" -o -name "*playbook*" \) 2>/dev/null | head -1)
+    fi
+    if [ -z "$file" ]; then
+        echo "FAIL: No se encontró playbook IR en $LAB_DIR" >&2
+        return 1
+    fi
+    assert_file_exists "$file"
+    assert_file_contains "$file" "preparación\|preparacion\|Preparación"
+    assert_file_contains "$file" "contención\|contencion\|Contención"
+    assert_file_contains "$file" "recuperación\|recuperacion\|Recuperación"
 }
 
+# ── Gamification arrays ────────────────────────────────────────────
 validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10)
 challenge_names=(
     "Generar log con logger"
@@ -82,8 +170,8 @@ reto1_info() {
     echo "Usa el comando logger para generar un log personalizado en el sistema."
     echo ""
     echo "Comandos útiles:"
-    echo "  logger 'Mensaje de prueba desde lab ciberseguridad'"
-    echo "  grep 'lab ciberseguridad' /var/log/syslog"
+    echo "  logger -p local0.info 'test-lab-log-v-ret1'"
+    echo "  grep 'test-lab-log-v-ret1' /var/log/syslog"
     separador
 }
 
@@ -95,8 +183,8 @@ reto2_info() {
     echo "Especifica rotación diaria, compresión y retención de 7 archivos."
     echo ""
     echo "Comandos útiles:"
-    echo "  sudo nano /etc/logrotate.d/mi_app"
-    echo "  logrotate -d /etc/logrotate.conf  (modo debug)"
+    echo "  nano ~/laboratorio/logging/logrotate_mi_app.conf"
+    echo "  logrotate -d ~/laboratorio/logging/logrotate_mi_app.conf  (modo debug)"
     separador
 }
 
@@ -199,3 +287,35 @@ reto10_info() {
     echo "Crea un documento playbook_ir.md o playbook_ir.txt."
     separador
 }
+
+# ── Standalone execution mode ──────────────────────────────────────
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit V: Logging, SIEM y BCP — Retos"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    PASSED=0
+    FAILED=0
+
+    for i in $(seq 1 "$TOTAL_RETOS"); do
+        validator="${validators[$((i-1))]}"
+        name="${challenge_names[$((i-1))]}"
+        icon="${ICONOS[$((i-1))]}"
+
+        if $validator >/dev/null 2>&1; then
+            echo "  [PASS] Reto $i: $name $icon"
+            PASSED=$((PASSED + 1))
+        else
+            echo "  [FAIL] Reto $i: $name"
+            FAILED=$((FAILED + 1))
+        fi
+    done
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit V Results: $PASSED/$TOTAL_RETOS passed, $FAILED failed"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    [ "$FAILED" -eq 0 ]
+fi
