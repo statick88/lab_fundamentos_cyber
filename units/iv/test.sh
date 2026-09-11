@@ -9,7 +9,11 @@ if [ -f "/shared/common.sh" ]; then
 else
     source "$(dirname "$0")/../../shared/common.sh"
 fi
-source /shared/sudo-wrappers.sh
+if [ -f "/shared/sudo-wrappers.sh" ]; then
+    source /shared/sudo-wrappers.sh
+else
+    source "$(dirname "$0")/../../shared/sudo-wrappers.sh"
+fi
 
 UNIT_NAME="unit-IV"
 TOTAL_RETOS=10
@@ -54,7 +58,7 @@ reto7() {
 reto8() {
     # Verificar que el directorio tiene permisos 755
     [ -d "/tmp/proyecto" ]
-    permisos=$(stat -c "%a" /tmp/proyecto 2>/dev/null)
+    permisos=$(stat -c "%a" /tmp/proyecto 2>/dev/null || stat -f "%Lp" /tmp/proyecto 2>/dev/null)
     [ "$permisos" = "755" ]
 }
 
