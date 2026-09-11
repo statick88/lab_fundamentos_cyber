@@ -1,6 +1,6 @@
 # SDD / Spec-Driven Development
-openspec/
-openspec/**
+# Track openspec/changes/ for SDD artifacts; ignore root-level config
+openspec/config.yaml
 .sdd/
 .sdd/**
 
