@@ -107,3 +107,124 @@ challenge_names=(
 )
 
 ICONOS=("🔍" "🚀" "📋" "📝" "🌐" "📊" "✅" "🔧" "🔄" "🛑")
+
+reto1_info() {
+    separador
+    echo -e "${CYAN}Reto 1: Verificar nginx${NC}"
+    echo ""
+    echo "Confirma que nginx está instalado y accesible en el PATH."
+    echo ""
+    echo "Comandos útiles:"
+    echo "  nginx -v"
+    separador
+}
+
+reto2_info() {
+    separador
+    echo -e "${CYAN}Reto 2: Iniciar nginx${NC}"
+    echo ""
+    echo "Inicia el servidor nginx y verifica que responda peticiones HTTP."
+    echo ""
+    echo "Comandos útiles:"
+    echo "  nginx"
+    echo "  curl http://localhost"
+    separador
+}
+
+reto3_info() {
+    separador
+    echo -e "${CYAN}Reto 3: Ver configuracion${NC}"
+    echo ""
+    echo "Inspecciona el archivo de configuración principal de nginx."
+    echo ""
+    echo "Comandos útiles:"
+    echo "  cat /etc/nginx/nginx.conf"
+    separador
+}
+
+reto4_info() {
+    separador
+    echo -e "${CYAN}Reto 4: Crear pagina personalizada${NC}"
+    echo ""
+    echo "Crea una página HTML personalizada en el directorio del estudiante."
+    echo "Configura nginx para servir ese contenido."
+    echo ""
+    echo "Comandos útiles:"
+    echo "  mkdir -p ~/laboratorio/web"
+    echo "  echo '<h1>Mi pagina</h1>' > ~/laboratorio/web/index.html"
+    separador
+}
+
+reto5_info() {
+    separador
+    echo -e "${CYAN}Reto 5: Configurar virtual host${NC}"
+    echo ""
+    echo "Crea un bloque server en sites-available para un virtual host."
+    echo "Un virtual host permite servir múltiples sitios en un mismo servidor."
+    echo ""
+    echo "Comandos útiles:"
+    echo "  ls /etc/nginx/sites-available/"
+    echo "  touch /etc/nginx/sites-available/mi-sitio"
+    separador
+}
+
+reto6_info() {
+    separador
+    echo -e "${CYAN}Reto 6: Ver logs de nginx${NC}"
+    echo ""
+    echo "Explora los archivos de log de nginx para ver tráfico y errores."
+    echo ""
+    echo "Comandos útiles:"
+    echo "  ls /var/log/nginx/"
+    echo "  tail -f /var/log/nginx/access.log"
+    separador
+}
+
+reto7_info() {
+    separador
+    echo -e "${CYAN}Reto 7: Verificar sitios activos${NC}"
+    echo ""
+    echo "Comprueba qué sitios están habilitados en sites-enabled."
+    echo "Solo los sitios con symlink en sites-enabled están activos."
+    echo ""
+    echo "Comandos útiles:"
+    echo "  ls -la /etc/nginx/sites-enabled/"
+    separador
+}
+
+reto8_info() {
+    separador
+    echo -e "${CYAN}Reto 8: Probar configuracion${NC}"
+    echo ""
+    echo "Valida la sintaxis del archivo de configuración de nginx."
+    echo "Siempre prueba la configuración antes de recargar el servicio."
+    echo ""
+    echo "Comandos útiles:"
+    echo "  nginx -t"
+    separador
+}
+
+reto9_info() {
+    separador
+    echo -e "${CYAN}Reto 9: Recargar nginx${NC}"
+    echo ""
+    echo "Recarga la configuración de nginx sin detener el servicio."
+    echo "Útil cuando aplicas cambios en configuración o virtual hosts."
+    echo ""
+    echo "Comandos útiles:"
+    echo "  nginx -s reload"
+    echo "  nginx -t && nginx -s reload"
+    separador
+}
+
+reto10_info() {
+    separador
+    echo -e "${CYAN}Reto 10: Detener nginx${NC}"
+    echo ""
+    echo "Detiene todos los procesos de nginx que estén ejecutándose."
+    echo ""
+    echo "Comandos útiles:"
+    echo "  pkill nginx"
+    echo "  nginx -s stop"
+    separador
+}

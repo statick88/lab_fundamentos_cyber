@@ -79,6 +79,7 @@ challenge_names=(
     "Eliminar paquete (conservar config)"
     "Eliminar paquete y configuracion"
 )
+ICONOS=("📦" "📝" "🌐" "ℹ️" "🔍" "📋" "📂" "🔎" "🗑️" "🔥")
 
 reto1_info() {
     separador

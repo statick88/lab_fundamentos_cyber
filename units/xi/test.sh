@@ -101,6 +101,7 @@ challenge_names=(
     "Programar backup automatico"
     "Restaurar desde backup verificado"
 )
+ICONOS=("🔧" "📦" "👁️" "🔄" "📑" "📁" "✅" "⚙️" "⏰" "🎯")
 
 reto1_info() {
     separador

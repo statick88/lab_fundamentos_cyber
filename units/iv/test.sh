@@ -81,6 +81,7 @@ challenge_names=(
     "Eliminar usuario"
     "Limpiar usuario y grupo"
 )
+ICONOS=("👤" "👥" "🔗" "🔑" "🖥️" "📁" "👑" "🔒" "❌" "🧹")
 
 reto1_info() {
     separador

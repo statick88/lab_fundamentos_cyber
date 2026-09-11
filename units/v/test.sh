@@ -94,6 +94,7 @@ challenge_names=(
     "Verificar servicio"
     "Listar servicios activos"
 )
+ICONOS=("📋" "🔍" "➕" "☠️" "⚡" "💾" "👤" "⏰" "🔧" "📊")
 
 reto1_info() {
     separador
