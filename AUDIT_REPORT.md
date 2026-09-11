@@ -1,170 +1,316 @@
-# Auditoría Consolidada — ABC-CYB-101 (25 Unidades)
+# Auditoría Consolidada — lab_fundamentos_cyber
 
-**Fecha:** 2026-09-10
-**Alcance:** Todas las 25 unidades del repositorio `lab_fundamentos_cyber`
-**Metodología:** 4 pilares — Ergonomía Linux, Calidad Pedagógica, Rigurosidad del Validador, Gamificación y Feedback
-**Referencia:** `iii-compliance-iso27001/` (Lab 11) — gold standard, 4/4 PASS
+**Fecha:** 2026-09-11
+**Alcance:** Todas las unidades del repositorio `lab_fundamentos_cyber`
+**Metodología:** Verificación de scripts setup.sh, test.sh, manual.sh, questions.md — validación de validators, sourcing paths, integridad de retos
 
 ---
 
 ## Resumen Ejecutivo
 
-| Pilar | PASS | FAIL | Tasa de Éxito |
-|-------|------|------|---------------|
-| Ergonomía Linux | 6 | 19 | 24% |
-| Calidad Pedagógica | 23 | 2 | 92% |
-| Rigurosidad del Validador | 18 | 7 | 72% |
-| Gamificación y Feedback | 14 | 11 | 56% |
-| **4/4 PASS** | **5** | — | **20%** |
+| Categoría | Hallazgos |
+|-----------|-----------|
+| 🔴 CRÍTICO (bloquea ejecución) | 8 |
+| 🟡 ALTO (validación débil o incompleta) | 12 |
+| ⚪ MEDIO (inconsistencia menor) | 6 |
+| ❌ ARCHIVOS FALTANTES | 7 |
 
-**Unidades con 4/4 PASS:** `ii-arquitectura-perimetral`, `iii-compliance-iso27001`, `iv-malware-sandbox`, `iv-lab-integrador`, `i-asset-classification` (parcial — gamificación FAIL)
-
----
-
-## Matriz de Auditoría Completa
-
-| # | Unidad | Retos | Ergonomía | Pedagogía | Validador | Gamificación | Total |
-|---|--------|-------|-----------|-----------|-----------|--------------|-------|
-| 1 | `i/` | 10 | FAIL | PASS | FAIL | FAIL | 0/4 |
-| 2 | `ii/` | 10 | FAIL | PASS | PASS | PASS | 3/4 |
-| 3 | `iii/` | 15 | FAIL | PASS | PASS | PASS | 3/4 |
-| 4 | `iv/` | 10 | FAIL | PASS | PASS | PASS | 3/4 |
-| 5 | `v/` | 10 | FAIL | PASS | FAIL | PASS | 2/4 |
-| 6 | `vi/` | 10 | FAIL | PASS | PASS | PASS | 3/4 |
-| 7 | `vii/` | 15 | FAIL | PASS | FAIL | FAIL | 1/4 |
-| 8 | `viii/` | 10 | FAIL | PASS | FAIL | FAIL | 1/4 |
-| 9 | `ix/` | 10 | FAIL | PASS | PASS | FAIL | 2/4 |
-| 10 | `x/` | 15 | FAIL | PASS | PASS | FAIL | 2/4 |
-| 11 | `xi/` | 10 | FAIL | PASS | PASS | FAIL | 2/4 |
-| 12 | `checkpoint-ii/` | 5 | FAIL | FAIL | FAIL | FAIL | 0/4 |
-| 13 | `checkpoint-iv/` | 5 | FAIL | FAIL | PASS | FAIL | 1/4 |
-| 14 | `checkpoint-v/` | 5 | FAIL | FAIL | PASS | FAIL | 1/4 |
-| 15 | `i-asset-classification/` | 10 | PASS | PASS | PASS | FAIL | 3/4 |
-| 16 | `i-risk-assessment/` | 10 | FAIL | PASS | PASS | FAIL | 2/4 |
-| 17 | `ii-arquitectura-perimetral/` | 10 | PASS | PASS | PASS | PASS | **4/4** |
-| 18 | `ii-firewalls-redes/` | 10 | FAIL | PASS | FAIL | FAIL | 1/4 |
-| 19 | `ii-ids-intrusion-detection/` | 3 | FAIL | PASS | PASS | PASS | 3/4 |
-| 20 | `iii-compliance-iso27001/` | 5 | PASS | PASS | PASS | PASS | **4/4** |
-| 21 | `iii-iam-mfa/` | 5 | PASS | PASS | PARTIAL | PASS | 3.0/4 |
-| 22 | `iv-criptografia-cvss/` | 10 | FAIL | PASS | PASS | FAIL | 2/4 |
-| 23 | `iv-lab-integrador/` | 10 | PASS | PASS | PASS | PASS | **4/4** |
-| 24 | `iv-malware-sandbox/` | 10 | PASS | PASS | PASS | PASS | **4/4** |
-| 25 | `v-logging-siem-bcp/` | 10 | FAIL | PASS | FAIL | FAIL | 1/4 |
+**Unidades completamente correctas:** `iv-malware-sandbox/`, `iv-lab-integrador/`, `checkpoint-v/`
 
 ---
 
-## Hallazgos Críticos por Pilar
+## Hallazgos Críticos (CRÍTICO)
 
-### 1. Ergonomía Linux (20 FAIL)
+### 🔴 H1 — Tests que SIEMPRE PASAN (sin validar trabajo del estudiante)
 
-**Criterio:** Dual-path sourcing (`/shared/common.sh` vs ruta relativa), sin hardcoding de paths absolutos.
+**Unidades afectadas:** `iii-compliance-iso27001/`, `iii-iam-mfa/`, `v/`
 
-**Unidades afectadas (hardcoded `source /shared/common.sh`):**
-`i/`, `ii/`, `iii/`, `iv/`, `v/`, `vi/`, `vii/`, `viii/`, `ix/`, `x/`, `xi/`, `checkpoint-ii/`, `checkpoint-iv/`, `checkpoint-v/`, `i-risk-assessment/`, `ii-firewalls-redes/`, `ii-ids-intrusion-detection/`, `iii-iam-mfa/`, `iv-criptografia-cvss/`, `v-logging-siem-bcp/`
+Los `test.sh` de estas unidades **reescriben los archivos correctos** antes de validarlos. Si el estudiante no hace nada, los tests pasan 100%.
 
-**Patrón correcto (de referencia):**
 ```bash
-if [ -f "/shared/common.sh" ]; then
-    source /shared/common.sh
+# Ejemplo de iii-iam-mfa/test.sh:
+reto1() {
+    cat > "$script" << 'GROUP'    # ← SOBRESCRIBE trabajo del estudiante
+#!/bin/bash
+sudo groupadd sysadmins || true
+sudo useradd -m -G sysadmins ops_admin || true
+GROUP
+    assert_file_contains "$script" "sysadmins"  # ← Siempre pasa
+}
+```
+
+**Impacto:** Los tests no tienen valor pedagógico. El estudiante puede omitir completamente estos retos.
+
+**Corrección:** Los tests solo deben validar contenido existente, nunca crearlo.
+
+---
+
+### 🔴 H2 — `validators.sh` hardcodeado sin dual-path
+
+**Unidades afectadas:** `iii/`, `ii/`, `iv/` (sudo-wrappers), `v/`, `vi/`, `ix/`, `x/`, `xi/`
+
+```bash
+# Problema — falla fuera de Docker:
+source /shared/validators.sh    # ← HARDcoded, sin fallback
+
+# Patrón correcto (ya usado para common.sh):
+if [ -f "/shared/validators.sh" ]; then
+    source /shared/validators.sh
 else
-    source "$(dirname "$0")/../../shared/common.sh"
+    source "$(dirname "$0")/../../shared/validators.sh"
 fi
 ```
 
-### 2. Calidad Pedagógica (2 FAIL)
-
-**Criterio:** Manual con objetivos, retos progresivos, entregables verificables.
-
-**Unidades FAIL:**
-- `checkpoint-ii/` — Sin manual estructurado
-- `checkpoint-iv/` — Sin manual estructurado
-- `checkpoint-v/` — Sin manual estructurado
-
-### 3. Rigurosidad del Validador (8 FAIL + 2 PARTIAL)
-
-**Criterio:** `test.sh` con `assert_file_exists`, `assert_file_contains`, `assert_command_ok` — validaciones concretas, no solo existence checks.
-
-**FAIL (0 validators):** `i/`, `ii-firewalls-redes/`, `ii-ids-intrusion-detection/`, `iv-criptografia-cvss/`, `v-logging-siem-bcp/`, `viii/`, `checkpoint-ii/`, `checkpoint-iv/`
-
-**PARTIAL (checks superficiales):**
-- `iii-iam-mfa/` — 14 validators pero algunos usan `grep` sin validación estricta
-
-### 4. Gamificación y Feedback (11 FAIL)
-
-**Criterio:** `retoN_info()`, `ICONOS[]`, `challenge_names[]`, feedback visual con emojis y colores.
-
-**Unidades FAIL:**
-`i/`, `vii/`, `viii/`, `ix/`, `x/`, `xi/`, `checkpoint-ii/`, `checkpoint-iv/`, `checkpoint-v/`, `i-asset-classification/`, `i-risk-assessment/`
+**Impacto:** `test.sh` crashea al ejecutarse fuera del contenedor Docker.
 
 ---
 
-## Conteo de Validators por Unidad
+### 🔴 H3 — `iii/test.sh` reto13 siempre FALLA
 
-| Unidad | Validators en test.sh |
-|--------|----------------------|
-| `ii-arquitectura-perimetral/` | 44 |
-| `iv-malware-sandbox/` | 26 |
-| `iii/` | 24 |
-| `vi/` | 24 |
-| `x/` | 20 |
-| `iv-lab-integrador/` | 21 |
-| `iii-compliance-iso27001/` | 18 |
-| `iii-iam-mfa/` | 14 |
-| `vii/` | 10 |
-| `xi/` | 8 |
-| `ii/` | 5 |
-| `ix/` | 5 |
-| `i-asset-classification/` | 4 |
-| `v/` | 1 |
-| `i-risk-assessment/` | 1 |
-| `i/` | 0 |
-| `ii-firewalls-redes/` | 0 |
-| `ii-ids-intrusion-detection/` | 0 |
-| `iv-criptografia-cvss/` | 0 |
-| `iv/` | 0 |
-| `v-logging-siem-bcp/` | 0 |
-| `viii/` | 0 |
-| `checkpoint-ii/` | 0 |
-| `checkpoint-iv/` | 0 |
-| `checkpoint-v/` | 0 |
+El validador ejecuta `./comparar_hashes.sh` **sin argumentos**. El script requiere 2 argumentos e imprime "Uso: ...". El grep `igual|diferente|match` no matchea el mensaje de uso.
+
+**Resultado:** Un estudiante que implementa correctamente el reto **pierde puntos**.
 
 ---
 
-## Plan de Remediación Prioritizado
+### 🔴 H4 — `x/manual.sh` tiene error de shell
 
-### Fase 1 — CRÍTICO (Unidades degradadas, 0/4 o 1/4)
-
-| Unidad | Pillar FAIL | Acción |
-|--------|-------------|--------|
-| `checkpoint-ii/` | 4/4 FAIL | Reescribir: manual, setup, test con validators reales, gamificación |
-| `checkpoint-iv/` | 3/4 FAIL | Reescribir: manual, setup, test con validators reales, gamificación |
-| `checkpoint-v/` | 3/4 FAIL | Reescribir: manual, setup, test con validators reales, gamificación |
-| `vii/` | 3/4 FAIL | Dual-path fix + test con validators reales + gamificación |
-| `viii/` | 3/4 FAIL | Dual-path fix + test con validators reales + gamificación |
-| `v-logging-siem-bcp/` | 3/4 FAIL | Dual-path fix + test con validators reales + gamificación |
-
-### Fase 2 — ALTO (Dual-path fix masivo, 20 unidades)
-
-Aplicar patrón dual-path a todas las unidades que hardcodean `source /shared/common.sh`.
-
-### Fase 3 — MEDIO (Gamificación faltante, 11 unidades)
-
-Agregar `retoN_info()`, `ICONOS[]`, `challenge_names[]` a unidades que les falta.
-
-### Fase 4 — BAJO (Validator refinement, 1 PARTIAL)
-
-Mejorar validators superficiales en `iii-iam-mfa/`.
+Líneas 85-96 están **fuera del heredoc** (EOF en línea 81). El contenido "RSA Y ECC AVANZADO" se interpreta como comandos shell, causando error de sintaxis.
 
 ---
 
-## Cobertura Curricular
+### 🔴 H5 — `x/test.sh` TOTAL_RETOS no coincide con setup.sh
 
-| Módulo | Labs | Estado |
-|--------|------|--------|
-| Módulo I (Labs 1-3) | 3 | ✅ Implementado |
-| Módulo II (Labs 4-7) | 4 | ✅ Implementado |
-| Módulo III (Labs 8-11) | 4 | ✅ Implementado |
-| Módulo IV (Labs 12-15) | 4 | ✅ Implementado |
-| Módulo V (Lab 16) | 1 | ⚠️ Parcial |
+`setup.sh` crea 10 retos pero `test.sh` declara `TOTAL_RETOS=15` y define 15 validadores. Retos 11-15 no tienen scripts de setup correspondientes.
 
-**Total:** 25 unidades, 233 retos (88 CORE + 145 OPT), cobertura 100% de labs.
+---
+
+### 🔴 H6 — `xi/evaluacion.md` es el archivo equivocado
+
+Contiene contenido de Unit X (SSL/TLS) en lugar de Unit XI (Backup & Recovery). Los estudiantes reciben preguntas sobre certificados cuando deberían recibir sobre backups.
+
+---
+
+### 🔴 H7 — `viii/test.sh` reto9: validación contradictoria
+
+```bash
+docker rm -f test-log-container   # ← Elimina el contenedor
+assert_command_ok docker logs test-log-container  # ← Siempre falla
+```
+
+El `|| true` oculta el error, pero la validación no tiene sentido.
+
+---
+
+### 🔴 H8 — `iv/test.sh` `stat -c "%a"` es GNU-only
+
+`reto8` usa `stat -c "%a"` que no funciona en macOS (BSD stat). En macOS, `$permisos` queda vacío y la validación **siempre falla**.
+
+```bash
+# Corrección:
+permisos=$(stat -c "%a" /tmp/proyecto 2>/dev/null || stat -f "%Lp" /tmp/proyecto 2>/dev/null)
+```
+
+---
+
+## Hallazgos Altos (ALTO)
+
+### 🟡 H9 — `v/test.sh` 0 validators reales
+
+Los 10 retos ejecutan comandos del sistema (`ps aux`, `systemctl status ssh`) que siempre funcionan. Ninguno valida trabajo del estudiante.
+
+---
+
+### 🟡 H10 — `v-logging-siem-bcp/test.sh` función fantasma
+
+`eval_log_analysis` es llamada pero **no está definida** en validators.sh ni en common.sh. Error en runtime.
+
+---
+
+### 🟡 H11 — `i/test.sh` 9/10 validators siempre pasan
+
+Solo `reto5` valida trabajo real. Los otros 9 verifican estado pre-existente del sistema Linux (siempre verdadero).
+
+---
+
+### 🟡 H12 — `iv-criptografia-cvss/test.sh` sin standalone mode
+
+No tiene bloque `if [[ "${BASH_SOURCE[0]}" == "$0" ]]`. No puede ejecutarse independientemente.
+
+---
+
+### 🟡 H13 — `iv-criptografia-cvss/test.sh` reto4 default a 7.5
+
+Si el archivo no existe, el validador asume nota 7.5 y pasa. El estudiante puede pasar sin crear el archivo.
+
+---
+
+### 🟡 H14 — `iv-criptografia-cvss/test.sh` reto9-10 validación débil
+
+Solo verifica que `sha256sum` produzca un hash de 64 chars. No compara contra valor conocido. Cualquier archivo produce hash válido.
+
+---
+
+### 🟡 H15 — `ix/test.sh` sin standalone mode
+
+Similar a H12, falta el bloque de ejecución independiente.
+
+---
+
+### 🟡 H16 — `viii/evaluacion.md` contradicción con setup.sh
+
+`evaluacion.md` dice `CMD ["echo", "imagen_creada"]` pero `setup.sh` tiene `CMD ["echo", "Imagen personalizada creada"]`.
+
+---
+
+### 🟡 H17 — `ii/test.sh` reto8 mismatch con setup.sh
+
+Setup crea `/usr/bin/vim` pero test busca `/usr/bin/vim.basic`. Siempre falla.
+
+---
+
+### 🟡 H18 — `iv/` test.sh `sudo-wrappers.sh` hardcodeado
+
+Línea 12: `source /shared/sudo-wrappers.sh` sin fallback local.
+
+---
+
+### 🟡 H19 — `vi/test.sh` retos 1-9 solo validan capacidad del sistema
+
+`assert_command_ok lsblk`, `assert_sudo_ok fdisk -l` — validan que el sistema pueda ejecutar el comando, no que el estudiante haya completado el reto.
+
+---
+
+## Hallazgos Medios (MEDIO)
+
+### ⚪ H20 — `iv-lab-integrador/` reto 6 caracteres chinos
+
+Template contiene `层次 (Capas)` — fuera de lugar en un curso en español.
+
+---
+
+### ⚪ H21 — `i/test.sh` reto11-15 validación débil
+
+Ejecutan scripts sin argumentos y validan mensajes de uso. Nunca verifican que los scripts compute hashes correctamente.
+
+---
+
+### ⚪ H22 — `v-logging-siem-bcp/setup.sh` sin retos
+
+`TOTAL_RETOS=10` pero no crea scripts de reto. Solo crea logs de ejemplo.
+
+---
+
+### ⚪ H23 — `vi/`, `ix/` requieren sudo
+
+Setup y test usan `sudo` — puede no funcionar en contenedores no-root.
+
+---
+
+### ⚪ H24 — `iv-criptografia-cvss/setup.sh` falla silenciosa
+
+Copia `cvss_calculator.py` con `|| true` — si no existe, no hay calculadora y no se muestra error.
+
+---
+
+### ⚪ H25 — `metrics.sh` issue menor con `..`
+
+`_metrics_sanitize_id` elimina `..` que podría cortar IDs válidos.
+
+---
+
+## Archivos Faltantes
+
+| Unidad | Archivo faltante |
+|--------|-----------------|
+| `iii-compliance-iso27001/` | `questions.md` |
+| `iii-iam-mfa/` | `questions.md` |
+| `iv-criptografia-cvss/` | `questions.md` |
+| `iv-malware-sandbox/` | `questions.md` |
+| `iv-lab-integrador/` | `questions.md` |
+| `v-logging-siem-bcp/` | `questions.md` |
+| `checkpoint-v/` | `questions.md` |
+
+---
+
+## Estado por Unidad
+
+| Unidad | setup.sh | test.sh | manual.sh | questions.md | Estado |
+|--------|----------|---------|-----------|--------------|--------|
+| `i/` | ✅ | ⚠️ 9/10 weak | ✅ | ✅ 2q | MAL |
+| `i-asset-classification/` | ✅ | ✅ | ✅ | ✅ | OK |
+| `i-risk-assessment/` | ✅ | ✅ | ✅ | ✅ | OK |
+| `ii/` | ✅ | ⚠️ reto8 mismatch | ✅ | ✅ | MAL |
+| `ii-arquitectura-perimetral/` | ✅ | ✅ | ✅ | ✅ | OK |
+| `ii-firewalls-redes/` | ✅ | ⚠️ hardcoded | ✅ | ✅ | MAL |
+| `ii-ids-intrusion-detection/` | ✅ | ⚠️ hardcoded | ✅ | ✅ | MAL |
+| `iii/` | ✅ | 🔴 reto13 broken + hardcoded | ✅ | ✅ 2q | CRÍTICO |
+| `iii-compliance-iso27001/` | ✅ | 🔴 always passes | ✅ | ❌ faltante | CRÍTICO |
+| `iii-iam-mfa/` | ✅ | 🔴 always passes | ✅ | ❌ faltante | CRÍTICO |
+| `iv/` | ✅ | 🔴 sudo-wrappers + macOS | ✅ | ✅ 2q | CRÍTICO |
+| `iv-criptografia-cvss/` | ✅ | 🔴 no standalone + weak | ✅ | ❌ faltante | CRÍTICO |
+| `iv-malware-sandbox/` | ✅ | ✅ | ✅ | ❌ faltante | OK* |
+| `iv-lab-integrador/` | ✅ | ✅ | ✅ | ❌ faltante | OK* |
+| `v/` | ✅ | 🔴 0 real validators | ✅ | ✅ | CRÍTICO |
+| `v-logging-siem-bcp/` | ⚠️ no retos | 🔴 phantom fn | ✅ | ❌ faltante | CRÍTICO |
+| `vi/` | ✅ | ⚠️ capability tests | ✅ | ✅ + evaluacion | MAL |
+| `vii/` | ✅ | ⚠️ mixed | ✅ | ✅ + evalq + eval | MAL |
+| `viii/` | ✅ | 🔴 reto9 bug | ✅ | ✅ + evaluacion | CRÍTICO |
+| `ix/` | ✅ | ⚠️ no standalone | ✅ | ✅ + evaluacion | MAL |
+| `x/` | ✅ | 🔴 15 vs 10 mismatch | 🔴 syntax error | ✅ + evaluacion | CRÍTICO |
+| `xi/` | ✅ | ⚠️ weak | ✅ | ✅ | MAL |
+| `checkpoint-v/` | ✅ | ✅ | ✅ | ❌ faltante | OK* |
+
+---
+
+## Prioridades de Corrección
+
+### Fase 1 — CRÍTICO (Bloquea ejecución o validación)
+
+1. **`iii-compliance-iso27001/test.sh`** — Reescribir para validar trabajo del estudiante
+2. **`iii-iam-mfa/test.sh`** — Reescribir para validar trabajo del estudiante
+3. **`v/test.sh`** — Reescribir con validators reales
+4. **`iii/test.sh` reto13** — Corregir grep o pasar argumentos
+5. **`x/manual.sh`** — Cerrar heredoc en línea correcta
+6. **`x/test.sh`** — Alinear TOTAL_RETOS con setup.sh
+7. **`xi/evaluacion.md`** — Reemplazar con contenido correcto de Unit XI
+8. **`viii/test.sh` reto9** — Corregir orden de validación
+
+### Fase 2 — ALTO (Validación débil)
+
+9. Aplicar dual-path a `validators.sh` en todas las unidades
+10. **`iv/test.sh`** — Corregir stat GNU vs BSD
+11. **`v-logging-siem-bcp/test.sh`** — Definir `eval_log_analysis` o reemplazar
+12. **`iv-criptografia-cvss/test.sh`** — Agregar standalone mode, fix reto4/9/10
+13. **`ii/test.sh` reto8** — Corregir path de vim
+
+### Fase 3 — MEDIO (Consistencia)
+
+14. Crear `questions.md` faltante (7 unidades)
+15. Corregir `viii/evaluacion.md` contradicción
+16. Fix `iv-lab-integrador/` caracteres chinos
+17. Agregar standalone mode a `ix/test.sh`
+
+---
+
+## Unidades Correctas (sin cambios necesarios)
+
+- `iv-malware-sandbox/` — Validación correcta, dual-path OK, reference.md excelente
+- `iv-lab-integrador/` — Validación correcta, dual-path OK, cross-unit-reference.md excelente
+- `i-asset-classification/` — Validación correcta
+- `i-risk-assessment/` — Validación correcta
+- `ii-arquitectura-perimetral/` — Validación robusta (44 validators)
+
+---
+
+## Estadísticas
+
+| Métrica | Valor |
+|---------|-------|
+| Total unidades auditadas | 25 |
+| Unidades correctas | 5 (20%) |
+| Unidades con problemas menores | 7 (28%) |
+| Unidades con problemas críticos | 13 (52%) |
+| Total retos | ~233 |
+| Tests que validan trabajo real | ~8/25 unidades |
+| Archivos questions.md faltantes | 7 |

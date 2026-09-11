@@ -24,15 +24,7 @@ LAB_DIR="$HOME/laboratorio/iam"
 # Valida que el script de scaffold contenga los comandos de creación.
 # Escribe contenido correcto para garantizar idempotencia.
 reto1() {
-    mkdir -p "$LAB_DIR" || return 1
     local script="$LAB_DIR/crear_grupo_usuario.sh"
-    cat > "$script" << 'GROUP'
-#!/bin/bash
-# Script de creacion de grupo y usuario
-sudo groupadd sysadmins || true
-sudo useradd -m -G sysadmins ops_admin || true
-GROUP
-    chmod +x "$script" 2>/dev/null || true
     assert_file_exists "$script"
     assert_file_contains "$script" "sysadmins"
     assert_file_contains "$script" "ops_admin"
@@ -42,13 +34,7 @@ GROUP
 # Valida el archivo de configuracion sudoers en el directorio de
 # laboratorio, no en /etc/sudoers.d (que requiere root).
 reto2() {
-    mkdir -p "$LAB_DIR/sudoers_config" || return 1
     local config_file="$LAB_DIR/sudoers_config/lab-cyber"
-    cat > "$config_file" << 'SUDO'
-# Configuracion sudoers para sysadmins
-%sysadmins ALL=(ALL) NOPASSWD: /usr/bin/systemctl
-SUDO
-    chmod 440 "$config_file" 2>/dev/null || true
     assert_file_exists "$config_file"
     assert_file_contains "$config_file" "sysadmins"
     assert_file_contains "$config_file" "NOPASSWD"
@@ -58,16 +44,7 @@ SUDO
 # Valida que el script/documento de política de contraseñas contenga
 # las directivas PASS_MAX_DAYS y PASS_MIN_DAYS.
 reto3() {
-    mkdir -p "$LAB_DIR" || return 1
     local policy_file="$LAB_DIR/password_policy.sh"
-    cat > "$policy_file" << 'POLICY'
-#!/bin/bash
-# Politica de contrasenas
-PASS_MAX_DAYS=90
-PASS_MIN_DAYS=10
-PASS_WARN_AGE=7
-POLICY
-    chmod +x "$policy_file" 2>/dev/null || true
     assert_file_exists "$policy_file"
     assert_file_contains "$policy_file" "PASS_MAX_DAYS"
     assert_file_contains "$policy_file" "PASS_MIN_DAYS"
@@ -77,15 +54,7 @@ POLICY
 # Valida que el archivo de configuracion PAM en el directorio de
 # laboratorio contenga la directiva pam_google_authenticator.so.
 reto4() {
-    mkdir -p "$LAB_DIR/pam_config" || return 1
     local pam_file="$LAB_DIR/pam_config/common-auth"
-    cat > "$pam_file" << 'PAM'
-# PAM config for Google Authenticator MFA
-auth [success=1 default=ignore] pam_google_authenticator.so
-auth requisite pam_deny.so
-auth required pam_permit.so
-PAM
-    chmod 644 "$pam_file" 2>/dev/null || true
     assert_file_exists "$pam_file"
     assert_file_contains "$pam_file" "pam_google_authenticator"
 }
@@ -93,20 +62,9 @@ PAM
 # ── Reto 5: Script de auditoria de usuarios privilegiados ───────────
 # Reutiliza el script ya existente en el directorio de laboratorio.
 reto5() {
-    mkdir -p "$LAB_DIR" || return 1
     local script="$LAB_DIR/audit_privileged.sh"
-    cat > "$script" << 'AUDIT'
-#!/bin/bash
-# Audita usuarios con privilegios (UID 0)
-echo "=== Usuarios con UID 0 ==="
-awk -F: '\$3 == 0 {print \$1}' /etc/passwd
-echo "=== Usuarios sudo ==="
-getent group sudo | cut -d: -f4
-AUDIT
-    chmod +x "$script" 2>/dev/null || true
     assert_file_exists "$script"
     assert_command_ok test -x "$script"
-    assert_command_ok "$script"
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5)

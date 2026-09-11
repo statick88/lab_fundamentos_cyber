@@ -56,7 +56,7 @@ cat << 'EOF'
 🎯 RETOS
 ══════════
 
-  Los retos estan en ~/laboratorio/ssl/reto[1-10].sh
+  Los retos estan en ~/laboratorio/ssl/reto[1-15].sh
   Ejecuta cada reto con: bash reto1.sh
   Usa 'evaluar' para verificar tu progreso.
 
@@ -78,10 +78,6 @@ cat << 'EOF'
   openssl x509 -req -in servidor.csr -CA ca.crt -CAkey ca.key \
     -CAcreateserial -out servidor.crt -days 365 -sha256
 
-EOF
-
-echo -e "\n${AMARILLO}Escribe ${CYAN}'evaluar'${AMARILLO} para verificar tu progreso o ${CYAN}'retos'${AMARILLO} para ver los retos.${RESET}"
-
   RSA Y ECC AVANZADO
   ───────────────────
   RSA 4096 bits: mayor seguridad que 2048, recomendado para CA
@@ -94,3 +90,7 @@ echo -e "\n${AMARILLO}Escribe ${CYAN}'evaluar'${AMARILLO} para verificar tu prog
   openssl ecparam -genkey -name secp384r1 -out ecc.key
   openssl req -new -key key.pem -out request.csr
   openssl verify -CAfile ca.crt cert.pem
+
+EOF
+
+echo -e "\n${AMARILLO}Escribe ${CYAN}'evaluar'${AMARILLO} para verificar tu progreso o ${CYAN}'retos'${AMARILLO} para ver los retos.${RESET}"

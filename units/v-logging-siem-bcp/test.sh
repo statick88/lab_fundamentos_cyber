@@ -7,9 +7,11 @@
 if [ -f "/shared/common.sh" ]; then
     source /shared/common.sh
     source /shared/validators.sh
+    source /shared/eval.sh
 else
     source "$(dirname "$0")/../../shared/common.sh"
     source "$(dirname "$0")/../../shared/validators.sh"
+    source "$(dirname "$0")/../../shared/eval.sh"
 fi
 
 UNIT_NAME="unit-V"

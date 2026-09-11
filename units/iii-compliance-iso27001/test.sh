@@ -20,15 +20,7 @@ LAB_DIR="$HOME/laboratorio/governance"
 # ── Reto 1: Risk Register CSV ──────────────────────────────────────
 # Valida que exista un CSV con encabezados estándar de risk register.
 reto1() {
-    mkdir -p "$LAB_DIR" || return 1
     local file="$LAB_DIR/risk_register.csv"
-    # Si el scaffolding fue eliminado, recrearlo para idempotencia
-    if [ ! -f "$file" ]; then
-        cat > "$file" << 'CSV'
-risk_id,title,likelihood,impact,owner
-RISK-001,Acceso no autorizado,Alta,Alta,Seguridad
-CSV
-    fi
     assert_file_exists "$file"
     assert_file_contains "$file" "risk_id"
     assert_file_contains "$file" "likelihood"
@@ -39,17 +31,7 @@ CSV
 # ── Reto 2: Statement of Applicability JSON ────────────────────────
 # Valida que exista un JSON válido con campos SoA.
 reto2() {
-    mkdir -p "$LAB_DIR" || return 1
     local file="$LAB_DIR/statement_of_applicability.json"
-    if [ ! -f "$file" ]; then
-        cat > "$file" << 'JSON'
-{
-  "standard": "ISO 27001",
-  "applicable_controls": ["A.5.1.1", "A.8.1.1"],
-  "non_applicable_controls": []
-}
-JSON
-    fi
     assert_file_exists "$file"
     assert_file_contains "$file" "applicable_controls"
     assert_file_contains "$file" "standard"
@@ -58,20 +40,7 @@ JSON
 # ── Reto 3: Policy Compliance MD ───────────────────────────────────
 # Valida que exista un documento de política de cumplimiento.
 reto3() {
-    mkdir -p "$LAB_DIR" || return 1
     local file="$LAB_DIR/politica_cumplimiento.md"
-    if [ ! -f "$file" ]; then
-        cat > "$file" << 'MD'
-# Política de Cumplimiento
-## 1. Alcance
-Define el alcance del ISMS.
-## 2. Referencias
-- ISO/IEC 27001:2022
-- NIST CSF 2.0
-## 3. Responsabilidades
-- Responsable del ISMS
-MD
-    fi
     assert_file_exists "$file"
     assert_file_contains "$file" "Alcance"
     assert_file_contains "$file" "ISO"
@@ -80,16 +49,7 @@ MD
 # ── Reto 4: Severity Matrix ────────────────────────────────────────
 # Valida que exista una matriz de severidad con likelihood/impact.
 reto4() {
-    mkdir -p "$LAB_DIR" || return 1
     local file="$LAB_DIR/severidad_matrix.csv"
-    if [ ! -f "$file" ]; then
-        cat > "$file" << 'SEV'
-severity,likelihood,impact,risk_level
-Baja,Baja,Baja,Acceptable
-Media,Media,Media,Tolerable
-Alta,Alta,Alta,Intolerable
-SEV
-    fi
     assert_file_exists "$file"
     assert_file_contains "$file" "likelihood"
     assert_file_contains "$file" "impact"
@@ -99,18 +59,7 @@ SEV
 # ── Reto 5: Controls Compliance Check ──────────────────────────────
 # Valida que exista un script verificador de controles ISO 27001.
 reto5() {
-    mkdir -p "$LAB_DIR" || return 1
     local script="$LAB_DIR/controls_check.sh"
-    if [ ! -f "$script" ]; then
-        cat > "$script" << 'CHECK'
-#!/bin/bash
-# Verificar cumplimiento de controles ISO 27001
-echo "Verificando controles de seguridad..."
-echo "Control A.5.1.1: Politicas de seguridad - OK"
-echo "Control A.8.1.1: Activos clasificados - OK"
-CHECK
-        chmod +x "$script" 2>/dev/null || true
-    fi
     assert_file_exists "$script"
     assert_command_ok test -x "$script"
     assert_file_contains "$script" "ISO"
