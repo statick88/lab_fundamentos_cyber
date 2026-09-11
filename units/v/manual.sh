@@ -2,7 +2,12 @@
 # Unit V: Processes & Services — manual.sh
 # Interactive guide for learning process/service management
 
-source /shared/common.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+fi
 
 UNIT_NAME="unit-V"
 banner_unidad 5 "Procesos y Servicios"

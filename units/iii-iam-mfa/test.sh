@@ -3,7 +3,12 @@
 # Estandarizado: usa /shared/validators.sh para aserciones deterministicas
 # Sin dependencias de sudo/root. Paths bajo $HOME/laboratorio.
 
-source /shared/common.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+fi
 source /shared/validators.sh
 
 UNIT_NAME="unit-III"

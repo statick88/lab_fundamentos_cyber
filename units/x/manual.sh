@@ -2,7 +2,12 @@
 # Unit X: SSL/TLS Certificates — manual.sh
 # Interactive guide for learning SSL
 
-source /shared/common.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+fi
 
 UNIT_NAME="unit-X"
 banner_unidad 10 "Certificados SSL/TLS"

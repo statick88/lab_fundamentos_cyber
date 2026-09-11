@@ -3,7 +3,12 @@
 # Creates the environment and 10 challenges for learning backup
 
 set -e
-source /shared/common.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+fi
 
 UNIT_NAME="unit-XI"
 UNIT_NUM=11

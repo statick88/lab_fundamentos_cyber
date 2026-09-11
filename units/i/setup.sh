@@ -3,7 +3,12 @@
 # Creates environment and 10 theoretical multiple-choice challenges
 
 set -e
-source /shared/common.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+fi
 
 UNIT_NAME="unit-I"
 UNIT_NUM=1

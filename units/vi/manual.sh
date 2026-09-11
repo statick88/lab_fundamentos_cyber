@@ -2,7 +2,12 @@
 # Unit VI: Storage Management — manual.sh
 # Interactive guide for learning storage management
 
-source /shared/common.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+fi
 
 UNIT_NAME="unit-VI"
 banner_unidad 6 "Gestion de Almacenamiento"

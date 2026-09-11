@@ -2,7 +2,12 @@
 # Unit I: Fundamentos de Linux y WSL2 — manual.sh
 # Interactive guide for learning Linux fundamentals
 
-source /shared/common.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+fi
 
 UNIT_NAME="unit-I"
 banner_unidad 1 "Fundamentos de Linux y WSL2"

@@ -1,7 +1,12 @@
 #!/bin/bash
 # Unit IV: Criptografía y CVSS — manual.sh
 
-source /shared/common.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+fi
 
 banner_unidad 4 "Criptografía y CVSS"
 

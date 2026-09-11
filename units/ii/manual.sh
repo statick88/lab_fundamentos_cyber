@@ -2,7 +2,12 @@
 # Unit II: Package Management — manual.sh
 # Interactive guide for learning apt/dpkg
 
-source /shared/common.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+fi
 
 UNIT_NAME="unit-II"
 banner_unidad 2 "Gestion de Paquetes"

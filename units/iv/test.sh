@@ -3,7 +3,12 @@
 # Automated validation of 10 challenges
 # System-Bound unit: uses /shared/sudo-wrappers.sh for privileged assertions
 
-source /shared/common.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+fi
 source /shared/sudo-wrappers.sh
 
 UNIT_NAME="unit-IV"

@@ -3,7 +3,12 @@
 # Automated validation of 10 challenges
 # Estandarizado: usa /shared/validators.sh y /shared/sudo-wrappers.sh
 
-source /shared/common.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+fi
 source /shared/validators.sh
 source /shared/sudo-wrappers.sh
 

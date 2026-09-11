@@ -2,7 +2,12 @@
 # Unit I: Fundamentos de Linux y WSL2 — test.sh
 # Standard pattern: defines retoN() validators + retoN_info() for menu-driven execution
 
-source /shared/common.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+fi
 
 UNIT_NAME="unit-I"
 TOTAL_RETOS=10

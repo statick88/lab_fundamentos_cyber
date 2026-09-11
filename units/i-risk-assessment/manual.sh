@@ -2,7 +2,12 @@
 # Unit: i-risk-assessment — Evaluación de Riesgos con matriz ISO 31000 (Lab 2)
 # Manual interactivo del estudiante
 
-source /shared/common.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+fi
 
 UNIT_NAME="unit-i-risk-assessment"
 banner_unidad 2 "Evaluación de Riesgos ISO 31000"

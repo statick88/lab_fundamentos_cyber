@@ -3,7 +3,12 @@
 # Setup: genera escenario PyME y plantilla de análisis
 
 set -e
-source /shared/common.sh
+# Support both container (/shared) and local (relative) paths
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+fi
 
 UNIT_NAME="unit-i-risk-assessment"
 UNIT_NUM=2
