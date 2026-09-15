@@ -16,7 +16,8 @@ phases:
     status: completed
     timestamp: "2026-09-11"
   design:
-    status: pending
+    status: completed
+    timestamp: "2026-09-11"
   tasks:
     status: pending
   apply:
