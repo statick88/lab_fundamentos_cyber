@@ -4,7 +4,7 @@
 
 # === MANIFIESTO DE UNIDADES ===
 # Índices: 1..22 (cada directorio en units/ tiene su propia entrada)
-# Total: 236 retos (60 CORE + 176 OPTATIVOS) — alineado con test.sh reales
+# Total: 243 retos (60 CORE + 183 OPTATIVOS) — alineado con test.sh reales
 #
 # Orden de unidades (índices 1..22):
 #   1  i                        unit-I            Principios y Gestión de Riesgo          M1
@@ -86,7 +86,7 @@ UNIT_ICONOS=(
   "🏷️" "📋" "🏰" "🦠" "🔬" "🦋"
 )
 
-# Cantidad de retos por unidad (236 total, alineado con test.sh reales)
+# Cantidad de retos por unidad (243 total, alineado con test.sh reales)
 # CORE: unit-I(10)+unit-II(10)+unit-IV(10)+unit-V(10)+i-risk-assessment(10)+i-asset-classification(10) = 60
 # OPT: 236 - 60 = 176
 UNIT_RETOS=(
@@ -99,14 +99,14 @@ UNIT_RETOS=(
 )
 
 # Clasificación pedagógica: 1 = CORE obligatorio, 0 = OPTATIVO/exploratorio
-# Total CORE: 60 retos. Total OPT: 176 retos.
+# Total CORE: 60 retos. Total OPT: 183 retos.
 # CORE: unit-I(10)+unit-II(10)+unit-IV(10)+unit-V(10)+i-risk-assessment(10)+i-asset-classification(10) = 60
 UNIT_CORE=(
-  1   1   0   0   1
+  1   1   0   0   0
   0   1   0   1   0
   0   0   0   0   0
   0   0   0   0   1
-  1   1   0   0   0
+  1   0   0   0   0
   0
 )
 

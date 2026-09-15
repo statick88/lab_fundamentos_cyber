@@ -1,6 +1,6 @@
 #!/bin/bash
 # Unit II-ids: Detección de Intrusos con Suricata — test.sh
-# 3 retos CORE: Suricata install/status, local.rules validation, alert generation
+# 3 retos OPT: Suricata install/status, local.rules validation, alert generation
 
 # Dual-path sourcing
 if [ -f "/shared/common.sh" ]; then

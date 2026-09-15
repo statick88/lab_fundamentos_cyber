@@ -1,6 +1,6 @@
 #!/bin/bash
-# Sistema de menus y navegacion para 19 unidades ABC-CYB-101
-# 178 retos totales: 63 CORE + 115 OPT
+# Sistema de menus y navegacion para 26 unidades ABC-CYB-101
+# 243 retos totales: 60 CORE + 183 OPT
 
 mostrar_menu_principal() {
     clear; echo ""

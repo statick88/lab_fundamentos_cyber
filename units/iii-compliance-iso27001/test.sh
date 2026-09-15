@@ -1,6 +1,6 @@
 #!/bin/bash
 # Unit iii-compliance-iso27001: Cumplimiento ISO 27001 / NIST CSF 2.0 — test.sh
-# 5 retos CORE: risk_register, SoA, política, matriz severidad, controls check
+# 5 retos OPT: risk_register, SoA, política, matriz severidad, controls check
 
 # Dual-path sourcing
 if [ -f "/shared/common.sh" ]; then
