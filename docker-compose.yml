@@ -5,12 +5,12 @@
 #
 # Uso:
 #   docker compose up -d          # Levantar en segundo plano
-#   docker compose exec lab-linux bash  # Entrar al contenedor
+#   docker compose exec lab_fundamentos_cyber bash  # Entrar al contenedor
 #   docker compose down           # Detener y eliminar
 # =============================================================================
 
 services:
-  lab-linux:
+  lab_fundamentos_cyber:
     build:
       context: .
       dockerfile: Dockerfile

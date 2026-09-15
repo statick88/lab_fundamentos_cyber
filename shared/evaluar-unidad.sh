@@ -34,6 +34,7 @@ case "$UNIT_ROMAN_LC" in
     i-risk) UNIT_DIR="i-risk-assessment" ;;
     i-asset) UNIT_DIR="i-asset-classification" ;;
     ii-arp) UNIT_DIR="ii-arquitectura-perimetral" ;;
+    iv-burp) UNIT_DIR="iv-burp-intercept" ;;
     iv-malware) UNIT_DIR="iv-malware-sandbox" ;;
     iv-integrador) UNIT_DIR="iv-lab-integrador" ;;
     *) UNIT_DIR="" ;;

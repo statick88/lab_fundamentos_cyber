@@ -1,0 +1,109 @@
+# SDD Change State — abc-cyb-101-ebook-completion
+# This file is the DAG state for the change. It tracks phase completion
+# and is updated by the orchestrator as phases complete.
+
+change_name: abc-cyb-101-ebook-completion
+artifact_store: openspec
+project: lab_fundamentos_cyber
+repo_path: /Users/statick/dev/labs/lab_fundamentos_cyber
+
+phases:
+  init:
+    status: completed
+    completed_at: "2026-08-31T23:10:00Z"
+  research:
+    status: completed
+    completed_at: "2026-08-31T23:15:00Z"
+  explore:
+    status: completed
+    completed_at: "2026-08-31T23:20:00Z"
+  propose:
+    status: completed
+    completed_at: "2026-08-31T23:29:16Z"
+    artifact: proposal.md
+  spec:
+    status: completed
+    completed_at: "2026-08-31T23:33:41Z"
+    artifact: specs/ebook/spec.md
+  design:
+    status: completed
+    completed_at: "2026-08-31T23:32:46Z"
+    artifact: design.md
+  tasks:
+    status: completed
+    completed_at: "2026-08-31T23:38:02Z"
+    artifact: tasks.md
+  apply:
+    status: completed
+    completed_at: "2026-09-03T05:06:00Z"
+    phase_1:
+      status: completed
+      work_unit: Foundation
+      scope: M2 rewrite, M3 update, index TOC
+      commits:
+        - dedefc1
+        - 26e8801
+        - a9c62e0
+        - 33dcd4a
+        - cb563e9
+      branch: feature/cyb-101-labs
+      settled_at: "2026-08-31T23:55:00Z"
+      settled_status: passed
+      budget_exceeded: true
+    phase_2:
+      status: completed
+      completed_at: "2026-09-01T00:10:00Z"
+      work_unit: Core modules
+      scope: M4, M5, M6 new files
+      commits:
+        - 8c64417
+        - a771c62
+        - f9aab6d
+        - f8d89d8
+    phase_2_5:
+      status: completed
+      completed_at: "2026-09-03T05:06:00Z"
+      work_unit: Dual-mode support
+      scope: Add Docker vs native callouts in index.qmd, M1, M2, M4, M5, M6
+      commits: []
+      budget_exceeded: false
+      changed_lines: ~180 (doc-only)
+  verify:
+    status: completed
+    completed_at: "2026-09-03T05:06:00Z"
+    render_passed: true
+    dual_mode_callouts_present: true
+    artifact: verify-report.md
+  archive:
+    status: completed
+    completed_at: "2026-09-03T15:09:00Z"
+    artifact: archive-report.md
+
+dependencies:
+  verify:
+    status: all_done
+  archive:
+    status: ready
+
+next_recommended: archive
+current_phase: archive
+delivery_status: archived
+
+delivery_strategy: single-pr
+chain_strategy: size-exception
+review_budget_lines: 400
+
+risks:
+  - "Phase 1 exceeded 600 changed-line budget (1979 lines) — budget_exceeded flag set"
+  - "Phase 2 (M4-M6) committed directly on main, state.yaml stale — now marked completed"
+  - "Phase 2.5 dual-mode additions within 400-line budget (no new risk)"
+  - "Chain strategy is size-exception (awaiting maintainer approval)"
+
+artifacts:
+  proposal: proposal.md
+  spec: specs/ebook/spec.md
+  design: design.md
+  tasks: tasks.md
+  apply: apply-progress.md
+  verify: verify-report.md
+  archive: archive-report.md

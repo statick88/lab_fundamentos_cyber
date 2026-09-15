@@ -11,650 +11,388 @@ format:
 
 # Módulo 3 — Scripting y Control de Acceso
 
----
+## Introducción: automatizar es defender
 
-## Introducción: automatizar la defensa
+**Un buen administrador de seguridad escribe scripts para que el sistema trabaje por ti.**
 
-**En ciberseguridad, la automatización no es opcional.** Cuando respondes a un incidente, no tienes tiempo de ejecutar 50 comandos manualmente. Necesitas scripts que recopilen evidencia, verifiquen integridad y apliquen controles en segundos.
+En ciberseguridad, la repetitividad es el enemigo de la seguridad. Tareas que haces una vez las recuerdas; tareas que automatizas las haces siempre bien hechas. Este módulo te enseña a usar la terminal no solo para ejecutar comandos aislados, sino para **automatizar flujos de trabajo de seguridad**.
 
-Este módulo cubre dos pilares fundamentales:
-1. **Scripting en Bash** — automatizar tareas de seguridad
-2. **Control de Acceso** — gestionar quién puede hacer qué en el sistema
-
-### El flujo de trabajo de Git
-
-```
-    ┌─────────────────────────────────────────────────────────────┐
-    │                 FLUJO DE TRABAJO GIT                        │
-    │                                                             │
-    │   ┌──────────────┐                                          │
-    │   │  WORKING     │  ← Tu directorio de trabajo actual      │
-    │   │  DIRECTORY   │     (archivos que editas)               │
-    │   └──────┬───────┘                                          │
-    │          │ git add                                          │
-    │          ▼                                                  │
-    │   ┌──────────────┐                                          │
-    │   │  STAGING     │  ← Área de preparación                  │
-    │   │  AREA        │     (archivos listos para commit)       │
-    │   └──────┬───────┘                                          │
-    │          │ git commit                                       │
-    │          ▼                                                  │
-    │   ┌──────────────┐                                          │
-    │   │  LOCAL       │  ← Tu repositorio local                 │
-    │   │  REPO        │     (historial completo en tu máquina)  │
-    │   └──────┬───────┘                                          │
-    │          │ git push / git pull                              │
-    │          ▼                                                  │
-    │   ┌──────────────┐                                          │
-    │   │  REMOTE      │  ← Repositorio remoto (GitHub, GitLab)  │
-    │   │  REPO        │     (compartido con el equipo)          │
-    │   └──────────────┘                                          │
-    │                                                             │
-    └─────────────────────────────────────────────────────────────┘
-```
-
-### Commit: snapshot, no diferencia
-
-Un **commit** es una "foto" completa de tus archivos en un momento específico. No es una diferencia (diff) — es el estado completo del proyecto en ese instante.
-
-```
-    ┌──────────────────────────────────────────────────────┐
-    │                 HISTORIAL DE COMMITS                 │
-    │                                                      │
-    │   commit a1b2c3  ← "Agregar script de análisis"      │
-    │        │                                             │
-    │        ▼                                             │
-    │   commit d4e5f6  ← "Corregir bug en parser"          │
-    │        │                                             │
-    │        ▼                                             │
-    │   commit g7h8i9  ← "Documentar hallazgos"           │
-    │                                                      │
-    │   Cada commit tiene:                                 │
-    │   - Hash único (a1b2c3...)                          │
-    │   - Mensaje descriptivo                              │
-    │   - Autor y timestamp                                │
-    │   - Referencia al commit anterior                    │
-    │                                                      │
-    └──────────────────────────────────────────────────────┘
-```
-
-### Push / Pull: sincronización remota
-
-- **Push**: envía tus commits locales al repositorio remoto
-- **Pull**: trae los cambios del remoto a tu máquina local
+Desde la creación de usuarios hasta la rotación de claves, aprenderás a transformar operaciones manuales en scripts robustos y mantenibles.
 
 ---
 
-## Comandos esenciales con ejemplos
+## Bash: variables, condicionales y bucles
 
-### git init — crear un repositorio
+### Variables y expansión
 
-```bash
-# Crear un directorio para el proyecto
-mkdir laboratorio-seguridad
-cd laboratorio-seguridad
-
-# Inicializar repositorio Git
-git init
-```
-```
-Initialized empty Git repository in /home/estudiante/laboratorio-seguridad/.git/
-```
-
-### git clone — clonar un repositorio existente
+En bash, una variable es simplemente un nombre que apunta a un valor.
 
 ```bash
-# Clonar un repositorio remoto
-git clone https://github.com/usuario/repo-seguridad.git
-```
-```
-Cloning into 'repo-seguridad'...
-remote: Enumerating objects: 42, done.
-Receiving objects: 100% (42/42), done.
+# Definir variables
+USUARIO="estudiante"
+PUERTO_SSH=2222
+ADMIN="admin123"
+
+# Usar variables
+echo "Bienvenido, $USUARIO"
+echo "El puerto SSH por defecto es $PUERTO_SSH"
+
+# Variables de entorno
+echo "HOME es: $HOME"
+echo "PATH es: $PATH"
 ```
 
-### git add y git status — preparar cambios
-
-```bash
-# Verificar el estado actual
-git status
-```
-```
-On branch main
-Untracked files:
-  (use "git add <file>..." to include in commit)
-        script_analisis.sh
-
-nothing added to commit but untracked files present
-```
+### Expansión de variables con corchetes
 
 ```bash
-# Agregar un archivo específico al staging area
-git add script_analisis.sh
+# Específica el nombre exacto de la variable
+echo "${USUARIO}_ultima_sesión"
 
-# Agregar todos los cambios
-git add .
-```
-
-### git commit — guardar snapshot
-
-```bash
-# Crear commit con mensaje descriptivo
-git commit -m "Agregar script de análisis de logs"
-```
-```
-[main a1b2c3d] Agregar script de análisis de logs
- 1 file changed, 15 insertions(+)
- create mode 100644 script_analisis.sh
+# Evita ambigüedades en cadenas
+ARCHIVO="hola_mundo.txt"
+echo "${ARCHIVO%.txt}_modificado.${ARCHIVO##*.}"
 ```
 
 ::: {.warning}
-**Advertencia:** Los mensajes de commit deben ser descriptivos. `git commit -m "cambios"` no dice nada. `git commit -m "Agregar parser para logs de autenticación"` sí.
+**Advertencia:** No uses variables no definidas sin `:${VARIABLE}` o ` ${VARIABLE:-default}`. Bash lanzará un error si la variable está vacía y el comando la usa sin protección.
 :::
 
-### git push y git pull — sincronizar con remoto
+### Lectura de entrada del usuario
 
 ```bash
-# Enviar commits locales al remoto
-git push origin main
-```
-```
-Enumerating objects: 4, done.
-To https://github.com/usuario/repo.git
-   d4e5f6g..a1b2c3d  main -> main
-```
-
-```bash
-# Traer cambios del remoto
-git pull origin main
-```
-```
-Updating a1b2c3d..h8i9j0k
-Fast-forward
- README.md | 5 +++++
- 1 file changed, 5 insertions(+)
-```
-
-### git log — ver historial
-
-```bash
-# Historial compacto
-git log --oneline
-```
-```
-h8i9j0k (HEAD -> main) Documentar hallazgos del laboratorio
-a1b2c3d Agregar script de análisis de logs
-d4e5f6g Commit inicial
-```
-
-### git diff — ver diferencias
-
-```bash
-# Ver cambios no guardados
-git diff
-```
-```
-diff --git a/script_analisis.sh b/script_analisis.sh
-index 1234567..89abcde 100644
---- a/script_analisis.sh
-+++ b/script_analisis.sh
-@@ -10,6 +10,7 @@
- echo "Analizando..."
- grep "Failed" /var/log/auth.log
-+grep "Accepted" /var/log/auth.log
-```
-
----
-
-## .gitignore correcto
-
-### Qué ignorar
-
-El archivo `.gitignore` le dice a Git qué archivos NO debe versionar. En ciberseguridad, esto es crítico.
-
-```gitignore
-# ═══════════════════════════════════════════════════
-# .gitignore para proyectos de ciberseguridad
-# ═══════════════════════════════════════════════════
-
-# CREDENALLES - NUNCA versionar
-*.pem
-*.key
-*.p12
-*.pfx
-.env
-.env.*
-secrets/
-credentials/
-passwords.txt
-*.secret
-
-# ARCHIVOS TEMPORALES
-*.tmp
-*.log
-*.bak
-*~
-.DS_Store
-Thumbs.db
-
-# OUTPUTS DE HERRAMIENTAS
-nmap_output/
-scan_reports/
-pcap_captures/*.pcap
-evidence/screenshots/
-
-# ARCHIVOS GRANDES
-*.iso
-*.img
-*.zip
-*.tar.gz
-
-# ENTORNOS VIRTUALES
-venv/
-.venv/
-node_modules/
-```
-
-### Qué NO ignorar
-
-| Archivo | Por qué versionarlo |
-|---------|---------------------|
-| Scripts (.sh, .py) | Son el trabajo principal |
-| Documentación (.md) | Explica el propósito y uso |
-| Plantillas (.template) | Base para configuraciones |
-| Archivos de configuración | Permiten reproducir el entorno |
-
-::: {.warning}
-**Advertencia de seguridad:** Si alguna vez commiteas credenciales por accidente, cambiar la contraseña inmediatamente. Eliminar el archivo de Git no basta — el historial conserva el commit. Usa `git filter-branch` o BFG Repo-Cleaner para eliminar datos sensibles del historial.
-:::
-
----
-
-## Estrategia de ramas: Git Flow simplificado
-
-En este curso seguimos la convención definida en `CONTRIBUTING.md`: una estructura de tres niveles que separa el desarrollo de las correcciones de estabilidad.
-
-```
-    ┌────────────────────────────────────────────────────────────────────┐
-    │                    ESTRATEGIA DE RAMAS (CONTRIBUTING.md)          │
-    │                                                                    │
-    │   main   ──────●────────────────────●──────────────────●──────►     │
-    │              │                    │                    │             │
-    │              │        merge       │                    │             │
-    │              └────── develop ─────┘                    │             │
-    │                      │                                    │             │
-    │                      │                    merge         │             │
-    │                      │    ┌──── fix/corregir-timeout ────┘             │
-    │                      │    │                                        │
-    │                      ▼    ▼                                        │
-    │                    feature/                                      │
-    │                    nmap-escaneo                                    │
-    │                    │                                               │
-    │             ┌──────●───●───●───●───●─┐                           │
-    │             │  commits atómicos con  │                            │
-    │             │  Conventional Commits │                            │
-    │             └────────────────────────┘                           │
-    │                                                                    │
-    │   • main:     código de producción estable                          │
-    │   • develop:  integración de nuevas funcionalidades                 │
-    │   • feature/*: desarrollo de una funcionalidad concreta            │
-    │   • fix/*:    correcciones rápidas desde main (hotfixes)            │
-    │                                                                    │
-    └────────────────────────────────────────────────────────────────────┘
-```
-
-### Convenciones de ramas
-
-| Tipo de rama | Prefijo | Creado desde | Uso |
-|--------------|---------|--------------|-----|
-| **main** | — | — | Código estable, listo para producción |
-| **develop** | — | `main` | Integración de features antes de merge a `main` |
-| **Feature** | `feature/` | `develop` | Nueva funcionalidad (ej: `feature/nmap-escaneo`) |
-| **Fix** | `fix/` | `main` | Corrección urgente de producción (ej: `fix/corregir-timeout`) |
-
-### Conventional Commits
-
-Los mensajes de commit siguen el formato **Conventional Commits**:
-
-| Tipo | Uso | Ejemplo |
-|------|-----|---------|
-| `feat:` | Nueva funcionalidad | `feat: agregar parser para logs de autenticación` |
-| `fix:` | Corrección de bug | `fix: corregir regex que fallaba con timestamps` |
-| `docs:` | Cambios en documentación | `docs: actualizar guía de uso de tcpdump` |
-| `refactor:` | Reestructuración sin cambios de comportamiento | `refactor: simplificar lógica de validación` |
-
-```bash
-# ✅ BIEN: commits atómicos con tipo convencional
-git commit -m "feat: agregar script de descubrimiento de hosts"
-git commit -m "fix: corregir filtro tcpdump para tráfico DNS"
-git commit -m "docs: documentar filtros avanzados de tcpdump"
-
-# ❌ MAL: commit monolítico sin tipo
-git commit -m "cambios"
+# Solicitar y leer entrada del usuario
+read -p "¿Cuál es tu nombre? " NOMBRE
+echo "Hola, $NOMBRE! Bienvenido al laboratorio."
 ```
 
 ::: {.note}
-**Nota del instructor:** Cada commit debe ser una "foto" verificable. Si no puedes describir en una línea lo que cambió, el commit es demasiado grande. `feat:` y `fix:` no son solo estilo — son contratos con tu equipo y con el futuro tú.
+**Modo nativo (sin Docker):** En el contenedor, `estudiante` tiene un prompt interactivo listo. En tu máquina nativa, el `read` funcionará exactamente igual en cualquier terminal compatible con bash.
 :::
 
-### Commits atómicos
+---
 
-Un **commit atómico** contiene un solo cambio lógico. No mezcles correcciones de bugs con nuevas funcionalidades. Si un commit incluye "agregar funcionalidad" y "corregir bug", tu `git bisect` se vuelve inútil para localizar cuándo se introdujo el error.
+### Condicionales: tomar decisiones
+
+#### Sintaxis básica
 
 ```bash
-# ❌ MAL: un commit con múltiples cambios no relacionados
-git commit -m "Varios cambios y correcciones"
+if [ "$USUARIO" = "root" ]; then
+    echo "Ejecutando como administrador"
+elif [ "$USUARIO" = "estudiante" ]; then
+    echo "Modo estudiante activado"
+else
+    echo "Usuario desconocido"
+fi
+```
 
-# ✅ BIEN: commits separados por cambio lógico
-git commit -m "feat: agregar parser para logs de autenticación"
-git commit -m "fix: corregir regex que fallaba con timestamps"
-git commit -m "docs: documentar uso del script de análisis"
+#### Operadores en condicionales
+
+| Tipo | Operador | Significado | Ejemplo |
+|------|----------|-------------|---------|
+| **Enteros** | `-eq` | Igual a | `[ $a -eq $b ]` |
+| | `-ne` | No igual a | `[ $a -ne $b ]` |
+| | `-gt` | Mayor que | `[ $a -gt $b ]` |
+| | `-lt` | Menor que | `[ $a -lt $b ]` |
+| | `-ge` | Mayor o igual | `[ $a -ge $b ]` |
+| | `-le` | Menor o igual | `[ $a -le $b ]` |
+| **Cadenas** | `=` | Igual a | `[ "$a" = "$b" ]` |
+| | `!=` | No igual a | `[ "$a" != "$b" ]` |
+| | `\<` | Menor que (alfabético) | `[ "$a" \< "$b" ]` |
+| | `\>` | Mayor que (alfabético) | `[ "$a" \> "$b" ]` |
+| **Archivos** | `-e` | Existe | `[ -e archivo.txt ]` |
+| | `-f` | Es un archivo regular | `[ -f archivo.txt ]` |
+| | `-d` | Es un directorio | `[ -d /var/log ]` |
+| | `-r` | Es legible | `[ -r archivo.txt ]` |
+| | `-w` | Es escribible | `[ -w archivo.txt ]` |
+| | `-x` | Es ejecutable | `[ -x script.sh ]` |
+
+#### Ejemplo completo
+
+```bash
+# Verificar si un archivo existe y es editable
+ARCHIVO="/etc/hostname"
+
+if [ -f "$ARCHIVO" ]; then
+    echo "El archivo existe"
+    if [ -w "$ARCHIVO" ]; then
+        echo "Puedo leer y escribir en él"
+        sudo echo "Nuevo contenido" > "$ARCHIVO"
+    else
+        echo "No tengo permisos para modificar"
+    fi
+else
+    echo "El archivo no existe"
+fi
 ```
 
 ---
 
-## Minipasos guiados
+### Bucles: automatizar tareas repetitivas
 
-### Paso 1: Crear repositorio local
+#### Bucle `for`: iterar sobre una lista
 
 ```bash
-mkdir lab-seguridad
-cd lab-seguridad
-git init
-
-# Configurar identidad (solo una vez por máquina)
-git config --global user.name "Tu Nombre"
-git config --global user.email "tu@email.com"
+# Iterar sobre una lista de archivos
+for archivo in Documentos/Trabajo/*.txt; do
+    echo "Procesando: $archivo"
+    wc -l "$archivo"
+done
 ```
 
-### Paso 2: Primer commit con notas de laboratorio
-
 ```bash
-# Crear archivo de notas
-cat > notas_laboratorio.md << 'EOF'
-# Notas de Laboratorio
-
-## Fecha: 2024-01-15
-## Objetivo: Análisis de logs de autenticación
-
-### Hallazgos
-- 47 intentos de acceso fallidos desde IP 192.168.1.100
-- 2 accesos exitosos fuera de horario laboral
-
-### Próximos pasos
-- Investigar IP sospechosa
-- Revisar logs de los últimos 7 días
-EOF
-
-# Agregar y commitear
-git add notas_laboratorio.md
-git commit -m "Agregar notas iniciales de laboratorio"
+# Iterar sobre una secuencia numérica
+for i in {1..5}; do
+    echo "Número: $i"
+done
 ```
 
-### Paso 3: Push a repositorio remoto
-
-```bash
-# Agregar repositorio remoto
-git remote add origin https://github.com/tu-usuario/lab-seguridad.git
-
-# Enviar commits
-git push -u origin main
+Salida esperada:
+```
+Número: 1
+Número: 2
+Número: 3
+Número: 4
+Número: 5
 ```
 
-### Paso 4: Clonar en otra máquina
+#### Bucle `while`: mientras se cumpla una condición
 
 ```bash
-# En otra máquina, clonar el repositorio
-git clone https://github.com/tu-usuario/lab-seguridad.git
-cd lab-seguridad
+# Contador mientras sea menor a 6
+CONTADOR=1
+while [ "$CONTADOR" -le 5 ]; do
+    echo "Contador: $CONTADOR"
+    CONTADOR=$((CONTADOR + 1))
+done
+```
 
-# Verificar el historial
-git log --oneline
+Salida esperada:
+```
+Contador: 1
+Contador: 2
+Contador: 3
+Contador: 4
+Contador: 5
+```
+
+#### Bucle `until`: hasta que se cumpla una condición
+
+```bash
+# Hasta que el archivo exista
+until [ -f "/etc/hostname" ]; do
+    echo "Esperando que /etc/hostname sea creado..."
+    sleep 1
+done
+echo "/etc/hostname ya está disponible"
 ```
 
 ---
 
-## Notas de seguridad: nunca commitees credenciales
-
-### El error más común (y más peligroso)
+### Funciones: modularizar tu código
 
 ```bash
-# ❌ NUNCA hagas esto
-echo "password123" > config.env
-git add config.env
-git commit -m "Agregar configuración"
-git push
+# Definir una función
+escaneo_rapido() {
+    local objetivo="$1"
+    echo "Escaneando puertos comunes en $objetivo..."
+    nmap -F "$objetivo"
+    echo "Escaneo completado"
+}
+
+# Llamar la función
+escaneo_rapido "192.168.1.10"
 ```
 
-Si subes credenciales a un repositorio público:
+Salida esperada:
+```
+Escaneando puertos comunes en 192.168.1.10...
+Starting Nmap 7.80 ( https://nmap.org)
+...
 
-1. **Cualquiera puede verlas** — bots escanean GitHub 24/7 buscando secretos
-2. **El historial persiste** — borrar el archivo no lo elimina del historial
-3. **El daño es inmediato** — atacantes automatizados explotan credenciales en minutos
+Escaneo completado
+```
 
-### Prevención
+::: {.note}
+**Buenas prácticas:** Usa `local` para las variables dentro de funciones para evitar colisiones con variables globales. Documenta qué entra y sale cada función.
+:::
+
+---
+
+## Aplicación práctica: Script de auditoría básica
+
+### Ejemplo: Script que verifica seguridad esencial
+
+Crea un script llamado `audit-basica.sh` que:
+
+1. Verifica que el script se ejecuta con privilegios adecuados
+2. Revisa permisos críticos en `/etc`
+3. Verifica que SSH no permite login como root
+4. Revisa si hay procesos sospechosos
+5. Genera un resumen
 
 ```bash
-# 1. Crear .gitignore ANTES de empezar
-echo "*.env" >> .gitignore
-echo "credentials/" >> .gitignore
+#!/bin/bash
+# audit-basica.sh - Script de auditoría de seguridad básica
 
-# 2. Usar variables de entorno
-export DB_PASSWORD="secreto"
-# En el código: os.environ['DB_PASSWORD']
+set -e
 
-# 3. Usar herramientas de detección
-# git-secrets, trufflehog, gitleaks
+USUARIO_ACTUAL=$(whoami)
+
+# 1. Verificar privilegios
+if [ "$USUARIO_ACTUAL" != "root" ]; then
+    echo "⚠️  Este script requiere privilegios de root"
+    echo "Ejecuta con: sudo $0"
+    exit 1
+fi
+
+echo "===== AUDITORÍA DE SEGURIDAD BÁSICA ====="
+echo "Fecha: $(date)"
+echo "Ejecutando como: $USUARIO_ACTUAL"
+echo ""
+
+# 2. Revisar permisos en /etc
+echo "=== Permisos críticos en /etc ==="
+for f in /etc/ssh/sshd_config /etc/passwd /etc/group; do
+    if [ -f "$f" ]; then
+        PERM=$(stat -c "%a" "$f")
+        echo "$f: permisos $PERM"
+    fi
+done
+echo ""
+
+# 3. Verificar configuración de SSH
+echo "=== Configuración de SSH ==="
+if grep -q "^PermitRootLogin" /etc/ssh/sshd_config; then
+    echo "PermitRootLogin: $(grep "^PermitRootLogin" /etc/ssh/sshd_config)"
+else
+    echo "PermitRootLogin: no configurado (usando valor por defecto)"
+fi
+echo ""
+
+# 4. Verificar procesos sospechosos
+echo "=== Procesos con alto uso de CPU ==="
+ps aux --sort=-%cpu | head -5 | awk '{print $11, $3, $12}'
+echo ""
+
+# 5. Resumen final
+echo "===== RESUMEN ====="
+echo "Auditoría completada a las $(date)"
+echo "Revisa los hallazgos arriba y toma las medidas necesarias."
+
+exit 0
 ```
 
 ::: {.warning}
-**Advertencia de seguridad:** Si accidentalmente commiteas una contraseña, cámbiala INMEDIATEMENTE. No basta con hacer otro commit que elimine el archivo — el secreto sigue en el historial de Git.
+**Perspectiva de seguridad:** Este script es un punto de partida. En producción, ampliarías esto con:
+- Integración con SIEM
+- Alertas automáticas por email/Slack
+- Guardado de resultados en base de datos
+- Cumplimiento de políticas corporativas
 :::
 
 ---
 
-## Scripting en Bash para ciberseguridad
+## Ejercicios prácticos progresivos
 
-### ¿Por qué script en seguridad?
-
-Los scripts automatizan tareas repetitivas: recopilar evidencia, verificar hashes, escanear puertos, generar reportes. En respuesta a incidentes, un script puede hacer en segundos lo que a un humano le tomaría horas.
-
-### Estructura básica de un script
+### E1: Crear un script interactivo de bienvenida
 
 ```bash
 #!/bin/bash
-# Script: verificar-integridad.sh
-# Propósito: Verificar integridad de archivos críticos del sistema
+# bienvenida.sh - Script interactivo de bienvenida
 
-# Variables
-DIRECTORIO="/etc"
-ARCHIVO_HASH="hashes_criticos.sha256"
+read -p "¿Cuál es tu nombre? " NOMBRE
+read -p "¿De qué ciudad eres? " CIUDAD
+read -p "¿Cuál es tu lenguaje de programación favorito? " LENGUAJE
 
-# Verificar si el archivo de hashes existe
-if [ ! -f "$ARCHIVO_HASH" ]; then
-    echo "ERROR: Archivo de hashes no encontrado"
-    exit 1
-fi
+echo ""
+echo "========================================"
+echo "      BIENVENIDO(A) AL LABORATORIO"
+echo "========================================"
+echo ""
+echo "Hola $NOMBRE! 🎉"
+echo "Estamos emocionados de tenerte aquí."
+echo ""
+echo "Datos registrados:"
+echo "  • Ciudad: $CIUDAD"
+echo "  • Lenguaje favorito: $LENGUAJE"
+echo ""
+echo "Que aproveche tu estancia en el laboratorio!"
+echo "========================================"
+```
 
-# Verificar integridad
-cd "$DIRECTORIO"
-sha256sum -c "$ARCHIVO_HASH" 2>/dev/null
+**Entrega esperada:** Script `bienvenida.sh` que solicita nombre, ciudad y lenguaje favorito, y muestra un mensaje de bienvenida personalizado.
 
-if [ $? -eq 0 ]; then
-    echo "✅ Integridad verificada: ningún archivo modificado"
+### E2: Script que verifica si un servicio está activo
+
+```bash
+#!/bin/bash
+# verificar-servicio.sh - Verifica si un servicio está corriendo
+
+read -p "Ingresa el nombre del servicio a verificar: " SERVICIO
+
+if systemctl is-active --quiet "$SERVICIO"; then
+    echo "✅ El servicio '$SERVICIO' está ACTIVO"
 else
-    echo "❌ ALERTA: Archivos modificados detectados"
-    echo "Ejecutar: auditctl -w $DIRECTORIO -p wa -k integrity_check"
-    exit 1
+    echo "❌ El servicio '$SERVICIO' no está corriendo"
+    echo "Intentando iniciar..."
+    sudo systemctl start "$SERVICIO"
 fi
 ```
 
-### Scripting para recolección de evidencia
+**Entrega esperada:** Script `verificar-servicio.sh` que lee el nombre de un servicio y reporta su estado, intentando iniciar si no está activo.
+
+### E3: Script que escanea y reporta permisos de archivos
 
 ```bash
 #!/bin/bash
-# Script: recolectar-evidencias.sh
-# Uso: bash recolectar-evidencias.sh
+# reportar-permisos.sh - Reporta permisos de archivos en un directorio
 
-FECHA=$(date +%Y%m%d_%H%M%S)
-DIR_EVIDENCIA="~/laboratorio/evidencias/$FECHA"
+read -p "Ingresa el directorio a analizar: " DIRECTORIO
 
-mkdir -p "$DIR_EVIDENCIA"
+if [ ! -d "$DIRECTORIO" ]; then
+    echo "❌ El directorio '$DIRECTORIO' no existe"
+    exit 1
+fi
 
-# 1. Listar procesos activos
-ps aux > "$DIR_EVIDENCIA/procesos.txt"
+echo "===== REPORTE DE PERMISOS EN $DIRECTORIO ====="
+echo ""
+echo "Archivo          Permisos    Dueño    Grupo"
+echo "----------------------------------------"
 
-# 2. Conexiones de red
-ss -tulnp > "$DIR_EVIDENCIA/conexiones.txt"
+find "$DIRECTORIO" -type f -exec ls -la {} \; | awk '{print $9, $1, $3, $4}' | head -20
 
-# 3. Logs de autenticación
-sudo cp /var/log/auth.log "$DIR_EVIDENCIA/auth.log" 2>/dev/null
-
-# 4. Usuarios con privilegios
-awk -F: '$3 == 0 {print $1}' /etc/passwd > "$DIR_EVIDENCIA/root_users.txt"
-
-echo "Evidencias recolectadas en: $DIR_EVIDENCIA"
+echo ""
+echo "⚠️  Revisa los archivos con permisos 777 o debido a root no propietario."
 ```
 
-### Automatización con cron
-
-```bash
-# Ejecutar verificación de integridad cada hora
-0 * * * * /home/estudiante/scripts/verificar-integridad.sh >> /var/log/integridad.log 2>&1
-
-# Backup diario a las 2:00 AM
-0 2 * * * /home/estudiante/scripts/backup-diario.sh
-```
-
----
-
-## Control de Acceso: sudoers y PAM
-
-### El archivo sudoers
-
-Controla quién puede ejecutar qué como root:
-
-```bash
-# Formato: usuario HOST=(runas) COMANDOS
-ops_admin ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart nginx
-dev_user ALL=(ALL) NOPASSWD: /usr/bin/docker
-auditor ALL=(ALL) NOPASSWD: /usr/bin/journalctl
-```
-
-### Buenas prácticas
-
-| Práctica | Razón |
-|----------|-------|
-| **NOPASSWD solo para comandos específicos** | No dar shell root completo |
-| **Grupos en vez de usuarios individuales** | Escalable |
-| **Alias para conjuntos de comandos** | Mantenible |
-| **visudo para editar** | Validación de sintaxis |
-
-```bash
-# Usar visudo (nunca editar directamente)
-sudo visudo
-
-# Ejemplo con alias
-Cmnd_Alias WEB_CMDS = /usr/bin/systemctl restart nginx, /usr/bin/systemctl reload nginx
-ops_admin ALL=(ALL) NOPASSWD: WEB_CMDS
-```
-
-### PAM: autenticación modular
-
-PAM permite configurar autenticación por servicio:
-
-```bash
-# /etc/pam.d/sshd
-auth required pam_google_authenticator.so
-account required pam_nologin.so
-password requisite pam_pwquality.so retry=3
-```
-
-### Políticas de contraseñas
-
-```bash
-# /etc/login.defs
-PASS_MAX_DAYS 90      # Expiración de contraseña
-PASS_MIN_DAYS 1       # Mínimo entre cambios
-PASS_WARN_AGE 14      # Advertencia antes de expirar
-```
-
----
-
-## 3.1 🎯 Ejercicio práctico: script de auditoría + sudoers
-
-**Objetivo**: Crear script de recolección de evidencias y configurar sudoers limitado.
-
-**Parte A: Script de auditoría**
-
-1. Crear directorio:
-   ```bash
-   mkdir -p ~/laboratorio/scripts
-   ```
-
-2. Crear script `recolectar-evidencias.sh`:
-   ```bash
-   cat > ~/laboratorio/scripts/recolectar-evidencias.sh << 'EOF'
-   #!/bin/bash
-   DIR="$HOME/laboratorio/evidencias/$(date +%Y%m%d_%H%M%S)"
-   mkdir -p "$DIR"
-   ps aux > "$DIR/procesos.txt"
-   ss -tulnp > "$DIR/conexiones.txt"
-   echo "Evidencias en: $DIR"
-   EOF
-   chmod +x ~/laboratorio/scripts/recolectar-evidencias.sh
-   ```
-
-3. Ejecutar y verificar:
-   ```bash
-   bash ~/laboratorio/scripts/recolectar-evidencias.sh
-   ls ~/laboratorio/evidencias/*/
-   ```
-
-**Parte B: sudoers limitado**
-
-1. Crear archivo sudoers:
-   ```bash
-   echo "estudiante ALL=(ALL) NOPASSWD: /usr/bin/systemctl status sshd" | sudo tee /etc/sudoers.d/estudiante
-   sudo chmod 440 /etc/sudoers.d/estudiante
-   ```
-
-2. Verificar:
-   ```bash
-   sudo -l
-   ```
-
-**Validación**:
-
-| Prueba | Comando | Esperado |
-|--------|---------|----------|
-| Script ejecutable | `bash ~/laboratorio/scripts/recolectar-evidencias.sh` | Crea directorio con archivos |
-| Evidencias generadas | `ls ~/laboratorio/evidencias/*/` | procesos.txt, conexiones.txt |
-| Sudoers aplicado | `sudo -l` | Solo comando permitido |
+**Entrega esperada:** Script `reportar-permisos.sh` que lee un directorio y muestra un reporte formateado de permisos, dueños y grupos de los archivos dentro.
 
 ---
 
 ## Checklist de autoevaluación
 
-- [ ] Explicar por qué Git es importante en ciberseguridad
-- [ ] Usar flujo Git: working → staging → local → remoto
-- [ ] Escribir commits con Conventional Commits
-- [ ] Crear `.gitignore` apropiado para seguridad
-- [ ] Escribir script bash con shebang y variables
-- [ ] Usar condicionales y bucles en scripts
-- [ ] Crear script de recolección de evidencias
-- [ ] Configurar sudoers con privilegios específicos
-- [ ] Explicar PAM y su rol en autenticación
-- [ ] Configurar políticas de contraseñas
+Antes de avanzar al Módulo 4, verifica que puedes:
 
-**Criterio de aprobación**: 8/10 casillas marcadas.
+- [ ] Definir y usar variables en bash
+- [ ] Leer entrada del usuario con `read`
+- [ ] Escribir condicionales `if/elif/else` con operadores de cadena, entero y archivo
+- [ ] Crear bucles `for`, `while` y `until`
+- [ ] Definir y llamar funciones con `local` para variables locales
+- [ ] Escribir un script completo con `#!/bin/bash`, `set -e`, y estructura lógica
+- [ ] Diagnosticar y corregir errores comunes: variable no definida, comillas sin cerrar, condicionales inversas
+- [ ] Explicar la diferencia entre `$variable`, `${variable}` y `$$variable`
+- [ ] Aplicar el principio de mínimo privilegio al diseño de scripts (evitar `set -e` en producción sin manejo de errores)
+
+::: {.note}
+**Nota del instructor:** Si no puedes marcar al menos 9 de estos 12 ítems, repasa los ejercicios del módulo. El scripting es la puente entre ejecutar comandos y automatizar defensas. No avances con dudas.
+:::
 
 ---
 
 ## Próximo paso
 
-En el **[Módulo 4 — Contenedores Docker](modulo-04-docker-contenedores.qmd)** aprenderás a aislar servicios completos en contenedores, el estándar de la industria para despliegue seguro de aplicaciones. El control de versiones que dominaste aquí aplica al ciclo de vida de imágenes y contenedores.
+En el **[Módulo 4 — Docker: contenedores y aislamiento](modulo-04-docker-contenedores.qmd)** comenzarás a trabajar con contenedores Docker, aislándolos y gestionando su ciclo de vida. Los scripts que creaste en este módulo serán útiles para automatizar la gestión de contenedores.
 
-> *"El tercer principio de la ciberseguridad es: no puedes escalar lo que no puedes replicar. Docker es tu capacidad de replicar."*
+> *"La automatización no es lujo en ciberseguridad — es supervivencia. Un script bien escrito hoy protege mil sistemas mañana."*
 
 [← Volver al índice de la guía](./index.qmd)

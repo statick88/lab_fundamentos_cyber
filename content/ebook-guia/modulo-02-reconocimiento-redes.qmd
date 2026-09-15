@@ -11,13 +11,11 @@ format:
 
 # Módulo 2 — Reconocimiento de Red y Superficie de Ataque
 
----
-
 ## Introducción: reconocer antes de actuar
 
 **El mejor ataque es el que nunca necesitas lanzar — porque ya sabes todo sobre tu objetivo.**
 
-En ciberseguridad, la fase de *reconocimiento* es el primer paso de cualquier evaluación ofensiva o defensiva. Antes de intentar acceder a un sistema, necesitas entender qué está ejecutándose, qué puertos están abiertos, qué servicios responden y cómo se comunican. Esta fase no implica atacar — implica **observar** sistemáticamente para construir un mapa de la superficie de ataque.
+En ciberseguridad, la fase de *reconocimiento* es el primer paso de cualquier evaluación ofensiva o defensiva. Antes de intentar acceder a un sistema, necesitas entender qué está ejecutándose, qué puertos están abiertos y qué servicios responden. Esta fase no implica atacar — implica **observar** sistemáticamente para construir un mapa de la superficie de ataque.
 
 La superficie de ataque es el conjunto de todos los puntos donde un atacante podría interactuar con tu sistema: puertos abiertos, servicios expuestos, configuraciones débiles, credenciales expuestas. Mapearla es el primer paso para defenderla.
 
@@ -29,551 +27,232 @@ El reconocimiento se divide en dos fases complementarias:
 2. **Escaneo de puertos y servicios** — ¿qué puertos están abiertos y qué servicios responden?
 3. **Análisis de superficie de ataque** — ¿cuáles son los vectores de acceso más probables?
 
-::: {.note}
-**Nota del instructor:** No subestimes el poder de empezar con pocos comandos bien ejecutados. `nmap` y `tcpdump` son herramientas que puedes dominar en una sola sesión. Lo importante no es cuántas herramientas conoces, sino cuántas usas con inteligencia para mapear la superficie de ataque.
-:::
-
 ---
 
-## Reconocimiento en el Cyber Kill Chain
+## Capa 1: Descubrimiento de hosts en la red
 
-### Fase 1: Reconocimiento (Reconnaissance)
-
-En el modelo de **Cyber Kill Chain** de Lockheed Martin, el reconocimiento es la **Fase 1** — el punto de partida de todo ataque. Los atacantes profesionales realizan reconocimiento exhaustivo antes de lanzar cualquier exploit:
-
-```
-┌─────────────────────────────────────────────────────────┐
-│              CYBER KILL CHAIN (Fases 1-2)               │
-│                                                          │
-│   1. RECONOCIMIENTO (Reconnaissance)                      │
-│      → Identificar objetivos, mapear superficie de ataque │
-│      → Herramientas: nmap, shodan, google dorks          │
-│                                                          │
-│   2. ARMAMENTO (Weaponization)                            │
-│      → Crear exploit personalizado para el objetivo      │
-│      → Requiere conocimiento detallado del paso 1        │
-│                                                          │
-│   3. ENTREGA (Delivery)                                   │
-│      → Phishing, USB, exploit remoto                     │
-│                                                          │
-│   4. EXPLOTACIÓN (Exploitation)                           │
-│      → Ejecutar código malicioso                         │
-│                                                          │
-│   5. INSTALACIÓN (Installation)                           │
-│      → Implantar backdoor, persistencia                  │
-│                                                          │
-│   6. COMANDO Y CONTROL (C2)                               │
-│      → Establecer canal de comunicación                  │
-│                                                          │
-│   7. ACCIÓN DE OBJETIVO (Actions on Objectives)           │
-│      → Exfiltrar datos, cifrar archivos, sabotear        │
-└─────────────────────────────────────────────────────────┘
-```
-
-### MITRE ATT&CK: T1595 Active Scanning
-
-El framework **MITRE ATT&CK** mapea esta fase como **T1595 - Active Scanning**:
-
-| Técnica | Descripción | Ejemplo |
-|---------|-------------|---------|
-| **T1595.001** | Scanning IP blocks | `nmap -sn 192.168.1.0/24` |
-| **T1595.002** | Vulnerability Scanning | `nmap --script vuln` |
-| **T1595.003** | Scanning for Vulnerable Software | Buscar versiones específicas de servicios |
-
-### Perspectiva defensiva: Blue Team
-
-El reconocimiento no es solo para atacantes. Como **defensor (Blue Team)**:
-
-1. **Reconocimiento propio** — escanea tu propia red periódicamente para encontrar:
-   - Puertos abiertos que deberían estar cerrados
-   - Servicios desactualizados con vulnerabilidades conocidas
-   - Dispositivos no autorizados en la red
-
-2. **Detección de reconocimiento** — monitoriza para identificar cuando alguien escanea tu red:
-   ```bash
-   # Detectar escaneo SYN en tiempo real
-   sudo tcpdump -nn -i eth0 "tcp[tcpflags] & (tcp-syn) != 0 and tcp[tcpflags] & (tcp-ack) = 0"
-   ```
-
-3. **Honeypots** — sistemas señuelo que detectan reconnaissance:
-   - Un puerto abierto que no debería existir
-   - Un servicio falso que registra quién se conecta
-   - Alerta inmediata cuando alguien interactúa con él
-
-### Threat Intelligence y reconocimiento
-
-La **inteligencia de amenazas (Threat Intelligence)** enriquece el reconocimiento con contexto sobre actores maliciosos:
-
-| Fuente de inteligencia | Uso en reconocimiento |
-|------------------------|----------------------|
-| **Shodan / Censys** | Identificar servidores expuestos a internet |
-| **VirusTotal** | Analizar IPs/dominios maliciosos conocidos |
-| **MITRE ATT&CK** | Entender TTPs de actores contra tu sector |
-| **AbuseIPDB** | Verificar si una IP tiene historial de abuso |
-| **Passive DNS** | Mapear infraestructura de atacantes sin contacto directo |
-
----
-
-## nmap: escaneo de hosts y puertos
-
-### ¿Qué es un escaneo y por qué es legal?
-
-**nmap** (Network Mapper) es una herramienta de escaneo de red que envía paquetes a objetivos y analiza las respuestas para determinar qué hosts están activos, qué puertos están abiertos y qué servicios se ejecutan.
-
-Un escaneo activo no modifica los sistemas objetivo — solo envía y recibe paquetes. Es legal siempre que tengas autorización explícita del propietario de la red. En este laboratorio, todos los objetivos son locales o de tu propiedad.
-
-### Flujo de trabajo de reconocimiento defensivo
-
-```
-┌─────────────────────────────────────────────────────────┐
-│           RECONOCIMIENTO DEFENSIVO (Blue Team)           │
-│                                                          │
-│   1. INVENTARIO                                          │
-│      → ¿Qué tengo en mi red?                             │
-│      → nmap -sn para descubrir hosts propios             │
-│                                                          │
-│   2. MAPEO DE SUPERFICIE                                  │
-│      → ¿Qué puertos están abiertos?                       │
-│      → nmap -sV para identificar servicios                │
-│                                                          │
-│   3. ANÁLISIS DE VULNERABILIDADES                         │
-│      → ¿Hay versiones desactualizadas?                    │
-│      → nmap --script vuln para detectar CVEs              │
-│                                                          │
-│   4. CAPTURA Y ANÁLISIS                                   │
-│      → ¿Hay tráfico sospechoso?                           │
-│      → tcpdump para registrar y analizar                  │
-│                                                          │
-│   5. COMPARACIÓN CON BASELINE                              │
-│      → ¿Hay cambios no autorizados?                       │
-│      → Comparar con escaneo anterior                      │
-└─────────────────────────────────────────────────────────┘
-```
-
-### Puertos y protocolos esenciales desde la perspectiva de seguridad
-
-Antes de escanear, debes entender qué puertos son comunes y qué servicios suelen correr en ellos. El archivo `/etc/services` en Ubuntu mantiene el mapeo oficial puerto ↔ servicio.
-
-| Puerto | Protocolo | Servicio típico | Riesgo de seguridad |
-|--------|-----------|-----------------|---------------------|
-| 22 | TCP | SSH | Seguro si está actualizado; riesgo si permite password authentication |
-| 80 | TCP | HTTP | **Riesgo alto** — tráfico sin cifrar, susceptible a MITM |
-| 443 | TCP | HTTPS | Cifrado; verificar certificado y configuración TLS |
-| 53 | UDP/TCP | DNS | Vector de exfiltración DNS tunneling |
-| 25 | TCP | SMTP | **Riesgo** — relay abierto, spam, spear-phishing |
-| 21 | TCP | FTP | **Inseguro** — credenciales en texto plano |
-| 23 | TCP | Telnet | **Crítico** — nunca usar, todo en texto plano |
-| 3306 | TCP | MySQL | **Riesgo** — exposición directa sin firewall |
-| 5432 | TCP | PostgreSQL | **Riesgo** — exposición directa sin firewall |
-| 3389 | TCP | RDP | **Alto riesgo** — objetivo frecuente de fuerza bruta |
-| 6379 | TCP | Redis | **Crítico** — sin autenticación por defecto |
+### ping: verificar conectividad básica
 
 ```bash
-# Verificar qué puerto está asociado a un servicio
-grep "^https" /etc/services
-grep "^domain" /etc/services
-grep "^ssh" /etc/services
+# Ping a un host específico
+ping -c 4 8.8.8.8
 ```
-
-::: {.note}
-**Nota del laboratorio:** En la unidad *ii-firewalls-redes* (retos 2 y 4) practicas la identificación de puertos en `/etc/services`. En la unidad *ii* (reto 8) practicas `dpkg -S` para identificar qué paquete instaló un binario. Estos conocimientos complementan tu fase de reconocimiento.
-:::
-
-### Escaneo defensivo: validar tu propia superficie de ataque
-
-Como profesional de seguridad, debes escanear tus propios sistemas periódicamente:
+```
+PING 8.8.8.8 (8.8.8.8) 56(84) bytes of data.
+64 bytes from google-public-dns.google.com: icmp_seq=1 ttl=117 time=15.2 ms
+...
+--- 8.8.8.8 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3007ms
+rtt min/avg/max/mdev = 12.135/15.234/18.456/2.345 ms
+```
 
 ```bash
-# 1. Descubrir hosts activos en tu red
-nmap -sn 192.168.1.0/24
-
-# 2. Escaneo rápido de puertos comunes
-nmap -F 192.168.1.1
-
-# 3. Detección de servicios y versiones
-nmap -sV 192.168.1.1
-
-# 4. Escaneo de vulnerabilidades (requiere autorización)
-nmap --script vuln 192.168.1.1
-
-# 5. Generar reporte en formatos útiles
-nmap -sV -oX scan_resultado.xml 192.168.1.1
-nmap -sV -oN scan_resultado.txt 192.168.1.1
+# Ping con límite de tiempo (útil en entornos con firewalls)
+ping -W 2 -c 3 192.168.1.1
 ```
-
----
-
-## tcpdump: análisis de capturas de red
-
-### ¿Por qué capturar tráfico?
-
-**tcpdump** es una herramienta de captura y análisis de paquetes en la línea de comandos. Mientras `nmap` te dice qué puertos están abiertos, `tcpdump` te permite ver **el tráfico real** que fluye por la red — el protocolo exacto, los encabezados y hasta fragmentos de los datos que se transmiten.
-
-La combinación `nmap` + `tcpdump` es poderosa: nmap descubre el objetivo, tcpdump registra y analiza el tráfico para entender el comportamiento real de los servicios.
-
-### Uso defensivo: detectar reconnaissance en tu propia red
-
-Como defensor, `tcpdump` te permite identificar cuando alguien está escaneando tu red:
-
-```bash
-# Detectar escaneo SYN (SYN scan) — técnica más común de nmap
-sudo tcpdump -nn -i eth0 "tcp[tcpflags] & (tcp-syn) != 0 and tcp[tcpflags] & (tcp-ack) = 0"
-
-# Detectar múltiples intentos de conexión desde una IP
-sudo tcpdump -nn -i eth0 | grep "SYN" | awk '{print $3}' | sort | uniq -c | sort -nr
-
-# Detectar escaneo de puertos completos (muchos puertos en poco tiempo)
-sudo tcpdump -nn -i eth0 | grep -c "SIN"
-```
-
-### Detección de patrones de ataque
-
-```bash
-# Detectar posible DNS tunneling (consultas DNS muy largas)
-sudo tcpdump -nn -i eth0 port 53 | awk '{print length($0)}' | sort -nr | head -10
-
-# Detectar escaneo de puertos horizontales (misma IP, muchos puertos)
-sudo tcpdump -nn -i eth0 | grep "SIN" | cut -d' ' -f5 | cut -d'.' -f1-4 | sort | uniq -c | sort -nr
-```
-
-### Filtros esenciales de tcpdump
-
-```
-┌──────────────────────────────────────────────────────┐
-│              SINTAXIS DE FILTROS tcpdump              │
-│                                                      │
-│  host 192.168.1.1       → tráfico hacia/Desde IP      │
-│  src 10.0.0.5           → tráfico ORIGINALMENTE desde │
-│  dst 10.0.0.5           → tráfico DESTINADO a          │
-│  port 80                → tráfico en puerto 80        │
-│  port 22 and tcp        → SSH sobre TCP               │
-│  icmp                   → mensajes ICMP (ping)         │
-│  not arp                → excluir ARP                 │
-│  -nn                    → no resolver nombres          │
-│  -r archivo.pcap        → leer captura grabada         │
-│  -c 10                  → capturar 10 paquetes y salir │
-└──────────────────────────────────────────────────────┘
-```
-
-### Leer una captura grabada
-
-Una captura `.pcapng` o `.pcap` es un archivo binario que contiene paquetes grabados. Puedes analizarlo con `tcpdump -r`:
-
-```bash
-# Listar todos los paquetes de una captura
-tcpdump -nn -r captura.pcapng
-
-# Buscar tráfico HTTP (puerto 80)
-tcpdump -nn -r captura.pcapng port 80
-
-# Buscar tráfico SSH (puerto 22)
-tcpdump -nn -r captura.pcapng port 22
-
-# Contar cuántos paquetes SYN existen (indica escaneo de puertos)
-tcpdump -nn -r captura.pcapng | grep -c "SYN"
-```
-
-::: {.note}
-**Nota del laboratorio:** En la unidad *ii-firewalls-redes* (retos 1-4) practicas la identificación de protocolos (HTTP, HTTPS, SSH, DNS) en capturas de red. Los archivos `captura_http.pcapng`, `captura_ssh.pcapng`, `captura_dns.pcapng` y `captura_scan.pcapng` están en `~/laboratorio/redes/`. El reto 10 detecta escaneos de puertos buscando paquetes `SYN` — exactamente lo que aprendes aquí.
-:::
-
----
-
-## Scripting para automatización de reconocimiento
-
-### Por qué automatizar el reconocimiento
-
-Ejecutar el mismo escaneo cada semana contra tus servidores no es tarea de robot — es **tarea de analista con script**. Un script de bash puede:
-
-- Escanear una lista de hosts con nmap y guardar resultados
-- Analizar capturas con tcpdump y reportar protocolos
-- Auditar permisos de usuarios con privilegios y alertar
-
-Aprender a automatizar te libera de tareas repetitivas y te permite enfocarte en los hallazgos reales.
-
-### Estructura básica de un script de reconocimiento defensivo
-
-```bash
-#!/bin/bash
-# recon_automatico.sh — Escaneo automatizado de hosts (Blue Team)
-
-# Configuración
-HOSTS=("192.168.1.1" "192.168.1.10" "192.168.1.15")
-OUTPUT_DIR="$HOME/laboratorio/redes"
-BASELINE_DIR="$HOME/laboratorio/baseline"
-FECHA=$(date +%Y%m%d_%H%M%S)
-
-mkdir -p "$OUTPUT_DIR"
-
-# Escanear cada host
-for host in "${HOSTS[@]}"; do
-    echo "Escaneando $host..."
-    nmap -sn "$host" -oA "$OUTPUT_DIR/recon_$host_$FECHA"
-done
-
-# Comparar con baseline (si existe)
-if [ -d "$BASELINE_DIR" ]; then
-    echo "Comparando con baseline..."
-    diff "$BASELINE_DIR/ultimo_escaneo.xml" "$OUTPUT_DIR/recon_192.168.1.1_$FECECHA.xml" || \
-    echo "⚠️  Cambios detectados en el escaneo!"
-fi
-
-echo "Escaneo completado. Resultados en $OUTPUT_DIR/"
-```
-
-### Script de detección de reconnaissance (Honeypot simple)
-
-Un script simple puede detectar cuando alguien está escaneando tu red:
-
-```bash
-#!/bin/bash
-# detectar_scanner.sh — Detectar actividad de escaneo
-
-INTERFAZ="eth0"
-UMBRAL_SYN=10  # Más de 10 SYN por segundo = posible escaneo
-
-# Contar SYN por origen
-sudo tcpdump -nn -i "$INTERFAZ" "tcp[tcpflags] & (tcp-syn) != 0 and tcp[tcpflags] & (tcp-ack) = 0" -c 100 2>/dev/null | \
-awk '{print $3}' | cut -d. -f1-4 | sort | uniq -c | sort -nr | while read count ip; do
-    if [ "$count" -gt "$UMBRAL_SYN" ]; then
-        echo "🚨 ALERTA: $count SYN desde $ip en 100 paquetes — posible escaneo"
-    fi
-done
-```
-
-### Auditoría de usuarios con privilegios
-
-Un script de auditoría revisa quiénes tienen privilegios de root o pertenecen a grupos administrativos. Esto es fundamental para detectar accesos innecesarios.
-
-```bash
-#!/bin/bash
-# audit_privileged.sh — Auditar usuarios con privilegios
-
-echo "=== Usuarios con UID 0 (root) ==="
-awk -F: '$3 == 0 {print $1}' /etc/passwd
-
-echo ""
-echo "=== Miembros del grupo sudo ==="
-getent group sudo
-
-echo ""
-echo "=== Archivos sudoers ==="
-visudo -c -f /etc/sudoers
-```
-
-::: {.note}
-**Nota del laboratorio:** La unidad *iii-iam-mfa* (reto 5) te pide crear un script `audit_privileged.sh` en `~/laboratorio/iam/` que liste usuarios con UID 0 o permisos sudo. El script debe ser ejecutable y completarse exitosamente. Aquí tienes el punto de partida; en la unidad profundizas con políticas sudoers y configuración de MFA.
-:::
 
 ::: {.warning}
-**Advertencia de seguridad:** Nunca ejecutes scripts de auditoría que descargues de fuentes no confiables. Un script malicioso puede usar `sudo`, `rm` o `iptables` con intenciones dañinas. Siempre revisa el contenido antes de ejecutar, y preferiblemente usa `sudo -n` (sin contraseña) solo para comandos específicos como indica el sudoers del laboratorio.
+**Advertencia de seguridad:** Algunos servidores bloquean ping (ICMP) intencionalmente como medida de seguridad. No poder hacer ping a un host **no** significa necesariamente que esté apagado o inaccesible; puede tener el ping bloqueado por el firewall.
 :::
 
----
-
-## Ejercicios prácticos
-
-::: {.note}
-**Modo nativo (sin Docker):** En el contenedor Docker, `nmap` y `tcpdump` vienen preinstalados y `estudiante` tiene permisos NOPASSWD. En modo nativo, instala las herramientas con `sudo apt-get install -y nmap tcpdump`. Ten en cuenta también que el nombre de la interfaz de red varía: en el contenedor es `eth0`, pero en tu máquina nativa puede ser `enp0s3`, `wlan0`, `ens33`, etc. Usa `ip link` para identificar tu interfaz principal.
-:::
-
-### E1: Descubrimiento de hosts con nmap
-
-**Conexión a la unidad *ii-firewalls-redes* (reto 10) y *ii* (reto 2)**
-
-En este ejercicio practicas el descubrimiento de hosts activos y la identificación de servicios por puerto. El objetivo es determinar qué dispositivos responden en tu red local y qué puertos tienen abiertos.
+### arp-scan: descubrir hosts en la red local
 
 ```bash
-# 0. Verificar que nmap está instalado (ver unidad ii — gestión de paquetes)
-which nmap || echo "Instalar con: sudo apt-get install -y nmap"
+# Instalar si no tienes: sudo apt install arp-scan
+sudo arp-scan --localnet
+```
+```
+IP address      MAC address       hostname
+192.168.1.1     00:11:22:33:44:55  router.local
+192.168.1.10    aa:bb:cc:dd:ee:ff  laptop-estudiante
+192.168.1.25    11:22:33:44:55:60  sin_nombre
+```
 
-# 1. Descubrir hosts activos en tu red local (solo ping, sin escanear puertos)
+::: {.note}
+**Nota:** `arp-scan` descubre hosts en tu subred local usando el protocolo ARP. No funciona para host en redes remotas sin VPN/túnel.
+:::
+
+### nmap — descubrimiento de hosts
+
+```bash
+# Descubrir hosts vivos en una red
 nmap -sn 192.168.1.0/24
-
-# 2. Escanear los puertos más comunes en un host objetivo
-nmap -F 192.168.1.1
-
-# 3. Identificar servicios en los puertos descubiertos
-nmap -sV 192.168.1.1
-
-# 4. Verificar qué servicio corresponde al puerto 443 en /etc/services
-grep "^https" /etc/services
-```
-
-Salida esperada del paso 1:
-```
-Nmap scan report for 192.168.1.1
-Host is up (0.0030s latency).
-Nmap scan report for 192.168.1.10
-Host is up (0.0042s latency).
-Nmap done: 24 IP addresses (2 hosts up) scanned in 0.32 seconds
-```
-
-::: {.note}
-**Nota del laboratorio:** En la unidad *ii-firewalls-redes* (reto 10) detectas escaneos de puertos analizando capturas con `tcpdump -nn -r captura_scan.pcapng | grep -c "SYN"`. Un escaneo SYN típico de nmap genera múltiples paquetes SYN a distintos puertos.
-:::
-
-### E2: Análisis de capturas con tcpdump
-
-**Conexión a la unidad *ii-firewalls-redes* (retos 1-4)**
-
-En este ejercicio practicas el análisis de capturas de red para identificar protocolos. Trabajas con las capturas que generaste o que proporciona el laboratorio en `~/laboratorio/redes/`.
-
-```bash
-# 1. Navegar al directorio de capturas
-cd ~/laboratorio/redes/
-
-# 2. Analizar una captura HTTP
-# Busca el banner "GET / HTTP/1.1" que identifica tráfico web sin cifrar
-grep -i "GET" captura_http.pcapng
-grep -qi "HTTP" captura_http.pcapng && echo "Protocolo HTTP detectado"
-
-# 3. Analizar una captura SSH
-# El banner SSH típico es: "SSH-2.0-OpenSSH_..."
-grep -i "SSH" captura_ssh.pcapng
-
-# 4. Verificar puerto HTTPS en /etc/services
-grep "^https" /etc/services
-```
-
-Salida esperada del paso 2:
-```
-GET / HTTP/1.1
-Protocolo HTTP detectado
-```
-
-Salida esperada del paso 3:
-```
-SSH-2.0-OpenSSH_8.4p1 Ubuntu-5+ubuntu20.04
-```
-
-::: {.note}
-**Nota del laboratorio:** Los retos 1-4 de la unidad *ii-firewalls-redes* validan que identifiques correctamente HTTP (puerto 80), HTTPS (puerto 443), SSH (puerto 22) y DNS (puerto 53) en las capturas. Usa `grep -i` para búsquedas sin distinción de mayúsculas.
-:::
-
-### E3: Script de auditoría de usuarios con privilegios
-
-**Conexión a la unidad *iii-iam-mfa* (reto 5)**
-
-En este ejercicio escribes un script que audita usuarios con privilegios elevados. Este es el reto 5 de la unidad *iii-iam-mfa*: debes crear `~/laboratorio/iam/audit_privileged.sh` que liste usuarios con UID 0 o pertenecientes al grupo sudo.
-
-```bash
-# 1. Crear el directorio de trabajo
-mkdir -p ~/laboratorio/iam/
-
-# 2. Escribir el script de auditoría
-cat > ~/laboratorio/iam/audit_privileged.sh << 'SCRIPT'
-#!/bin/bash
-# audit_privileged.sh — Auditoría de usuarios privilegiados
-
-echo "=== REPORTE DE AUDITORÍA DE PRIVILEGIOS ==="
-echo "Fecha: $(date)"
-echo ""
-
-echo "--- Usuarios con UID 0 (equivalentes a root) ---"
-awk -F: '$3 == 0 {print $1, "(UID: " $3 ")"}' /etc/passwd
-
-echo ""
-echo "--- Usuarios en grupos privilegiados ---"
-for grupo in sudo adm wheel; do
-    miembros=$(getent group "$grupo" 2>/dev/null | cut -d: -f4)
-    if [ -n "$miembros" ]; then
-        echo "$grupo: $miembros"
-    fi
-done
-
-echo ""
-echo "--- Archivos sudoers personalizados ---"
-if [ -d /etc/sudoers.d ]; then
-    ls -la /etc/sudoers.d/ 2>/dev/null
-fi
-
-echo ""
-echo "Auditoría completada."
-SCRIPT
-
-# 3. Hacer el script ejecutable
-chmod +x ~/laboratorio/iam/audit_privileged.sh
-
-# 4. Ejecutar la auditoría
-bash ~/laboratorio/iam/audit_privileged.sh
 ```
 
 Salida esperada:
 ```
-=== REPORTE DE AUDITORÍA DE PRIVILEGIOS ===
-Fecha: lun sep  1 23:57:00 UTC 2025
-
---- Usuarios con UID 0 (equivalentes a root) ---
-root (UID: 0)
-
---- Usuarios en grupos privilegiados ---
-sudo: estudiante
-
---- Archivos sudoers personalizados ---
-(total de archivos en /etc/sudoers.d/ si existen)
-
-Auditoría completada.
+Starting Nmap 7.80 ( https://nmap.org)
+Hostnmap scan report for 192.168.1.1
+Hostnmap scan report for 192.168.1.10
+Hostnmap scan report for 192.168.1.25
 ```
 
 ::: {.note}
-**Nota del laboratorio:** El reto 5 de *iii-iam-mfa* requiere que el script exista, sea ejecutable (`-x`) y se ejecute exitosamente (`"script" > /dev/null 2>&1`). Usa `awk -F: '$3 == 0 {print $1}' /etc/passwd` o `getent group sudo` para identificar usuarios con privilegios.
+**Nota del instructor:** `nmap -sn` (no ping sweep) solo descubre hosts vivos. No escanea puertos. Usa `-Pn` para saltar el descubrimiento de hosts y asumir que todos están activos.
 :::
 
 ---
 
-## Notas de seguridad: el reconocimiento responsable
+## Capa 2: Escaneo de puertos y servicios
 
-### ¿Cuándo es legal hacer reconocimiento de red?
+### nmap — los fundamentos
 
+Nmap es la herramienta esencial para el reconocimiento de red. Tiene tres modos principales:
+
+| Modo | Comando | Propósito |
+|------|---------|-----------|
+| **Ping sweep** | `nmap -sn 192.168.1.0/24` | Descubrir hosts vivos |
+| **Puerto completo** | `nmap 192.168.1.1` | Escaneo de los 1000 puertos más comunes |
+| **Puerto personalizado** | `nmap -p 80,443,22` | Solo los puertos que importan |
+
+```bash
+# Escaneo rápido de puertos comunes
+nmap -F 192.168.1.1
 ```
-┌──────────────────────────────────────────────────────┐
-│           ESCALA DE LEGALIDAD DEL RECON               │
-│                                                      │
-│   ✅ TÚ ERES EL PROPIETARIO                            │
-│      → Escanea tu propia red doméstica                 │
-│                                                      │
-│   ✅ Tienes PERMISO POR ESCRITO                          │
-│      → Contrato de consultoría, autorización explícita │
-│                                                      │
-│   ⚠️  Dominio público (.com, .org sin permiso           │
-│      → Solo descubrimiento de hosts, no escaneo        │
-│                                                      │
-│   ❌ Sin permiso, red ajenos                          │
-│      → DELITO en casi todos los países                 │
-└──────────────────────────────────────────────────────┘
+* `-F` = Fast mode: escanea los 100 puertos más comunes (en lugar de los 1000 completos)
+
+```bash
+# Escaneo detallado con versión y SO
+nmap -sV -sC 192.168.1.1
+```
+* `-sV` = Detecta versiones de servicios (¿Apache 2.4.41? vs genérico Apache?)
+* `-sC` = Ejecuta scripts por defecto (NSE scripts de vulnerabilidad, versión, etc.)
+
+### Ejemplo completo de escaneo
+
+```bash
+nmap -sV -sC -p 80,443,22,8080 192.168.1.10
 ```
 
-### Kali Linux: referencia profesional, no entorno de estudio
-
-Kali Linux es una distribución especializada con cientos de herramientas preinstaladas. Es útil **como referencia profesional**: cuando un cliente pide una auditoría completa, Kali tiene todo lo necesario en un solo lugar.
-
-**Sin embargo, en este curso usamos Ubuntu 24.04 porque:**
-
-| Criterio | Kali Linux | Ubuntu 24.04 |
-|----------|-----------|--------------|
-| Uso profesional real | 5% de los servidores | 43% de los servidores web |
-| Permisos de root | Root por defecto | sudo para tareas específicas |
-| Curva de aprendizaje | Aprender herramientas primero | Aprender conceptos primero |
-| Reproducibilidad | Difícil de replicar | Fácil de instalar en cualquier lugar |
-| Actualizaciones | Rolling release (puede romperse) | LTS con 5 años de soporte |
+Salida esperada relevante:
+```
+PORT     STATE SERVICE VERSION
+80/tcp   open  http    Apache httpd 2.4.41
+443/tcp  open  ssl/http Apache httpd 2.4.41
+22/tcp   open  ssh     OpenSSH 8.9p1 Ubuntu (protocol 2.0)
+8080/tcp open  http    nginx 1.20.1
+```
 
 ::: {.warning}
-**Advertencia de seguridad:** El reconocimiento de red no es un delito siempre que tengas autorización. Sin embargo, muchos proveedores de servicios consideran el escaneo activo como abuso de términos de servicio. Siempre obtén permiso por escrito antes de escanear cualquier red que no sea tuya.
+**Advertencia de seguridad:** El escaneo de puertos sin autorización puede violar leyes y políticas corporativas. Solo escanea redes que posees o para las que tengas permiso por escrito. En entornos profesionales, usa herramientas autorizadas y documenta siempre tus actividades de reconocimiento.
 :::
 
-### Marco legal en Latinoamérica
+### TCP Connect vs SYN Scan (-sS)
 
-| País | Ley aplicable | Consecuencia para reconocimiento no autorizado |
-|------|---------------|-------------------------------------------------|
-| Ecuador | Código Integral Penal | 1-3 años de prisión por acceso no autorizado |
-| México | Código Penal Federal | 6 meses-2 años por delitos informáticos |
-| Colombia | Ley 1273 de 2009 | 4-8 años por acceso abusivo a sistema informático |
-| España | Ley 40/2015 | Multas y responsabilidad civil por vulneración de sistemas |
+```bash
+# TCP Connect (estándar, más lento, más detectable)
+nmap -sS 192.168.1.1  # SYN scan (más rápido, menos detectable)
+```
+* `-sS` = SYN scan (también llamado "half-open scan"). Envía un paquete SYN y espera respuesta. No completa la conexión TCP, por lo que es más sigiloso y no genera logs en el servidor objetivo.
 
-::: {.warning}
-**Advertencia ética:** El conocimiento es neutral, pero su uso no. Aprender a escanear redes te hace un profesional mas preparado, pero usar ese conocimiento sin autorización convierte a un profesional en un delincuente. La diferencia entre un pentester y un atacante es el **documento firmado** que autoriza el trabajo.
+::: {.note}
+**Perspectiva de seguridad:** El SYN scan (-sS) es la técnica preferida para reconocimiento profesional porque es más rápido y menos detectable por sistemas de prevención de intrusos (IPS). Sin embargo, algunos firewalls aún lo detectan. El TCP Connect (-sT) es más lento pero funciona en redes donde el SYN scan está bloqueado.
 :::
+
+### UDP scan
+
+```bash
+# Escanear puertos UDP (más lento y menos común)
+nmap -sU -p 53,67,68,161 192.168.1.1
+```
+* Muchos servicios críticos usan UDP (DNS, DHCP, SNMP)
+* El escaneo UDP es más lento y propenso a falsos negativos (los puertos pueden estar abiertos pero no responder)
+
+---
+
+## Capa 3: Análisis de superficie de ataque
+
+### Puertos críticos y qué servicios suelen correr en ellos
+
+| Puerto | Servicio | Riesgo típico | Recomendación |
+|--------|----------|---------------|---------------|
+| **22** | SSH | Brute force, credenciales débiles | Usar clave SSH, desactivar login por password, cambiar puerto por defecto |
+| **21** | FTP | Credenciales en claro, acceso no autorizado | NUNCA usar FTP; preferir SFTP o FTPS |
+| **23** | Telnet | Todo en claro (passwords, datos), obsoleto | NUNCA usar Telnet; SSH siempre |
+| **25** | SMTP | Spam, relay no autorizado | Configurar autenticación, monitorear colas |
+| **53** | DNS | Cache poisoning, tunneling de datos | Hardening DNS, restricción de recursión |
+| **80** | HTTP | XSS, injection, información expuesta | HTTPS obligatorio, cabeceras de seguridad |
+| **110** | POP3 | Contraseñas en claro | NUNCA usar POP3 sin TLS; preferir IMAPS |
+| **143** | IMAP | Acceso no autorizado a correo | IMAPS (TLS) obligatorio |
+| **3306** | MySQL | Base de datos expuesta, inyección SQL | Binding a 127.0.0.1 solo, autenticación fuerte |
+| **5432** | PostgreSQL | Base de datos expuesta, credenciales débiles | Binding a 127.0.0.1 solo, pg_hba.conf |
+| **6379** | Redis | Datos en caché expuestos, RCE | NUNCA exponer en internet; usar ACL |
+| **8080** | HTTP alternate | Aplicaciones web expuestas | Revisar si es necesario, usar auth |
+| **8443** | HTTPS alternate | Servicios HTTPS expuestos | Revisar certificado, configuración TLS |
+| **389** | LDAP | Directorio activo expuesto | Usar LDAPS (TLS) |
+| **636** | LDAPS | Directorio seguro | Preferir sobre LDAP |
+
+### Scripts NSE de Nmap para análisis avanzado
+
+```bash
+# Scripts de vulnerabilidad conocidos
+nmap --script vuln 192.168.1.1
+
+# Script de detección de versiones de servicio
+nmap --script version 192.168.1.1
+
+# Script de reconocimiento de SSL/TLS
+nmap --script ssl-cert,ssl-date 192.168.1.1:443
+```
+
+### Superficie de ataque: qué mapear
+
+Al finalizar el reconocimiento, deberías tener un mapa como este:
+
+```
+┌─────────────────────────────────────────────────────┐
+│   SUPERFICIE DE ATAQUE MAPEADA                      │
+│                                                     │
+│   ┌─────────────────┐   ┌─────────────────────┐   │
+│   │     PUERTOS     │   │     SERVICIOS       │   │
+│   │                 │   │                     │   │
+│   │    22 (SSH)     │   │   OpenSSH 8.9       │   │
+│   │    80 (HTTP)    │   │   Apache 2.4.41     │   │
+│   │   443 (HTTPS)   │   │   Apache 2.4.41 SSL │   │
+│   │   2222 (SSH alt)|   │   Dropbear 2021     │   │
+│   │   8080 (HTTP)   │   │   nginx 1.20.1      │   │
+│   └─────────────────┘   └─────────────────────┘   │
+│                                                     │
+│   Vectores de acceso probables:                    │
+│   • SSH brute force → cambiar puerto, usar keys   │
+│   • SQL injection en HTTP → sanitizar inputs      │
+│   • Credenciales por defecto → rotar inmediatamente │
+│   • Versiones desactualizadas → aplicar parches     │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+## Ejercicios prácticos progresivos
+
+### E1: Descubrir hosts en tu red local
+
+```bash
+# Asegúrate de estar en la red correcta (mismo router que tus dispositivos)
+ip addr show  # Verifica tu dirección IP y máscara de red
+
+# Descubre qué hosts hay en tu red local
+nmap -sn 192.168.1.0/24
+```
+
+**Entrega esperada:** Lista de 3-10 direcciones IP vivas en tu red local, con sus nombres de host si están disponibles.
+
+### E2: Escaneo rápido de puertos en un host local
+
+```bash
+# Escaneo rápido de los 100 puertos más comunes
+nmap -F 127.0.0.1
+```
+
+**Entrega esperada:** Lista de puertos abiertos con servicios identificados (por ejemplo: `22/open/tcp//SSH`, `80/open/tcp//HTTP`, etc.).
+
+### E3: Escaneo detallado con detección de versión
+
+```bash
+nmap -sV -sC -p 22,80,443 127.0.0.1
+```
+
+**Entrega esperada:** Resultado completo mostrando puerto, estado, servicio y versión (por ejemplo: `22/tcp open ssh OpenSSH 8.9p1 Ubuntu`).
 
 ---
 
@@ -581,32 +260,24 @@ Kali Linux es una distribución especializada con cientos de herramientas preins
 
 Antes de avanzar al Módulo 3, verifica que puedes:
 
-- [ ] Explicar qué es el reconocimiento de red y por qué se hace primero
-- [ ] Distinguir entre descubrimiento de hosts y escaneo de puertos
-- [ ] Ejecutar `nmap -sn` para descubrir hosts activos en una red
-- [ ] Usar `nmap -F` y `nmap -sV` para escanear puertos y servicios
-- [ ] Consultar `/etc/services` para mapear puertos a servicios
-- [ ] Usar `tcpdump -nn -r` para leer capturas de red grabadas
-- [ ] Aplicar filtros de tcpdump (host, port, proto) para aislar tráfico
-- [ ] Identificar tráfico HTTP, SSH y DNS en una captura
-- [ ] Escribir un script bash con `for`, `awk` y `getent` para automatizar tareas
-- [ ] Crear un script de auditoría que liste usuarios con UID 0 y miembros de sudo
-- [ ] Comprender que Kali Linux es referencia profesional, no entorno de estudio
-- [ ] Reconocer que el reconocimiento requiere autorización explícita
-- [ ] Conocer las consecuencias legales del escaneo no autorizado
-- [ ] Entender el reconocimiento como Fase 1 del Cyber Kill Chain
-- [ ] Mapear reconocimiento a MITRE ATT&CK T1595
-- [ ] Aplicar reconocimiento desde perspectiva defensiva (Blue Team)
-- [ ] Usar tcpdump para detectar escaneos en tu propia red
-- [ ] Entender el concepto de superficie de ataque
-- [ ] Integrar threat intelligence en el proceso de reconocimiento
+- [ ] Explicar la diferencia entre `ping`, `arp-scan` y `nmap -sn`
+- [ ] Ejecutar `nmap -F` (escaneo rápido) y `nmap -sV -sC` (detallado)
+- [ ] Identificar al menos 5 puertos críticos de la tabla y sus riesgos
+- [ ] Explicar la diferencia entre `-sS` (SYN) y `-sT` (TCP Connect)
+- [ ] Diagnosticar qué información revela cada uno de: puerto abierto, servicio, versión, sistema operativo
+- [ ] Explicar por qué el ping bloqueado no significa que el host esté apagado
+- [ ] Aplicar el principio de mínimo privilegio al abrir puertos en producción
 
 ::: {.note}
-**Nota del instructor:** El reconocimiento de red es como la fase de "ojo de águila" en tu entrenamiento. Las mejores herramientas no son las que escanean más rápido, sino las que te ayudan a entender el objetivo. Domina nmap y tcpdump, y el resto vendrá naturalmente. Como defensor, el reconocimiento te permite conocer tu propia superficie de ataque antes que los atacantes.
+**Nota del instructor:** Si no puedes marcar al menos 9 de estos 12 ítems, repasa los ejercicios del módulo. El reconocimiento es la base de toda evaluación de seguridad. No avances con dudas.
 :::
+
+---
 
 ## Próximo paso
 
-En el **[Módulo 3 — Scripting y Control de Acceso](modulo-03-git.qmd)** aprenderás a automatizar tareas de seguridad y gestionar privilegios en el sistema. Los scripts de reconocimiento que desarrollaste aquí se expanden hacia la automatización de defensa.
+En el **[Módulo 3 — Scripting y Control de Acceso](modulo-03-git.qmd)** aplicarás los conceptos de reconocimiento para automatizar tareas de seguridad y gestionar privilegios en el sistema.
+
+> *"El reconocimiento no es el ataque — es la inteligencia que transforma un ataque ciego en una operación calculada."*
 
 [← Volver al índice de la guía](./index.qmd)

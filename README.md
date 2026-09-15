@@ -7,11 +7,11 @@
 ## Quick path
 
 ```bash
-git clone https://github.com/statick88/lab-linux.git
-cd lab-linux
+git clone https://github.com/statick88/lab_fundamentos_cyber.git
+cd lab_fundamentos_cyber
 docker compose build
 docker compose up -d
-docker compose exec lab-linux bash
+docker compose exec lab_fundamentos_cyber bash
 ```
 
 Usuario: `estudiante` / Contraseña: `lab123`
@@ -87,7 +87,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 2. Los checkpoints (16, 17, 18) son evaluaciones formativas automáticas
 3. Cada reto tiene pistas integradas activadas con `pista` durante el juego
 4. El sistema no modifica archivos del sistema permanentemente
-5. Usar `docker compose logs lab-linux` para depurar problemas
+5. Usar `docker compose logs lab_fundamentos_cyber` para depurar problemas
 
 ## Medidas de seguridad del laboratorio
 
@@ -107,10 +107,10 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 ```bash
 brew install --cask docker
-git clone https://github.com/statick88/lab-linux.git
-cd lab-linux
+git clone https://github.com/statick88/lab_fundamentos_cyber.git
+cd lab_fundamentos_cyber
 docker compose build && docker compose up -d
-docker compose exec lab-linux bash
+docker compose exec lab_fundamentos_cyber bash
 ```
 </details>
 
@@ -120,10 +120,10 @@ docker compose exec lab-linux bash
 ```bash
 sudo apt update && sudo apt install -y docker.io docker-compose-v2
 sudo usermod -aG docker $USER
-git clone https://github.com/statick88/lab-linux.git
-cd lab-linux
+git clone https://github.com/statick88/lab_fundamentos_cyber.git
+cd lab_fundamentos_cyber
 docker compose build && docker compose up -d
-docker compose exec lab-linux bash
+docker compose exec lab_fundamentos_cyber bash
 ```
 </details>
 
@@ -135,10 +135,10 @@ sudo dnf -y install dnf-plugins-core
 sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
 sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 sudo systemctl start docker && sudo usermod -aG docker $USER
-git clone https://github.com/statick88/lab-linux.git
-cd lab-linux
+git clone https://github.com/statick88/lab_fundamentos_cyber.git
+cd lab_fundamentos_cyber
 docker compose build && docker compose up -d
-docker compose exec lab-linux bash
+docker compose exec lab_fundamentos_cyber bash
 ```
 </details>
 
@@ -153,10 +153,10 @@ wsl --install
 # Dentro de WSL:
 sudo apt update && sudo apt install -y docker.io docker-compose-v2
 sudo usermod -aG docker $USER
-git clone https://github.com/statick88/lab-linux.git
-cd lab-linux
+git clone https://github.com/statick88/lab_fundamentos_cyber.git
+cd lab_fundamentos_cyber
 docker compose build && docker compose up -d
-docker compose exec lab-linux bash
+docker compose exec lab_fundamentos_cyber bash
 ```
 </details>
 
@@ -164,15 +164,15 @@ docker compose exec lab-linux bash
 
 | Problema | Solución |
 |----------|----------|
-| Contenedor no inicia | `docker compose logs lab-linux` → `docker compose build --no-cache` |
-| Comandos no funcionan | Verificar que estás dentro: `docker compose exec lab-linux bash` |
+| Contenedor no inicia | `docker compose logs lab_fundamentos_cyber` → `docker compose build --no-cache` |
+| Comandos no funcionan | Verificar que estás dentro: `docker compose exec lab_fundamentos_cyber bash` |
 | Pruebas fallan | directorio debe ser `~/laboratorio`, nombres exactos |
 | Reglas UFW persisten | Ejecuta `bash reset.sh` para limpiar |
 
 ## Arquitectura
 
 ```
-lab-linux/
+lab_fundamentos_cyber/
 ├── Dockerfile              # Ubuntu 24.04 + herramientas ciberseguridad
 ├── docker-compose.yml      # Red aislada 172.20.0.0/24 + capabilities mínimas
 ├── entrypoint.sh           # Sourcing, aliases y banner ABC-CYB-101

@@ -25,7 +25,7 @@
 
 ## 2. Entorno de ejecución
 
-- Contenedor: `lab-ciberseguridad` (imagen `lab_fundamentos_cyber-lab-linux`)
+- Contenedor: `lab-ciberseguridad` (imagen `lab_fundamentos_cyber-lab_fundamentos_cyber`)
 - Unidad bajo prueba: `/home/estudiante/laboratorio/units/i-risk-assessment/`
 - Escenario regenerado: `bash setup.sh` → `$HOME/laboratorio/risk-assessment/escenario.json` + `plantilla-analisis.md`
 - Validadores ejecutados: `source test.sh && retoN` (N = 1..10), cada uno con `source /shared/common.sh` y `source /shared/validators.sh`
