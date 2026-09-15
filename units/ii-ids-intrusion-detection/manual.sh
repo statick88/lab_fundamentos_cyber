@@ -52,7 +52,7 @@ cat << 'EOF'
 🎯 RETOS DE ESTA UNIDAD
 ═══════════════════════
 
-   3 retos CORE de detección de intrusiones:
+   3 retos OPT de detección de intrusiones:
 
    1. Verificar instalación y estado de Suricata
       Comprobar que Suricata está instalado, el binario existe,

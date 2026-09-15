@@ -9,8 +9,16 @@ if [ -f "/shared/common.sh" ]; then
 else
     source "$(dirname "$0")/../../shared/common.sh"
 fi
-source /shared/validators.sh
-source /shared/sudo-wrappers.sh
+if [ -f "/shared/validators.sh" ]; then
+    source /shared/validators.sh
+else
+    source "$(dirname "$0")/../../shared/validators.sh"
+fi
+if [ -f "/shared/sudo-wrappers.sh" ]; then
+    source /shared/sudo-wrappers.sh
+else
+    source "$(dirname "$0")/../../shared/sudo-wrappers.sh"
+fi
 
 UNIT_NAME="unit-VI"
 TOTAL_RETOS=10

@@ -60,17 +60,17 @@ git push origin fix/nombre-del-bug
 ### Setup
 
 ```bash
-git clone https://github.com/statick88/lab-linux.git
-cd lab-linux
+git clone https://github.com/statick88/lab_fundamentos_cyber.git
+cd lab_fundamentos_cyber
 docker compose build
 docker compose up -d
-docker compose exec lab-linux bash
+docker compose exec lab_fundamentos_cyber bash
 ```
 
 ### Comandos útiles
 
 | Comando | Qué hace |
 |---------|----------|
-| `docker compose logs -f lab-linux` | Ver logs en tiempo real |
-| `docker compose down && docker compose build --no-cache lab-linux && docker compose up -d` | Reconstruir tras cambios en Dockerfile/entrypoint |
-| `docker compose exec lab-linux bash /shared/test_runner.sh` | Ejecutar tests |
+| `docker compose logs -f lab_fundamentos_cyber` | Ver logs en tiempo real |
+| `docker compose down && docker compose build --no-cache lab_fundamentos_cyber && docker compose up -d` | Reconstruir tras cambios en Dockerfile/entrypoint |
+| `docker compose exec lab_fundamentos_cyber bash /shared/test_runner.sh` | Ejecutar tests |

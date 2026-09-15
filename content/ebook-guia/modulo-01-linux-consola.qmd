@@ -11,8 +11,6 @@ format:
 
 # Módulo 1 — Linux para Ciberseguridad: Consola, Permisos y Errores
 
----
-
 ## Introducción: la terminal como herramienta de seguridad
 
 **La terminal no es tu enemiga — es tu interfaz directa con el sistema que estás protegiendo.**
@@ -75,32 +73,6 @@ Ese texto se llama **prompt** y te dice tres cosas:
 ::: {.warning}
 **Advertencia de seguridad:** Si ves `#` al final del prompt, significa que estás como root (administrador). Con grandes poderes vienen grandes responsabilidades. Un comando mal escrito como root puede dañar todo el sistema.
 :::
-
-### Navegación básica
-
-```bash
-# ¿Dónde estoy?
-pwd
-```
-```
-/home/estudiante
-```
-
-```bash
-# ¿Qué hay aquí?
-ls
-```
-```
-Documentos  Descargas  Escritorio  notas.txt
-```
-
-```bash
-# Ir al directorio Documentos
-cd Documentos
-
-# Volver al directorio anterior
-cd ..
-```
 
 ---
 
@@ -276,13 +248,18 @@ Hola, este es mi primer archivo en Linux.
 # less: muestra archivo con scroll (ideal para archivos grandes)
 less /var/log/syslog
 # Usa flechas para navegar, 'q' para salir
+```
 
+```bash
 # head: primeras 10 líneas
 head /var/log/syslog
+```
 
+```bash
 # tail: últimas 10 líneas (útil para logs en tiempo real)
 tail -f /var/log/auth.log
 ```
+
 ### sudo — ejecutar como superusuario
 
 ```bash
@@ -465,14 +442,6 @@ laboratorio/
 └── scripts
 ```
 
-```bash
-# 4. Crea un archivo de notas
-echo "Mi primer laboratorio de ciberseguridad" > laboratorio/notas/dia1.txt
-
-# 5. Verifica el contenido
-cat laboratorio/notas/dia1.txt
-```
-
 ### E2: Crear archivos con permisos específicos
 
 ```bash
@@ -558,7 +527,6 @@ El **principio de mínimo privilegio** establece que un usuario o programa debe 
     │  Si un atacante               Si un atacante        │
     │  encuentra el script,         encuentra el script,  │
     │  puede modificarlo            no puede modificarlo   │
-    │  para ejecutar malware        (solo lectura)        │
     └──────────────────────────────────────────────────────┘
 ```
 
@@ -595,9 +563,11 @@ Antes de avanzar al Módulo 2, verifica que puedes:
 **Nota del instructor:** Si no puedes marcar al menos 9 de estos 12 ítems, repasa los ejercicios del módulo. La terminal es la base de todo lo que viene. No avances con dudas.
 :::
 
+---
+
 ## Próximo paso
 
-En el **[Módulo 2 — Reconocimiento de Redes](modulo-02-reconocimiento-redes.qmd)** aplicarás los comandos que has aprendido para mapear la superficie de ataque. La terminal ya no es un miedo: es tu instrumento de exploración.
+En el **[Módulo 2 — Reconocimiento de Red](modulo-02-reconocimiento-redes.qmd)** aplicarás los comandos que has aprendido para mapear la superficie de ataque. La terminal ya no es un miedo: es tu instrumento de exploración.
 
 > *"El primer principio de la ciberseguridad es: no puedes atacar lo que no puedes ver. El escaneo de red es tu vista a distancia."*
 

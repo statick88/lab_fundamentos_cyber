@@ -86,7 +86,7 @@
 | 9 | Escaneo de vulnerabilidades | Trivy para imágenes | `trivy image <image>` |
 | 10 | Secrets management | No hardcodear credenciales | Docker secrets, env files |
 
-**Docker Compose:** Referencia `docker-compose.yml` del laboratorio `lab-linux`.
+**Docker Compose:** Referencia `docker-compose.yml` del laboratorio `lab_fundamentos_cyber`.
 
 ---
 

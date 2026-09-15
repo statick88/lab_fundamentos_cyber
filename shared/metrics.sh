@@ -1,5 +1,5 @@
 #!/bin/bash
-# shared/metrics.sh — Modulo de metricas del lab-linux
+# shared/metrics.sh — Modulo de metricas del lab_fundamentos_cyber
 # Recolecta timing, estado y progreso por reto en CSV persistente.
 # Sin dependencias externas. Integra via guard-check: METRICS_INITIALIZED=1
 #

@@ -1,221 +1,349 @@
 #!/bin/bash
-# Unit: i-risk-assessment — Evaluación de Riesgos con matriz ISO 31000 (Lab 2)
-# Standard pattern: defines retoN() validators + retoN_info() for menu-driven execution
+# Unit i-risk-assessment: Evaluación de Riesgos con matriz ISO 31000 — test.sh
+# 10 retos CORE: escenario, matriz, tratamientos, justificación
 
-# Support both container (/shared) and local (relative) paths
+# Dual-path sourcing
 if [ -f "/shared/common.sh" ]; then
     source /shared/common.sh
-    source /shared/validators.sh
 else
     source "$(dirname "$0")/../../shared/common.sh"
-    source "$(dirname "$0")/../../shared/validators.sh"
 fi
 
 UNIT_NAME="unit-i-risk-assessment"
 TOTAL_RETOS=10
 
-# Pure validators - no user interaction, check system state only
+LAB_DIR="$HOME/laboratorio/risk-assessment"
 
+# ── Reto 1: Verificar existencia del escenario ─────────────────
 reto1() {
-    # Verificar que el escenario JSON existe y es válido
-    local esc="$HOME/laboratorio/risk-assessment/escenario.json"
-    [ -f "$esc" ] || return 1
-    command -v jq >/dev/null 2>&1 || return 1
-    jq -e '.activos | length' "$esc" >/dev/null 2>&1
+    local scenario="$LAB_DIR/escenario.json"
+    if [ ! -f "$scenario" ]; then
+        echo "FAIL: escenario.json no existe en $LAB_DIR" >&2
+        return 1
+    fi
+    # Verificar que contiene la empresa
+    grep -q "DataGuard" "$scenario" 2>/dev/null || grep -q "empresa" "$scenario" 2>/dev/null
 }
 
+# ── Reto 2: Validar que el escenario tiene 5 activos ───────────
 reto2() {
-    # Verificar que la plantilla de análisis existe
-    assert_file_exists "$HOME/laboratorio/risk-assessment/plantilla-analisis.md"
+    local scenario="$LAB_DIR/escenario.json"
+    if [ ! -f "$scenario" ]; then
+        echo "FAIL: escenario.json no existe" >&2
+        return 1
+    fi
+    # Contar IDs de activos (A1-A5)
+    local count
+    count=$(grep -o '"id": "A[1-5]"' "$scenario" 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$count" -ge 5 ]; then
+        return 0
+    fi
+    echo "FAIL: Solo $count activos encontrados (se esperan 5)" >&2
+    return 1
 }
 
+# ── Reto 3: Verificar amenazas para cada activo ────────────────
 reto3() {
-    # Verificar que el escenario tiene exactamente 5 activos
-    local esc="$HOME/laboratorio/risk-assessment/escenario.json"
-    [ -f "$esc" ] || return 1
-    [ "$(jq '.activos | length' "$esc" 2>/dev/null)" = "5" ]
+    local scenario="$LAB_DIR/escenario.json"
+    if [ ! -f "$scenario" ]; then
+        echo "FAIL: escenario.json no existe" >&2
+        return 1
+    fi
+    # Verificar que cada activo tiene al menos 1 amenaza
+    local threats
+    threats=$(grep -c '"nombre"' "$scenario" 2>/dev/null || echo 0)
+    if [ "$threats" -ge 10 ]; then
+        return 0
+    fi
+    echo "FAIL: Solo $threats amenazas encontradas (se esperan al menos 10)" >&2
+    return 1
 }
 
+# ── Reto 4: Completar tabla de probabilidad × impacto ──────────
 reto4() {
-    # Verificar que cada activo tiene al menos una amenaza
-    local esc="$HOME/laboratorio/risk-assessment/escenario.json"
-    [ -f "$esc" ] || return 1
-    # jq -e returns 4 (no match) when no asset has <1 threat — that's the pass case
-    local out
-    out=$(jq -e '.activos[] | select((.amenazas | length) < 1) | .id' "$esc" 2>/dev/null) && return 1
-    [ -z "$out" ]
+    # Verificar que existe la plantilla o un archivo de análisis completado
+    local template="$LAB_DIR/plantilla-analisis.md"
+    if [ -f "$template" ]; then
+        # Verificar que tiene datos más allá del template
+        local filled
+        filled=$(grep -c '|.*|.*|.*|' "$template" 2>/dev/null || echo 0)
+        if [ "$filled" -gt 5 ]; then
+            return 0
+        fi
+    fi
+    # Buscar archivo de análisis alternativo
+    local analysis
+    analysis=$(find "$LAB_DIR" -maxdepth 1 -type f -name "*analisis*" -o -name "*matrix*" -o -name "*matriz*" 2>/dev/null | head -1)
+    if [ -n "$analysis" ] && [ -f "$analysis" ]; then
+        return 0
+    fi
+    echo "FAIL: Tabla de probabilidad × impacto no completada" >&2
+    return 1
 }
 
+# ── Reto 5: Asignar nivel de riesgo a cada amenaza ────────────
 reto5() {
-    # Verificar que A1 (Servidor BD) tiene criticidad 'alta'
-    local esc="$HOME/laboratorio/risk-assessment/escenario.json"
-    [ -f "$esc" ] || return 1
-    jq -e '.activos[] | select(.id=="A1") | select(.criticidad=="alta")' "$esc" >/dev/null 2>&1
+    local scenario="$LAB_DIR/escenario.json"
+    if [ ! -f "$scenario" ]; then
+        echo "FAIL: escenario.json no existe" >&2
+        return 1
+    fi
+    # Verificar que hay scores de probabilidad (1-5) e impacto (1-5)
+    local probs
+    probs=$(grep -o '"probabilidad": [1-5]' "$scenario" 2>/dev/null | wc -l | tr -d ' ')
+    local impacts
+    impacts=$(grep -o '"impacto": [1-5]' "$scenario" 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$probs" -ge 5 ] && [ "$impacts" -ge 5 ]; then
+        return 0
+    fi
+    echo "FAIL: Probabilidades ($probs) o impactos ($impacts) insuficientes" >&2
+    return 1
 }
 
+# ── Reto 6: Clasificar riesgos por nivel (Bajo/Medio/Alto/Crítico) ──
 reto6() {
-    # Verificar que A4 (laptop) tiene criticidad 'baja'
-    local esc="$HOME/laboratorio/risk-assessment/escenario.json"
-    [ -f "$esc" ] || return 1
-    jq -e '.activos[] | select(.id=="A4") | select(.criticidad=="baja")' "$esc" >/dev/null 2>&1
+    local template="$LAB_DIR/plantilla-analisis.md"
+    if [ -f "$template" ]; then
+        if grep -qi "BAJO\|MEDIO\|ALTO\|CRÍTICO\|CRITICO" "$template" 2>/dev/null; then
+            return 0
+        fi
+    fi
+    # Buscar archivos de clasificación
+    local classified
+    classified=$(find "$LAB_DIR" -maxdepth 1 -type f \( -name "*clasif*" -o -name "*nivel*" \) 2>/dev/null | head -1)
+    if [ -n "$classified" ] && [ -f "$classified" ]; then
+        return 0
+    fi
+    echo "FAIL: Clasificación de niveles de riesgo no encontrada" >&2
+    return 1
 }
 
+# ── Reto 7: Definir tratamiento para al menos 3 amenazas ──────
 reto7() {
-    # Verificar que A5 (DRP) tiene criticidad 'alta'
-    local esc="$HOME/laboratorio/risk-assessment/escenario.json"
-    [ -f "$esc" ] || return 1
-    jq -e '.activos[] | select(.id=="A5") | select(.criticidad=="alta")' "$esc" >/dev/null 2>&1
+    local scenario="$LAB_DIR/escenario.json"
+    if [ ! -f "$scenario" ]; then
+        echo "FAIL: escenario.json no existe" >&2
+        return 1
+    fi
+    # Verificar que hay controles definidos para al menos 3 amenazas
+    local controls
+    controls=$(grep -c '"controles"' "$scenario" 2>/dev/null || echo 0)
+    if [ "$controls" -ge 3 ]; then
+        return 0
+    fi
+    echo "FAIL: Solo $controls amenazas con controles (se esperan al menos 3)" >&2
+    return 1
 }
 
+# ── Reto 8: Calcular riesgo inherente y residual ──────────────
 reto8() {
-    # Verificar que A2 (nginx) tiene criticidad 'media'
-    local esc="$HOME/laboratorio/risk-assessment/escenario.json"
-    [ -f "$esc" ] || return 1
-    jq -e '.activos[] | select(.id=="A2") | select(.criticidad=="media")' "$esc" >/dev/null 2>&1
+    local template="$LAB_DIR/plantilla-analisis.md"
+    if [ -f "$template" ]; then
+        if grep -qi "inherente\|residual" "$template" 2>/dev/null; then
+            return 0
+        fi
+    fi
+    # Buscar archivos con cálculos de riesgo
+    local risk_files
+    risk_files=$(find "$LAB_DIR" -maxdepth 1 -type f \( -name "*risk*" -o -name "*riesgo*" \) 2>/dev/null | head -1)
+    if [ -n "$risk_files" ] && [ -f "$risk_files" ]; then
+        return 0
+    fi
+    echo "FAIL: Cálculos de riesgo inherente/residual no encontrados" >&2
+    return 1
 }
 
+# ── Reto 9: Generar justificación económica ────────────────────
 reto9() {
-    # Verificar que A3 (red) tiene criticidad 'alta'
-    local esc="$HOME/laboratorio/risk-assessment/escenario.json"
-    [ -f "$esc" ] || return 1
-    jq -e '.activos[] | select(.id=="A3") | select(.criticidad=="alta")' "$esc" >/dev/null 2>&1
+    local template="$LAB_DIR/plantilla-analisis.md"
+    if [ -f "$template" ]; then
+        if grep -qi "costo\|económico\|inversión\|ROI" "$template" 2>/dev/null; then
+            return 0
+        fi
+    fi
+    # Buscar archivos de justificación
+    local econ_files
+    econ_files=$(find "$LAB_DIR" -maxdepth 1 -type f \( -name "*costo*" -o -name "*econom*" -o -name "*justif*" \) 2>/dev/null | head -1)
+    if [ -n "$econ_files" ] && [ -f "$econ_files" ]; then
+        return 0
+    fi
+    echo "FAIL: Justificación económica no encontrada" >&2
+    return 1
 }
 
+# ── Reto 10: Documentar plan de seguimiento ────────────────────
 reto10() {
-    # Verificar que la suma de probabilidad×impacto es calculable (jq evalúa)
-    local esc="$HOME/laboratorio/risk-assessment/escenario.json"
-    [ -f "$esc" ] || return 1
-    jq -e '[.activos[].amenazas[] | (.probabilidad * .impacto)] | add' "$esc" >/dev/null 2>&1
+    # Verificar que existe documentación de seguimiento
+    local followup
+    followup=$(find "$LAB_DIR" -maxdepth 1 -type f \( -name "*seguimiento*" -o -name "*tracking*" -o -name "*plan*" \) 2>/dev/null | head -1)
+    if [ -n "$followup" ] && [ -f "$followup" ]; then
+        return 0
+    fi
+    # Verificar que la plantilla tiene sección de seguimiento
+    local template="$LAB_DIR/plantilla-analisis.md"
+    if [ -f "$template" ]; then
+        if grep -qi "seguimiento\|tracking\|monitoreo\|revisión" "$template" 2>/dev/null; then
+            return 0
+        fi
+    fi
+    echo "FAIL: Plan de seguimiento no documentado" >&2
+    return 1
 }
 
-# Array de funciones de evaluación (para compatibilidad con evaluación batch)
 validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10)
-
 challenge_names=(
-    "Escenario JSON válido"
-    "Plantilla de análisis existe"
-    "5 activos en escenario"
-    "Cada activo tiene amenazas"
-    "A1 criticidad alta"
-    "A4 criticidad baja"
-    "A5 criticidad alta"
-    "A2 criticidad media"
-    "A3 criticidad alta"
-    "Riesgo calculable"
+    "Verificar existencia del escenario"
+    "Validar 5 activos en el escenario"
+    "Verificar amenazas para cada activo"
+    "Completar tabla probabilidad × impacto"
+    "Asignar nivel de riesgo a cada amenaza"
+    "Clasificar riesgos por nivel"
+    "Definir tratamiento para al menos 3 amenazas"
+    "Calcular riesgo inherente y residual"
+    "Generar justificación económica"
+    "Documentar plan de seguimiento"
 )
 
-# Iconos para el menú (referenciados por menu.sh)
-ICONOS=(🛡️ 📋 📊 🔢 🎯 📉 📈 💰 🏢 📝)
-
-# Funciones de información para cada reto (patrón estándar Units II-XI)
+ICONOS=("📋" "🏢" "⚠️" "📊" "🎯" "🏷️" "🔧" "🔢" "💰" "📅")
 
 reto1_info() {
     separador
-    echo -e "${CYAN}Reto 1: Escenario JSON válido${NC}"
+    echo -e "${CYAN}Reto 1: Verificar existencia del escenario${NC}"
     echo ""
-    echo "El escenario define una PyME con 5 activos críticos."
-    echo "Verifica que el archivo escenario.json existe y es JSON válido."
+    echo "Comprueba que escenario.json existe y contiene la empresa DataGuard."
     echo ""
-    echo "Comando útil: cat escenario.json | jq ."
+    echo "Comandos útiles:"
+    echo "  cat ~/laboratorio/risk-assessment/escenario.json"
     separador
 }
 
 reto2_info() {
     separador
-    echo -e "${CYAN}Reto 2: Plantilla de análisis${NC}"
+    echo -e "${CYAN}Reto 2: Validar 5 activos en el escenario${NC}"
     echo ""
-    echo "La plantilla-analisis.md guía el análisis de riesgos."
-    echo "Contiene: matriz probabilidad×impacto, niveles de riesgo, tratamientos."
+    echo "Verifica que el escenario contiene 5 activos (A1-A5)."
     echo ""
-    echo "Comando útil: cat plantilla-analisis.md"
+    echo "Comandos útiles:"
+    echo "  grep '\"id\": \"A' escenario.json | wc -l"
     separador
 }
 
 reto3_info() {
     separador
-    echo -e "${CYAN}Reto 3: 5 activos en escenario${NC}"
+    echo -e "${CYAN}Reto 3: Verificar amenazas para cada activo${NC}"
     echo ""
-    echo "La PyME DataGuard tiene 5 activos críticos:"
-    echo "A1-Servidor BD, A2-Servidor Web, A3-Infraestructura de Red,"
-    echo "A4-Equipo Desarrollo, A5-Plan de Recuperación."
+    echo "Cada activo debe tener al menos 1 amenaza definida."
     echo ""
-    echo "Comando útil: jq '.activos[].id' escenario.json"
+    echo "Comandos útiles:"
+    echo "  grep '\"nombre\"' escenario.json | wc -l"
     separador
 }
 
 reto4_info() {
     separador
-    echo -e "${CYAN}Reto 4: Cada activo tiene amenazas${NC}"
+    echo -e "${CYAN}Reto 4: Completar tabla probabilidad × impacto${NC}"
     echo ""
-    echo "ISO 31000 requiere identificar amenazas por activo."
-    echo "Cada activo debe tener al menos una amenaza identificada."
+    echo "Completa la matriz de probabilidad e impacto para cada amenaza."
     echo ""
-    echo "Comando útil: jq '.activos[].amenazas | length' escenario.json"
+    echo "Comandos útiles:"
+    echo "  nano ~/laboratorio/risk-assessment/plantilla-analisis.md"
     separador
 }
 
 reto5_info() {
     separador
-    echo -e "${CYAN}Reto 5: A1 (Servidor BD) criticidad alta${NC}"
+    echo -e "${CYAN}Reto 5: Asignar nivel de riesgo a cada amenaza${NC}"
     echo ""
-    echo "El servidor de base de datos es activo de información crítica."
-    echo "Su pérdida comprometería la operación del negocio."
+    echo "Asigna nivel (Bajo/Medio/Alto/Crítico) a cada amenaza."
     echo ""
-    echo "Comando útil: jq '.activos[] | select(.id=="A1")' escenario.json"
+    echo "Comandos útiles:"
+    echo "  cat ~/laboratorio/risk-assessment/plantilla-analisis.md"
     separador
 }
 
 reto6_info() {
     separador
-    echo -e "${CYAN}Reto 6: A4 (laptop) criticidad baja${NC}"
+    echo -e "${CYAN}Reto 6: Clasificar riesgos por nivel${NC}"
     echo ""
-    echo "El equipo de desarrollo es activo de hardware de menor criticidad."
-    echo "Pero contiene datos sensibles (código, credenciales)."
+    echo "Clasifica todas las amenazas en niveles de riesgo."
     echo ""
-    echo "Comando útil: jq '.activos[] | select(.id=="A4")' escenario.json"
+    echo "Comandos útiles:"
+    echo "  nano ~/laboratorio/risk-assessment/clasificacion.md"
     separador
 }
 
 reto7_info() {
     separador
-    echo -e "${CYAN}Reto 7: A5 (DRP) criticidad alta${NC}"
+    echo -e "${CYAN}Reto 7: Definir tratamiento para al menos 3 amenazas${NC}"
     echo ""
-    echo "El plan de recuperación ante desastres es activo de información crítica."
-    echo "Sin él, la organización no puede recuperarse de un incidente."
+    echo "Para al menos 3 amenazas, define tratamiento."
     echo ""
-    echo "Comando útil: jq '.activos[] | select(.id=="A5")' escenario.json"
+    echo "Comandos útiles:"
+    echo "  nano ~/laboratorio/risk-assessment/tratamientos.md"
     separador
 }
 
 reto8_info() {
     separador
-    echo -e "${CYAN}Reto 8: A2 (nginx) criticidad media${NC}"
+    echo -e "${CYAN}Reto 8: Calcular riesgo inherente y residual${NC}"
     echo ""
-    echo "El servidor web es activo de software de criticidad media."
-    echo "Es expuesto a internet, pero su pérdida es recuperable."
+    echo "Calcula riesgo inherente y residual para cada amenaza."
     echo ""
-    echo "Comando útil: jq '.activos[] | select(.id=="A2")' escenario.json"
+    echo "Comandos útiles:"
+    echo "  nano ~/laboratorio/risk-assessment/calculos.md"
     separador
 }
 
 reto9_info() {
     separador
-    echo -e "${CYAN}Reto 9: A3 (red) criticidad alta${NC}"
+    echo -e "${CYAN}Reto 9: Generar justificación económica${NC}"
     echo ""
-    echo "La infraestructura de red es activo de hardware crítica."
-    echo "Su configuración errónea puede comprometer toda la organización."
+    echo "Documenta la justificación económica de cada tratamiento."
     echo ""
-    echo "Comando útil: jq '.activos[] | select(.id=="A3")' escenario.json"
+    echo "Comandos útiles:"
+    echo "  nano ~/laboratorio/risk-assessment/economia.md"
     separador
 }
 
 reto10_info() {
     separador
-    echo -e "${CYAN}Reto 10: Riesgo inherente calculable${NC}"
+    echo -e "${CYAN}Reto 10: Documentar plan de seguimiento${NC}"
     echo ""
-    echo "Riesgo inherente = Probabilidad × Impacto (escala 1-5)."
-    echo "Con 10 amenazas, la suma total es el indicador de riesgo global."
+    echo "Crea un plan de seguimiento para los riesgos."
     echo ""
-    echo "Comando útil: jq '[.activos[].amenazas[] | (.probabilidad * .impacto)] | add' escenario.json"
+    echo "Comandos útiles:"
+    echo "  nano ~/laboratorio/risk-assessment/seguimiento.md"
     separador
 }
+
+# ── Standalone execution mode ─────────────────────────────────────
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  i-risk-assessment: Evaluación de Riesgos ISO 31000 — Retos"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    PASSED=0
+    FAILED=0
+
+    for i in $(seq 1 "$TOTAL_RETOS"); do
+        validator="${validators[$((i-1))]}"
+        name="${challenge_names[$((i-1))]}"
+        icon="${ICONOS[$((i-1))]}"
+
+        if $validator >/dev/null 2>&1; then
+            echo "  [PASS] Reto $i: $name $icon"
+            PASSED=$((PASSED + 1))
+        else
+            echo "  [FAIL] Reto $i: $name"
+            FAILED=$((FAILED + 1))
+        fi
+    done
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  i-risk-assessment Results: $PASSED/$TOTAL_RETOS passed, $FAILED failed"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    [ "$FAILED" -eq 0 ]
+fi

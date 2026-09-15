@@ -1,12 +1,7 @@
 #!/bin/bash
 # Unit IV: Criptografía y CVSS — test.sh
 
-# Support both container (/shared) and local (relative) paths
-if [ -f "/shared/common.sh" ]; then
-    source /shared/common.sh
-else
-    source "$(dirname "$0")/../../shared/common.sh"
-fi
+source /shared/common.sh
 
 UNIT_NAME="unit-IV"
 TOTAL_RETOS=10

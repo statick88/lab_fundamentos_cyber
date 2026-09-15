@@ -132,12 +132,12 @@ El usuario `estudiante` pertenece al grupo `sudo` con NOPASSWD para herramientas
 | Tipo | Retos | Descripción |
 |------|:-----:|-------------|
 | CORE | 60 | Obligatorios para certificación. Cubren competencias mínimas del módulo. |
-| OPTATIVO | 115 | Exploratorios. Permiten profundizar en tópicos avanzados. |
+| OPTATIVO | 183 | Exploratorios. Permiten profundizar en tópicos avanzados. |
 
 - Las sesiones de 24h se diseñan alrededor de los 60 retos CORE.
 - Los retos OPTATIVO se pueden asignar como tarea adicional o para estudiantes avanzados.
 - La clasificación está centralizada en `shared/units_manifest.sh`.
-- **Distribución CORE por unidad**: I(10)+II-firewalls(10)+III-iam(5)+IV(10)+V-logging(10)+checkpoint-II(5)+checkpoint-IV(5)+checkpoint-V(5) = 60 retos.
+- **Distribución CORE por unidad**: I(10)+II-firewalls(10)+IV-criptografia(10)+V-logging(10)+i-risk-assessment(10)+i-asset-classification(10) = 60 retos.
 
 ## Anti-tampering y progreso
 

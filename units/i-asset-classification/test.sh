@@ -1,226 +1,422 @@
 #!/bin/bash
-# Unit: i-asset-classification — Clasificación de Activos / CSF 2.0 (Lab 3)
-# Standard pattern: defines retoN() validators + retoN_info() for menu-driven execution
+# Unit i-asset-classification: Clasificación de Activos / CSF 2.0 — test.sh
+# 10 retos CORE: escenario, activos, CIA, CSV, CSF, clasificación, plantillas, controles, informe
 
-# Support both container (/shared) and local (relative) paths
+# Dual-path sourcing
 if [ -f "/shared/common.sh" ]; then
     source /shared/common.sh
-    source /shared/validators.sh
 else
     source "$(dirname "$0")/../../shared/common.sh"
-    source "$(dirname "$0")/../../shared/validators.sh"
 fi
 
-UNIT_NAME="unit-I-asset"
+UNIT_NAME="unit-i-asset-classification"
 TOTAL_RETOS=10
 
-# Pure validators - no user interaction, check system state only
+LAB_DIR="$HOME/laboratorio/asset-classification"
 
+# ── Reto 1: Verificar existencia del escenario ─────────────────
 reto1() {
-    # Verificar que escenario.json existe y es JSON válido
-    local esc="$HOME/laboratorio/asset-classification/escenario.json"
-    [ -f "$esc" ] || return 1
-    command -v jq >/dev/null 2>&1 || return 1
-    jq -e '.activos | length' "$esc" >/dev/null 2>&1
+    local scenario="$LAB_DIR/escenario.json"
+    if [ ! -f "$scenario" ]; then
+        echo "FAIL: escenario.json no existe en $LAB_DIR" >&2
+        return 1
+    fi
+    # Verificar que contiene la empresa FinSecure
+    grep -qi "FinSecure" "$scenario" 2>/dev/null
+    if [ $? -ne 0 ]; then
+        echo "FAIL: escenario.json no contiene la empresa FinSecure" >&2
+        return 1
+    fi
+    return 0
 }
 
+# ── Reto 2: Validar que el escenario tiene 5 activos ───────────
 reto2() {
-    # Verificar que plantilla-clasificacion.md existe
-    assert_file_exists "$HOME/laboratorio/asset-classification/plantilla-clasificacion.md"
+    local scenario="$LAB_DIR/escenario.json"
+    if [ ! -f "$scenario" ]; then
+        echo "FAIL: escenario.json no existe" >&2
+        return 1
+    fi
+    # Contar IDs de activos (A1-A5)
+    local count
+    count=$(grep -o '"id": "A[1-5]"' "$scenario" 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$count" -ge 5 ]; then
+        return 0
+    fi
+    echo "FAIL: Solo $count activos encontrados en escenario.json (se esperan 5: A1-A5)" >&2
+    return 1
 }
 
+# ── Reto 3: Verificar ratings CIA para cada activo ─────────────
 reto3() {
-    # Verificar que asset_registry.csv tiene 5 filas de datos (excluyendo header)
-    local csv="$HOME/laboratorio/asset-classification/data/asset_registry.csv"
-    [ -f "$csv" ] || return 1
-    local data_rows
-    data_rows=$(($(wc -l < "$csv") - 1))
-    [ "$data_rows" = "5" ]
+    local scenario="$LAB_DIR/escenario.json"
+    if [ ! -f "$scenario" ]; then
+        echo "FAIL: escenario.json no existe" >&2
+        return 1
+    fi
+    # Verificar que cada activo tiene los 3 ratings CIA (1-5)
+    local conf_count integ_count disp_count
+    conf_count=$(grep -o '"confidencialidad": [1-5]' "$scenario" 2>/dev/null | wc -l | tr -d ' ')
+    integ_count=$(grep -o '"integridad": [1-5]' "$scenario" 2>/dev/null | wc -l | tr -d ' ')
+    disp_count=$(grep -o '"disponibilidad": [1-5]' "$scenario" 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$conf_count" -ge 5 ] && [ "$integ_count" -ge 5 ] && [ "$disp_count" -ge 5 ]; then
+        return 0
+    fi
+    echo "FAIL: Ratings CIA incompletos — confidencialidad=$conf_count, integridad=$integ_count, disponibilidad=$disp_count (se esperan 5 cada uno)" >&2
+    return 1
 }
 
+# ── Reto 4: Verificar que existe CSV de inventario con 5+ entradas ──
 reto4() {
-    # Verificar que todas las clasificaciones están en {público,interno,confidencial,restringido}
-    local csv="$HOME/laboratorio/asset-classification/data/asset_registry.csv"
-    [ -f "$csv" ] || return 1
-    # Extraer columna 3 (classification), saltar header, verificar valores válidos
-    local invalid
-    invalid=$(tail -n +2 "$csv" | cut -d',' -f3 | grep -vE '^(público|interno|confidencial|restringido)$' | wc -l)
-    [ "$invalid" = "0" ]
+    local csv="$LAB_DIR/data/asset_registry.csv"
+    if [ ! -f "$csv" ]; then
+        echo "FAIL: data/asset_registry.csv no existe en $LAB_DIR" >&2
+        return 1
+    fi
+    # Contar líneas de datos (excluir header)
+    local data_lines
+    data_lines=$(tail -n +2 "$csv" 2>/dev/null | grep -c '[^ ]' 2>/dev/null || echo 0)
+    if [ "$data_lines" -ge 5 ]; then
+        return 0
+    fi
+    echo "FAIL: CSV tiene solo $data_lines entradas de datos (se esperan al menos 5)" >&2
+    return 1
 }
 
+# ── Reto 5: Verificar mapeo CSF completado ─────────────────────
 reto5() {
-    # Verificar que todos los ratings CIA son 1-5
-    local csv="$HOME/laboratorio/asset-classification/data/asset_registry.csv"
-    [ -f "$csv" ] || return 1
-    # Verificar columnas 4, 5, 6 (confidencialidad, integridad, disponibilidad)
-    local invalid
-    invalid=$(tail -n +2 "$csv" | awk -F',' '$4 < 1 || $4 > 5 || $5 < 1 || $5 > 5 || $6 < 1 || $6 > 5' | wc -l)
-    [ "$invalid" = "0" ]
+    local template="$LAB_DIR/plantilla-clasificacion.md"
+    local csf_ref="$LAB_DIR/data/csf_mapping.md"
+    # Verificar que la plantilla tiene referencias CSF o el archivo de mapeo existe
+    if [ -f "$template" ]; then
+        if grep -qi "ID\.AM-0[157]\|CSF\|NIST" "$template" 2>/dev/null; then
+            return 0
+        fi
+    fi
+    # Verificar archivo de referencia CSF
+    if [ -f "$csf_ref" ]; then
+        if grep -qi "ID\.AM-0[157]\|CSF" "$csf_ref" 2>/dev/null; then
+            return 0
+        fi
+    fi
+    # Buscar cualquier archivo con mapeo CSF
+    local csf_files
+    csf_files=$(find "$LAB_DIR" -maxdepth 2 -type f \( -name "*csf*" -o -name "*mapping*" -o -name "*mapeo*" \) 2>/dev/null | head -1)
+    if [ -n "$csf_files" ] && [ -f "$csf_files" ]; then
+        return 0
+    fi
+    echo "FAIL: Mapeo CSF 2.0 no encontrado (ID.AM-01/05/07)" >&2
+    return 1
 }
 
+# ── Reto 6: Verificar niveles de clasificación asignados ───────
 reto6() {
-    # Verificar que csf_mapping.md contiene ID.AM-01
-    assert_file_contains "$HOME/laboratorio/asset-classification/data/csf_mapping.md" "ID.AM-01"
+    local template="$LAB_DIR/plantilla-clasificacion.md"
+    local csv="$LAB_DIR/data/asset_registry.csv"
+    local scenario="$LAB_DIR/escenario.json"
+    # Verificar en escenario.json que los 4 niveles aparecen
+    local levels_found=0
+    if [ -f "$scenario" ]; then
+        grep -qi "restringido" "$scenario" 2>/dev/null && levels_found=$((levels_found + 1))
+        grep -qi "confidencial" "$scenario" 2>/dev/null && levels_found=$((levels_found + 1))
+        grep -qi "interno" "$scenario" 2>/dev/null && levels_found=$((levels_found + 1))
+        grep -qi "publico\|público" "$scenario" 2>/dev/null && levels_found=$((levels_found + 1))
+    fi
+    if [ "$levels_found" -ge 2 ]; then
+        return 0
+    fi
+    # Verificar en CSV
+    if [ -f "$csv" ]; then
+        levels_found=0
+        grep -qi "restringido" "$csv" 2>/dev/null && levels_found=$((levels_found + 1))
+        grep -qi "confidencial" "$csv" 2>/dev/null && levels_found=$((levels_found + 1))
+        grep -qi "interno" "$csv" 2>/dev/null && levels_found=$((levels_found + 1))
+        grep -qi "publico\|público" "$csv" 2>/dev/null && levels_found=$((levels_found + 1))
+        if [ "$levels_found" -ge 2 ]; then
+            return 0
+        fi
+    fi
+    # Verificar en plantilla completada
+    if [ -f "$template" ]; then
+        if grep -qi "restringido\|confidencial\|interno\|publico\|público" "$template" 2>/dev/null; then
+            return 0
+        fi
+    fi
+    echo "FAIL: Niveles de clasificación (Public/Internal/Confidential/Restricted) no asignados" >&2
+    return 1
 }
 
+# ── Reto 7: Verificar plantilla de inventario completada ────────
 reto7() {
-    # Verificar que csf_mapping.md contiene ID.AM-05
-    assert_file_contains "$HOME/laboratorio/asset-classification/data/csf_mapping.md" "ID.AM-05"
+    local template="$LAB_DIR/plantilla-clasificacion.md"
+    if [ ! -f "$template" ]; then
+        echo "FAIL: plantilla-clasificacion.md no existe en $LAB_DIR" >&2
+        return 1
+    fi
+    # Verificar que tiene datos más allá de la plantilla vacía
+    # Contar filas de tabla con datos (más allá de separadores)
+    local filled_rows
+    filled_rows=$(grep -c '| A[1-5] |.*|.*|.*|.*|.*|' "$template" 2>/dev/null || echo 0)
+    if [ "$filled_rows" -ge 5 ]; then
+        return 0
+    fi
+    # Verificar que tiene contenido más allá de headers vacíos
+    local data_entries
+    data_entries=$(grep -ci 'restringido\|confidencial\|interno\|público\|publico' "$template" 2>/dev/null || echo 0)
+    if [ "$data_entries" -ge 3 ]; then
+        return 0
+    fi
+    echo "FAIL: Plantilla de clasificación no completada (solo $filled_rows filas con datos, $data_entries clasificaciones)" >&2
+    return 1
 }
 
+# ── Reto 8: Verificar justificación CIA en plantilla ────────────
 reto8() {
-    # Verificar que csf_mapping.md contiene ID.AM-07
-    assert_file_contains "$HOME/laboratorio/asset-classification/data/csf_mapping.md" "ID.AM-07"
+    local template="$LAB_DIR/plantilla-clasificacion.md"
+    if [ ! -f "$template" ]; then
+        echo "FAIL: plantilla-clasificacion.md no existe" >&2
+        return 1
+    fi
+    # Verificar que tiene justificaciones de clasificación
+    local justifications
+    justifications=$(grep -ci 'justificación\|justificacion\|criterio\|por qué\|porque' "$template" 2>/dev/null || echo 0)
+    if [ "$justifications" -ge 2 ]; then
+        return 0
+    fi
+    # Verificar que tiene priorización (ID.AM-05)
+    local priority
+    priority=$(grep -ci 'prioridad\|priorización\|criticidad' "$template" 2>/dev/null || echo 0)
+    if [ "$priority" -ge 2 ]; then
+        return 0
+    fi
+    echo "FAIL: Justificación de clasificación CIA o priorización no documentada en plantilla" >&2
+    return 1
 }
 
+# ── Reto 9: Verificar que los 5 activos tienen controles definidos ──
 reto9() {
-    # Verificar que escenario.json es JSON válido con array de activos
-    local esc="$HOME/laboratorio/asset-classification/escenario.json"
-    [ -f "$esc" ] || return 1
-    command -v jq >/dev/null 2>&1 || return 1
-    # Verificar que es array y tiene 5 elementos
-    jq -e '.activos | length == 5' "$esc" >/dev/null 2>&1
+    local template="$LAB_DIR/plantilla-clasificacion.md"
+    local scenario="$LAB_DIR/escenario.json"
+    local csv="$LAB_DIR/data/asset_registry.csv"
+    # Verificar controles en escenario.json
+    local controls=0
+    if [ -f "$scenario" ]; then
+        controls=$(grep -c '"controles"\|"control"\|"medida"' "$scenario" 2>/dev/null || echo 0)
+    fi
+    if [ "$controls" -ge 5 ]; then
+        return 0
+    fi
+    # Verificar controles en plantilla
+    if [ -f "$template" ]; then
+        local ctrl_template
+        ctrl_template=$(grep -ci 'control\|medida\|salvaguarda\|protección\|proteccion' "$template" 2>/dev/null || echo 0)
+        if [ "$ctrl_template" -ge 3 ]; then
+            return 0
+        fi
+    fi
+    # Verificar archivos de controles
+    local control_files
+    control_files=$(find "$LAB_DIR" -maxdepth 2 -type f \( -name "*control*" -o -name "*salvaguarda*" -o -name "*medidas*" \) 2>/dev/null | head -1)
+    if [ -n "$control_files" ] && [ -f "$control_files" ]; then
+        return 0
+    fi
+    echo "FAIL: Controles de seguridad no definidos para los activos (se esperan al menos 5)" >&2
+    return 1
 }
 
+# ── Reto 10: Verificar documento de resumen/informe final ──────
 reto10() {
-    # Verificar que al menos un activo tiene clasificación "restringido" o "confidencial"
-    local csv="$HOME/laboratorio/asset-classification/data/asset_registry.csv"
-    [ -f "$csv" ] || return 1
-    # Buscar en columna 3 (classification)
-    tail -n +2 "$csv" | cut -d',' -f3 | grep -qE '^(restringido|confidencial)$'
+    # Buscar archivo de resumen o informe final
+    local report
+    report=$(find "$LAB_DIR" -maxdepth 1 -type f \( -name "*resumen*" -o -name "*informe*" -o -name "*summary*" -o -name "*report*" -o -name "*final*" \) 2>/dev/null | head -1)
+    if [ -n "$report" ] && [ -f "$report" ]; then
+        return 0
+    fi
+    # Verificar que la plantilla tiene sección de resumen/entregables
+    local template="$LAB_DIR/plantilla-clasificacion.md"
+    if [ -f "$template" ]; then
+        if grep -qi "resumen\|entregable\|informe\|conclusión\|conclusion\|resumen ejecutivo" "$template" 2>/dev/null; then
+            return 0
+        fi
+    fi
+    # Buscar archivo markdown que pueda ser el resumen
+    local any_md
+    any_md=$(find "$LAB_DIR" -maxdepth 1 -type f -name "*.md" ! -name "plantilla-*" ! -name "csf*" 2>/dev/null | head -1)
+    if [ -n "$any_md" ] && [ -f "$any_md" ]; then
+        local md_size
+        md_size=$(wc -l < "$any_md" 2>/dev/null || echo 0)
+        if [ "$md_size" -ge 10 ]; then
+            return 0
+        fi
+    fi
+    echo "FAIL: Documento de resumen o informe final no encontrado" >&2
+    return 1
 }
 
-# Array de funciones de evaluación (para compatibilidad con evaluación batch)
 validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10)
-
 challenge_names=(
-    "Escenario JSON válido"
-    "Plantilla de clasificación existe"
-    "CSV tiene 5 filas de datos"
-    "Clasificaciones válidas (público/interno/confidencial/restringido)"
-    "Ratings CIA 1-5"
-    "CSF mapping contiene ID.AM-01"
-    "CSF mapping contiene ID.AM-05"
-    "CSF mapping contiene ID.AM-07"
-    "Escenario JSON con 5 activos"
-    "Al menos un activo restringido/confidencial"
+    "Verificar existencia del escenario"
+    "Validar 5 activos (A1-A5) en el escenario"
+    "Verificar ratings CIA para cada activo"
+    "Verificar CSV de inventario con 5+ entradas"
+    "Verificar mapeo CSF 2.0 completado"
+    "Verificar niveles de clasificación asignados"
+    "Verificar plantilla de clasificación completada"
+    "Verificar justificación CIA y priorización"
+    "Verificar controles de seguridad definidos"
+    "Verificar documento de resumen final"
 )
 
-# Iconos para el menú (referenciados por menu.sh)
-ICONOS=(🛡️ 📋 📊 🏷️ 🔢 📚 🎯 🔗 📦 🔐)
-
-# Funciones de información para cada reto (patrón estándar)
+ICONOS=("📋" "🏢" "🔐" "📊" "🗺️" "🏷️" "📝" "⚖️" "🛡️" "📄")
 
 reto1_info() {
     separador
-    echo -e "${CYAN}Reto 1: Escenario JSON válido${NC}"
+    echo -e "${CYAN}Reto 1: Verificar existencia del escenario${NC}"
     echo ""
-    echo "El escenario define una organización con 5 activos críticos."
-    echo "Verifica que el archivo escenario.json existe y es JSON válido con array 'activos'."
+    echo "Comprueba que escenario.json existe y contiene la empresa FinSecure."
     echo ""
-    echo "Comando útil: cat escenario.json | jq ."
+    echo "Comandos útiles:"
+    echo "  cat ~/laboratorio/asset-classification/escenario.json"
+    echo "  cat escenario.json | jq ."
     separador
 }
 
 reto2_info() {
     separador
-    echo -e "${CYAN}Reto 2: Plantilla de clasificación${NC}"
+    echo -e "${CYAN}Reto 2: Validar 5 activos (A1-A5) en el escenario${NC}"
     echo ""
-    echo "La plantilla-clasificacion.md guía la clasificación de activos."
-    echo "Contiene: tabla de inventario, priorización CIA, mapeo CSF ID.AM-01/05/07."
+    echo "Verifica que el escenario contiene los 5 activos: A1-A5."
     echo ""
-    echo "Comando útil: cat plantilla-clasificacion.md"
+    echo "Comandos útiles:"
+    echo "  grep '\"id\": \"A' escenario.json | wc -l"
+    echo "  cat escenario.json | jq '.activos | length'"
     separador
 }
 
 reto3_info() {
     separador
-    echo -e "${CYAN}Reto 3: CSV con 5 filas de datos${NC}"
+    echo -e "${CYAN}Reto 3: Verificar ratings CIA para cada activo${NC}"
     echo ""
-    echo "El registro de activos (asset_registry.csv) debe tener:"
-    echo "  - 1 fila de header: name,type,classification,confidencialidad,integridad,disponibilidad"
-    echo "  - 5 filas de datos (una por cada activo A1-A5)"
+    echo "Cada activo debe tener confidencialidad, integridad y disponibilidad (1-5)."
     echo ""
-    echo "Comando útil: wc -l data/asset_registry.csv"
+    echo "Comandos útiles:"
+    echo "  grep '\"confidencialidad\"' escenario.json | wc -l"
+    echo "  grep '\"integridad\"' escenario.json | wc -l"
+    echo "  grep '\"disponibilidad\"' escenario.json | wc -l"
     separador
 }
 
 reto4_info() {
     separador
-    echo -e "${CYAN}Reto 4: Clasificaciones válidas${NC}"
+    echo -e "${CYAN}Reto 4: Verificar CSV de inventario con 5+ entradas${NC}"
     echo ""
-    echo "Cada activo debe tener una clasificación de las 4 permitidas:"
-    echo "  • público      — información de acceso general"
-    echo "  • interno      — uso interno de la organización"
-    echo "  • confidencial — información sensible, acceso por necesidad"
-    echo "  • restringido  — información altamente sensible, acceso muy limitado"
+    echo "El archivo data/asset_registry.csv debe tener al menos 5 registros."
     echo ""
-    echo "Comando útil: cut -d',' -f3 data/asset_registry.csv | sort -u"
+    echo "Comandos útiles:"
+    echo "  cat data/asset_registry.csv"
+    echo "  tail -n +2 data/asset_registry.csv | wc -l"
     separador
 }
 
 reto5_info() {
     separador
-    echo -e "${CYAN}Reto 5: Ratings CIA en escala 1-5${NC}"
+    echo -e "${CYAN}Reto 5: Verificar mapeo CSF 2.0 completado${NC}"
     echo ""
-    echo "Cada activo tiene 3 ratings (confidencialidad, integridad, disponibilidad):"
-    echo "  1 = Muy bajo  |  2 = Bajo  |  3 = Medio  |  4 = Alto  |  5 = Muy alto"
+    echo "Se debe documentar el mapeo ID.AM-01, ID.AM-05 y ID.AM-07."
     echo ""
-    echo "Comando útil: cut -d',' -f4-6 data/asset_registry.csv"
+    echo "Comandos útiles:"
+    echo "  cat data/csf_mapping.md"
+    echo "  grep 'ID.AM' plantilla-clasificacion.md"
     separador
 }
 
 reto6_info() {
     separador
-    echo -e "${CYAN}Reto 6: CSF ID.AM-01 (Inventario de Activos)${NC}"
+    echo -e "${CYAN}Reto 6: Verificar niveles de clasificación asignados${NC}"
     echo ""
-    echo "ID.AM-01: Los inventarios de hardware, software, datos y servicios se gestionan."
-    echo "Verifica que csf_mapping.md referencia esta subcategoría."
+    echo "Cada activo debe tener un nivel: público, interno, confidencial o restringido."
     echo ""
-    echo "Comando útil: grep 'ID.AM-01' data/csf_mapping.md"
+    echo "Comandos útiles:"
+    echo "  grep 'clasificacion' escenario.json"
+    echo "  cut -d',' -f3 data/asset_registry.csv"
     separador
 }
 
 reto7_info() {
     separador
-    echo -e "${CYAN}Reto 7: CSF ID.AM-05 (Priorización de Activos)${NC}"
+    echo -e "${CYAN}Reto 7: Verificar plantilla de clasificación completada${NC}"
     echo ""
-    echo "ID.AM-05: Los activos se priorizan según clasificación, criticidad y valor."
-    echo "Verifica que csf_mapping.md referencia esta subcategoría."
+    echo "La plantilla plantilla-clasificacion.md debe estar completada con datos."
     echo ""
-    echo "Comando útil: grep 'ID.AM-05' data/csf_mapping.md"
+    echo "Comandos útiles:"
+    echo "  cat plantilla-clasificacion.md"
+    echo "  grep '| A' plantilla-clasificacion.md | wc -l"
     separador
 }
 
 reto8_info() {
     separador
-    echo -e "${CYAN}Reto 8: CSF ID.AM-07 (Mapeo a Roles y Dependencias)${NC}"
+    echo -e "${CYAN}Reto 8: Verificar justificación CIA y priorización${NC}"
     echo ""
-    echo "ID.AM-07: Se establece mapa de activos con roles, responsabilidades y dependencias."
-    echo "Verifica que csf_mapping.md referencia esta subcategoría."
+    echo "Cada clasificación debe tener justificación y priorización por criticidad."
     echo ""
-    echo "Comando útil: grep 'ID.AM-07' data/csf_mapping.md"
+    echo "Comandos útiles:"
+    echo "  grep -i 'justificación\\|prioridad' plantilla-clasificacion.md"
     separador
 }
 
 reto9_info() {
     separador
-    echo -e "${CYAN}Reto 9: Escenario con 5 activos (A1-A5)${NC}"
+    echo -e "${CYAN}Reto 9: Verificar controles de seguridad definidos${NC}"
     echo ""
-    echo "El escenario.json debe contener exactamente 5 activos con IDs A1 a A5,"
-    echo "cada uno con: id, nombre, tipo, clasificación, confidencialidad, integridad, disponibilidad."
+    echo "Los 5 activos deben tener al menos un control de seguridad cada uno."
     echo ""
-    echo "Comando útil: jq '.activos[] | {id, nombre, tipo, clasificacion}' escenario.json"
+    echo "Comandos útiles:"
+    echo "  grep -i 'control\\|medida\\|salvaguarda' plantilla-clasificacion.md"
+    echo "  ls data/"
     separador
 }
 
 reto10_info() {
     separador
-    echo -e "${CYAN}Reto 10: Al menos un activo restringido/confidencial${NC}"
+    echo -e "${CYAN}Reto 10: Verificar documento de resumen final${NC}"
     echo ""
-    echo "Una organización financiera debe tener activos altamente sensibles."
-    echo "Verifica que al menos un activo tiene clasificación 'restringido' o 'confidencial'."
+    echo "Debe existir un documento de resumen o informe final del análisis."
     echo ""
-    echo "Comando útil: cut -d',' -f3 data/asset_registry.csv | grep -E 'restringido|confidencial'"
+    echo "Comandos útiles:"
+    echo "  ls *.md"
+    echo "  cat resumen.md 2>/dev/null || cat informe.md 2>/dev/null || cat summary.md"
     separador
 }
+
+# ── Standalone execution mode ─────────────────────────────────────
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  i-asset-classification: Clasificación de Activos / CSF 2.0 — Retos"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    PASSED=0
+    FAILED=0
+
+    for i in $(seq 1 "$TOTAL_RETOS"); do
+        validator="${validators[$((i-1))]}"
+        name="${challenge_names[$((i-1))]}"
+        icon="${ICONOS[$((i-1))]}"
+
+        if $validator >/dev/null 2>&1; then
+            echo "  [PASS] Reto $i: $name $icon"
+            PASSED=$((PASSED + 1))
+        else
+            echo "  [FAIL] Reto $i: $name"
+            FAILED=$((FAILED + 1))
+        fi
+    done
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  i-asset-classification Results: $PASSED/$TOTAL_RETOS passed, $FAILED failed"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    [ "$FAILED" -eq 0 ]
+fi

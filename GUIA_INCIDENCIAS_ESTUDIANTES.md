@@ -37,7 +37,7 @@ Si el login falla por una contraseña olvidada o modificada, sal del contenedor 
 
 ```bash
 # 1. Ingresa al contenedor como root (UID 0)
-docker compose exec -u 0 lab-linux bash
+docker compose exec -u 0 lab_fundamentos_cyber bash
 
 # 2. Cambia la contraseña del usuario estudiante — NO pide la actual
 passwd estudiante
@@ -48,7 +48,7 @@ passwd estudiante
 Luego vuelve a entrar normalmente:
 
 ```bash
-docker compose exec lab-linux bash
+docker compose exec lab_fundamentos_cyber bash
 ```
 
 #### Opción B — Usar el script `reset.sh`
@@ -66,7 +66,7 @@ bash reset.sh --progreso     # Limpieza completa (también reinicia progreso)
 
 | Comando | Qué hace | Nota |
 |---------|----------|------|
-| `menu` | Muestra el menú principal de 18 unidades | Es una **función**, no un binario. No uses `sudo menu`. |
+| `menu` | Muestra el menú principal de 26 unidades | Es una **función**, no un binario. No uses `sudo menu`. |
 | `jugar` | Inicia el modo interactivo de retos | |
 | `unidad N` | Selecciona la unidad N (1-18) | Ejemplo: `unidad 4` |
 | `retos` | Lista los retos de la unidad actual | |
@@ -86,7 +86,7 @@ bash reset.sh --progreso     # Limpieza completa (también reinicia progreso)
 | Problema | Causa | Solución |
 |----------|-------|----------|
 | `Permission denied` al ejecutar un comando | El comando requiere privilegios de root | Usa `sudo` + el comando. El usuario `estudiante` tiene NOPASSWD para: `ufw`, `iptables`, `nmap`, `logrotate`, `john`, `fail2ban-client` |
-| `sudo: passwd: command not found` o pide contraseña actual | `passwd` no está en la lista de sudoers NOPASSWD | Resetea desde el host con `docker compose exec -u 0 lab-linux bash` → `passwd estudiante` |
+| `sudo: passwd: command not found` o pide contraseña actual | `passwd` no está en la lista de sudoers NOPASSWD | Resetea desde el host con `docker compose exec -u 0 lab_fundamentos_cyber bash` → `passwd estudiante` |
 | Las reglas de UFW no persisten | El archivo `/etc/ufw/user.rules` fue sobreescrito | Ejecuta `bash reset.sh` y reconfigura |
 | El contador de progreso no avanza | El progreso se almacena en `/var/lab-state/progress` (root, modo 0660) | El estudiante no puede modificarlo directamente. Usa `evaluar` para validar. |
 | El contenedor no inicia | La imagen está desactualizada | `docker compose build --no-cache && docker compose up -d` |
@@ -187,7 +187,7 @@ La IA no reemplaza a la teoría. Si un comando "funciona" pero no entiendes **po
 
 ## 4. Frase Secreta del Laboratorio
 
-Cada unidad completada revela una palabra. Completa las 18 unidades para descubrir la frase completa:
+Cada unidad completada revela una palabra. Completa las 26 unidades para descubrir la frase completa:
 
 ```
 Toda revolution comienza con un pass

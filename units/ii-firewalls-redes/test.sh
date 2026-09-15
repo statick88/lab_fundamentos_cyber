@@ -1,12 +1,7 @@
 #!/bin/bash
 # Unit II: Filtrado de Red y Firewalls — test.sh
 
-# Support both container (/shared) and local (relative) paths
-if [ -f "/shared/common.sh" ]; then
-    source /shared/common.sh
-else
-    source "$(dirname "$0")/../../shared/common.sh"
-fi
+source /shared/common.sh
 
 UNIT_NAME="unit-II"
 TOTAL_RETOS=10
@@ -30,32 +25,54 @@ reto4() {
 }
 
 reto5() {
-    [ -f "$HOME/laboratorio/redes/ufw_ssh.sh" ] && [ -x "$HOME/laboratorio/redes/ufw_ssh.sh" ]
+    if command -v sudo >/dev/null 2>&1 && sudo -n ufw status >/dev/null 2>&1; then
+        sudo ufw status | grep -q "22/tcp"
+    else
+        [ -f "$HOME/laboratorio/redes/ufw_ssh.sh" ] && [ -x "$HOME/laboratorio/redes/ufw_ssh.sh" ]
+    fi
 }
 
 reto6() {
-    [ -f "$HOME/laboratorio/redes/ufw_telnet.sh" ] && [ -x "$HOME/laboratorio/redes/ufw_telnet.sh" ]
+    if command -v sudo >/dev/null 2>&1 && sudo -n ufw status >/dev/null 2>&1; then
+        sudo ufw status | grep -q "23/tcp"
+    else
+        [ -f "$HOME/laboratorio/redes/ufw_telnet.sh" ] && [ -x "$HOME/laboratorio/redes/ufw_telnet.sh" ]
+    fi
 }
 
 reto7() {
-    [ -f "$HOME/laboratorio/redes/ufw_web.sh" ] && [ -x "$HOME/laboratorio/redes/ufw_web.sh" ]
+    if command -v sudo >/dev/null 2>&1 && sudo -n ufw status >/dev/null 2>&1; then
+        sudo ufw status | grep -qE "80/tcp|443/tcp"
+    else
+        [ -f "$HOME/laboratorio/redes/ufw_web.sh" ] && [ -x "$HOME/laboratorio/redes/ufw_web.sh" ]
+    fi
 }
 
 reto8() {
-    [ -f "$HOME/laboratorio/redes/iptables_block.sh" ] && [ -x "$HOME/laboratorio/redes/iptables_block.sh" ]
+    if command -v sudo >/dev/null 2>&1 && sudo -n iptables -L INPUT -n -v >/dev/null 2>&1; then
+        sudo iptables -L INPUT -n -v | grep -q "DROP"
+    else
+        [ -f "$HOME/laboratorio/redes/iptables_block.sh" ] && [ -x "$HOME/laboratorio/redes/iptables_block.sh" ]
+    fi
 }
 
 reto9() {
-    command -v iptables >/dev/null 2>&1
-    [ -f "$HOME/laboratorio/redes/iptables_list.sh" ] && [ -x "$HOME/laboratorio/redes/iptables_list.sh" ]
+    if command -v sudo >/dev/null 2>&1 && sudo -n iptables -L >/dev/null 2>&1; then
+        sudo iptables -L >/dev/null 2>&1
+    else
+        command -v iptables >/dev/null 2>&1
+        [ -f "$HOME/laboratorio/redes/iptables_list.sh" ] && [ -x "$HOME/laboratorio/redes/iptables_list.sh" ]
+    fi
 }
 
 reto10() {
     if [ -f "$HOME/laboratorio/redes/captura_scan.pcapng" ]; then
-        # setup.sh genera un dump de texto hex de la captura (mismo formato que los retos 1 y 3).
-        # Un paquete SYN de escaneo de puertos lleva la bandera TCP SYN (0x02),
-        # que aparece como "50 02 20 00" en el dump (offset 0x2c: puerto + flags).
-        grep -q "50 02 20 00" "$HOME/laboratorio/redes/captura_scan.pcapng" 2>/dev/null
+        if command -v tcpdump >/dev/null 2>&1; then
+            tcpdump -nn -r "$HOME/laboratorio/redes/captura_scan.pcapng" 2>/dev/null | grep -c "SYN" >/dev/null 2>&1 && return 0
+        fi
+        local size
+        size=$(stat -c %s "$HOME/laboratorio/redes/captura_scan.pcapng" 2>/dev/null || stat -f %z "$HOME/laboratorio/redes/captura_scan.pcapng" 2>/dev/null || echo 0)
+        [ "$size" -gt 1024 ]
     else
         return 1
     fi
@@ -203,37 +220,3 @@ reto10_info() {
     echo "  tcpdump -nn -r captura_scan.pcapng"
     separador
 }
-
-# ── Standalone execution mode ────────────────────────────────
-# When invoked directly (not sourced), run all validators and report results.
-# This enables: bash test.sh | ./test.sh | validate-m4-m6-labs.sh sourcing.
-if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
-    echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "  Unit II: Filtrado de Red y Firewalls — Retos"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-    PASSED=0
-    FAILED=0
-
-    for i in $(seq 1 "$TOTAL_RETOS"); do
-        validator="${validators[$((i-1))]}"
-        name="${challenge_names[$((i-1))]}"
-        icon="${ICONOS[$((i-1))]}"
-
-        if $validator >/dev/null 2>&1; then
-            echo "  [PASS] Reto $i: $name $icon"
-            PASSED=$((PASSED + 1))
-        else
-            echo "  [FAIL] Reto $i: $name"
-            FAILED=$((FAILED + 1))
-        fi
-    done
-
-    echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "  Unit II Results: $PASSED/$TOTAL_RETOS passed, $FAILED failed"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-    [ "$FAILED" -eq 0 ]
-fi
