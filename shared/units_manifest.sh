@@ -3,10 +3,10 @@
 # Este archivo elimina la duplicación de mapeos en common.sh, unidad.sh, menu.sh e interactive.sh
 
 # === MANIFIESTO DE UNIDADES ===
-# Índices: 1..22 (cada directorio en units/ tiene su propia entrada)
+# Índices: 1..26 (cada directorio en units/ tiene su propia entrada)
 # Total: 243 retos (60 CORE + 183 OPTATIVOS) — alineado con test.sh reales
 #
-# Orden de unidades (índices 1..22):
+# Orden de unidades (índices 1..26):
 #   1  i                        unit-I            Principios y Gestión de Riesgo          M1
 #   2  ii-firewalls-redes       unit-II           Filtrado de Red y Firewalls            M2
 #   3  ii-ids-intrusion-detect  unit-II-ids       Detección de Intrusos con Suricata     M2
