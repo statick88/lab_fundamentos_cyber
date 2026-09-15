@@ -66,7 +66,7 @@ bash reset.sh --progreso     # Limpieza completa (también reinicia progreso)
 
 | Comando | Qué hace | Nota |
 |---------|----------|------|
-| `menu` | Muestra el menú principal de 18 unidades | Es una **función**, no un binario. No uses `sudo menu`. |
+| `menu` | Muestra el menú principal de 26 unidades | Es una **función**, no un binario. No uses `sudo menu`. |
 | `jugar` | Inicia el modo interactivo de retos | |
 | `unidad N` | Selecciona la unidad N (1-18) | Ejemplo: `unidad 4` |
 | `retos` | Lista los retos de la unidad actual | |
@@ -187,7 +187,7 @@ La IA no reemplaza a la teoría. Si un comando "funciona" pero no entiendes **po
 
 ## 4. Frase Secreta del Laboratorio
 
-Cada unidad completada revela una palabra. Completa las 18 unidades para descubrir la frase completa:
+Cada unidad completada revela una palabra. Completa las 26 unidades para descubrir la frase completa:
 
 ```
 Toda revolution comienza con un pass

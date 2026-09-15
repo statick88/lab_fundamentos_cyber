@@ -88,7 +88,7 @@ UNIT_ICONOS=(
 
 # Cantidad de retos por unidad (243 total, alineado con test.sh reales)
 # CORE: unit-I(10)+unit-II(10)+unit-IV(10)+unit-V(10)+i-risk-assessment(10)+i-asset-classification(10) = 60
-# OPT: 236 - 60 = 176
+# OPT: 243 - 60 = 183
 UNIT_RETOS=(
   10   10    3   10    5
   15   10   10   10   10
