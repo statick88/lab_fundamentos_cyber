@@ -32,6 +32,10 @@ case "$UNIT_NUM" in
     xi) UNIT_DIR="xi" ;;
     i-risk) UNIT_DIR="i-risk-assessment" ;;
     i-asset) UNIT_DIR="i-asset-classification" ;;
+    checkpoint-ii) UNIT_DIR="checkpoint-ii" ;;
+    checkpoint-iv) UNIT_DIR="checkpoint-iv" ;;
+    checkpoint-v) UNIT_DIR="checkpoint-v" ;;
+    iii-compliance-iso27001) UNIT_DIR="iii-compliance-iso27001" ;;
     *) UNIT_DIR="" ;;
 esac
 

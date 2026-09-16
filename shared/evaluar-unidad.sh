@@ -37,6 +37,10 @@ case "$UNIT_ROMAN_LC" in
     iv-burp) UNIT_DIR="iv-burp-intercept" ;;
     iv-malware) UNIT_DIR="iv-malware-sandbox" ;;
     iv-integrador) UNIT_DIR="iv-lab-integrador" ;;
+    checkpoint-ii) UNIT_DIR="checkpoint-ii" ;;
+    checkpoint-iv) UNIT_DIR="checkpoint-iv" ;;
+    checkpoint-v) UNIT_DIR="checkpoint-v" ;;
+    iii-compliance-iso27001) UNIT_DIR="iii-compliance-iso27001" ;;
     *) UNIT_DIR="" ;;
 esac
 
