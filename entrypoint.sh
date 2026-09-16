@@ -129,6 +129,22 @@ export PATH="$HOME/bin:$PATH"
 
 # ─── Mostrar banner de bienvenida ────────────────────────────────────────────
 banner_bienvenida
+
+# ─── Solicitar datos del estudiante en el primer inicio ──────────────────────
+STUDENT_INFO_FILE="$HOME/laboratorio/.student_info"
+if [ ! -f "$STUDENT_INFO_FILE" ]; then
+    read -r -p "Nombre del estudiante [Estudiante]: " student_name
+    student_name="${student_name:-Estudiante}"
+    read -r -p "Curso [ABC-CYB-101]: " course_name
+    course_name="${course_name:-ABC-CYB-101}"
+
+    {
+        printf 'STUDENT_NAME=%s\n' "$student_name"
+        printf 'COURSE=%s\n' "$course_name"
+    } > "$STUDENT_INFO_FILE"
+    chmod 600 "$STUDENT_INFO_FILE" 2>/dev/null || true
+fi
+
 echo ""
 echo -e "  ${CYAN}Curso: Fundamentos de Ciberseguridad ABC-CYB-101${RESET}"
 echo -e "  ${CYAN}26 unidades · 60 CORE + 183 optativos · 5 módulos${RESET}"

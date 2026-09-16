@@ -141,6 +141,14 @@ ejecutar_reto() {
         echo -e "\n  ⏳ Verificando reto $reto_num..."
         if "$validator_func" >/dev/null 2>&1; then
             marcar_completado "$unit" "$reto_num"
+            local reto_index=$((reto_num - 1))
+            local reto_name="${challenge_names[$reto_index]:-Reto $reto_num}"
+            local reto_icon="${ICONOS[$reto_index]:-📄}"
+            if generar_pdf_reto "$unit" "$reto_num" "$reto_name" "$reto_name" "$reto_icon"; then
+                exito "Certificado PDF generado para el reto $reto_num"
+            else
+                error "No se pudo generar el certificado PDF del reto $reto_num"
+            fi
             exito "Reto $reto_num completado"
             mostrar_frase_unidad "$(get_unit_index "$unit")"
             return 0
@@ -194,6 +202,14 @@ jugar_reto() {
                     echo ""
                     exito "¡Reto $reto_num COMPLETADO! ✨"
                     mostrar_frase_unidad "$(get_unit_index "$unit")"
+                    local reto_index=$((reto_num - 1))
+                    local reto_name="${challenge_names[$reto_index]:-Reto $reto_num}"
+                    local reto_icon="${ICONOS[$reto_index]:-📄}"
+                    if generar_pdf_reto "$unit" "$reto_num" "$reto_name" "$reto_name" "$reto_icon"; then
+                        exito "Certificado PDF generado para el reto $reto_num"
+                    else
+                        error "No se pudo generar el certificado PDF del reto $reto_num"
+                    fi
                     echo ""
                     progreso
                     local total=${#challenge_names[@]}

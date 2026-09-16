@@ -11,6 +11,136 @@ init_state() {
     true
 }
 
+# Carga los datos del estudiante sin ejecutar contenido del archivo
+cargar_datos_estudiante() {
+    local key value
+    local student_info_file="${STUDENT_INFO_FILE:-$HOME/laboratorio/.student_info}"
+
+    STUDENT_NAME="Estudiante"
+    COURSE="ABC-CYB-101"
+
+    if [ ! -f "$student_info_file" ]; then
+        export STUDENT_NAME COURSE
+        return 0
+    fi
+
+    while IFS='=' read -r key value; do
+        value="${value%$'\r'}"
+        case "$key" in
+            STUDENT_NAME) STUDENT_NAME="${value:-Estudiante}" ;;
+            COURSE) COURSE="${value:-ABC-CYB-101}" ;;
+        esac
+    done < "$student_info_file"
+
+    export STUDENT_NAME COURSE
+}
+
+# Genera un certificado PDF después de completar un reto
+generar_pdf_reto() {
+    local unit_name="$1" reto_num="$2" reto_name="$3" challenge_desc="$4"
+    local reto_icon="${5:-}"
+    local unit_idx unit_title unit_dir reto_type completion_date pdf_engine
+    local output_dir output_file
+
+    cargar_datos_estudiante
+
+    case "$reto_num" in
+        ''|*[!0-9]*)
+            error "Número de reto inválido para generar el certificado"
+            return 1
+            ;;
+    esac
+
+    unit_idx=$(get_unit_index "$unit_name")
+    if [ "$unit_idx" -lt 1 ] || [ "$unit_idx" -gt "$UNIT_COUNT" ]; then
+        error "Unidad no encontrada para generar el certificado: $unit_name"
+        return 1
+    fi
+
+    unit_title=$(get_unit_title "$unit_idx")
+    unit_dir=$(get_unit_dir "$unit_idx")
+    if [ -z "$unit_dir" ]; then
+        error "Directorio no encontrado para la unidad: $unit_name"
+        return 1
+    fi
+
+    reto_name="${reto_name:-Reto $reto_num}"
+    challenge_desc="${challenge_desc:-$reto_name}"
+    if [ -z "$reto_icon" ]; then
+        if declare -p ICONOS >/dev/null 2>&1; then
+            reto_icon="${ICONOS[$((reto_num - 1))]:-📄}"
+        else
+            reto_icon="📄"
+        fi
+    fi
+
+    if is_reto_core "$unit_idx" "$reto_num"; then
+        reto_type="CORE"
+    else
+        reto_type="OPT"
+    fi
+
+    output_dir="$HOME/laboratorio/units/$unit_dir/certs"
+    output_file="$output_dir/reto_${reto_num}.pdf"
+
+    if ! mkdir -p "$output_dir"; then
+        error "No se pudo crear el directorio de certificados: $output_dir"
+        return 1
+    fi
+
+    if ! command -v pandoc >/dev/null 2>&1; then
+        error "pandoc no está disponible; no se generó el certificado del reto $reto_num"
+        return 1
+    fi
+
+    pdf_engine="pdflatex"
+    if command -v xelatex >/dev/null 2>&1; then
+        pdf_engine="xelatex"
+    fi
+
+    # pdflatex cannot render emoji; strip non-ASCII and use placeholder
+    if [ "$pdf_engine" = "pdflatex" ]; then
+        local _sanitized_icon
+        _sanitized_icon=$(printf '%s' "$reto_icon" | tr -dc '\000-\177')
+        reto_icon="${_sanitized_icon:-[icon]}"
+    fi
+
+    completion_date=$(date '+%Y-%m-%d %H:%M:%S %Z')
+
+    if pandoc \
+        --from=markdown \
+        --to=pdf \
+        --pdf-engine="$pdf_engine" \
+        --output="$output_file" \
+        - <<EOF
+# Certificado de finalización
+
+**Curso:** $COURSE
+
+**Estudiante:** $STUDENT_NAME
+
+## Unidad
+
+$unit_title
+
+## Reto completado
+
+**Reto $reto_num:** $reto_icon $reto_name
+
+**Tipo:** **$reto_type**
+
+**Descripción:** $challenge_desc
+
+**Fecha y hora:** $completion_date
+EOF
+    then
+        return 0
+    fi
+
+    error "No se pudo generar el certificado PDF: $output_file"
+    return 1
+}
+
 marcar_completado() {
     local key="${1}:reto:${2}"
     # Student is read-only on /var/lab-state; writes are deferred to CI/admin.
