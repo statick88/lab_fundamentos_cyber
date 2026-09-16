@@ -44,9 +44,9 @@ Chain strategy: feature-branch-chain
 
 ## Phase 3: Integration/Wiring
 
-- [ ] 3.1 Create `.github/workflows/ci.yml` with push/PR triggers for `feature/cyb-101-labs` and `main`, 26-unit matrix, missing-test skip, CORE fail-fast, and PASS/FAIL report.
-- [ ] 3.2 Add CI Compose profile (`no-new-privileges:false`, whitelisted sudo) while keeping production hardened.
-- [ ] 3.3 Extend `verify.sh` cross-checks for Dockerfile, manifest totals (26/243/85), shared modules, and docs links.
+- [x] 3.1 Create `.github/workflows/ci.yml` with push/PR triggers for `feature/cyb-101-labs` and `main`, 26-unit matrix, missing-test skip, CORE fail-fast, and PASS/FAIL report.
+- [x] 3.2 Add CI Compose profile (`no-new-privileges:false`, whitelisted sudo) while keeping production hardened.
+- [x] 3.3 Extend `verify.sh` cross-checks for Dockerfile, manifest totals (26/243/85), shared modules, and docs links.
 
 ## Phase 4: Testing/Verification
 

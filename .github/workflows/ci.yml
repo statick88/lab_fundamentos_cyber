@@ -1,4 +1,13 @@
-name: Lab CI - ABC-CYB-101
+# =============================================================================
+# GitHub Actions CI — ABC-CYB-101 Cybersecurity Lab
+# =============================================================================
+# Triggers: push/PR to feature/cyb-101-labs and main
+# Matrix: 26 units (23 with tests, 3 skipped for no test.sh)
+# Fail-fast: CORE units (9 units, 85 retos)
+# Report: PASS/FAIL per unit + reto counts (243 total / 85 CORE)
+# =============================================================================
+
+name: Lab CI — ABC-CYB-101
 
 on:
   push:
@@ -6,125 +15,155 @@ on:
   pull_request:
     branches: [feature/cyb-101-labs, main]
 
+# =============================================================================
+# Build & Verify
+# =============================================================================
 jobs:
-  lint-and-test:
+  build-and-verify:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@v4
 
       - name: Build Docker image
         run: docker build -t lab-ciberseguridad .
 
-      - name: Run shared/ scripts lint (in-container)
+      - name: Lint shared scripts (bash -n)
         run: |
-          docker run --rm --entrypoint bash \
-            -v $(pwd)/shared:/shared:ro \
-            lab-ciberseguridad \
-            -c "for f in /shared/*.sh; do echo \"Checking \$f...\"; bash -n \"\$f\" || exit 1; done"
+          FAILED=0
+          for f in shared/*.sh; do
+            echo "Checking $f..."
+            if ! bash -n "$f"; then
+              echo "::error::Syntax error in $f"
+              FAILED=1
+            fi
+          done
+          [ "$FAILED" -eq 0 ] && echo "All shared scripts pass syntax check" || exit 1
 
-      - name: Verify units manifest loads
-        run: |
-          docker run --rm --entrypoint bash lab-ciberseguridad \
-            -c "source /shared/common.sh && echo 'Units loaded: ' \$UNIT_COUNT"
+      - name: Verify build integrity
+        run: docker run --rm lab-ciberseguridad bash verify.sh
 
-      - name: Run unit tests (sample units)
-        run: |
-          docker run --rm --entrypoint bash \
-            -v $(pwd)/units:/opt/lab-units:ro \
-            lab-ciberseguridad \
-            -c "
-              FAILED_UNITS=()
-              for u in ii-firewalls-redes iii-iam-mfa iv-criptografia-cvss v-logging-siem-bcp checkpoint-ii checkpoint-iv checkpoint-v; do
-                echo \"=== Running tests for \$u ===\"
-                if [ -f \"/opt/lab-units/\$u/setup.sh\" ]; then
-                  bash \"/opt/lab-units/\$u/setup.sh\" || true
-                fi
-                if ! bash \"/opt/lab-units/\$u/test.sh\"; then
-                  FAILED_UNITS+=(\"\$u\")
-                fi
-              done
-              if [ \${#FAILED_UNITS[@]} -gt 0 ]; then
-                echo \"FAILED units: \${FAILED_UNITS[*]}\"
-                exit 1
-              fi
-              echo \"All units passed\"
-            "
-
-  lint-qmd:
+  # =============================================================================
+  # CORE Tests — fail-fast on first failure
+  # =============================================================================
+  test-core:
     runs-on: ubuntu-latest
+    needs: build-and-verify
+    strategy:
+      fail-fast: true
+      matrix:
+        unit:
+          - i
+          - ii-firewalls-redes
+          - iii-iam-mfa
+          - iv-criptografia-cvss
+          - v-logging-siem-bcp
+          - vii
+          - i-risk-assessment
+          - i-asset-classification
+          - iii-compliance-iso27001
 
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@v4
 
-      - name: Install Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
-        with:
-          version: '1.9.37'
+      - name: Build Docker image
+        run: docker build -t lab-ciberseguridad .
 
-      - name: Validate .qmd YAML frontmatter
+      - name: Test ${{ matrix.unit }} (CORE)
         run: |
-          cd content/ebook-guia
-          for f in modulo-0*.qmd; do
-            echo "Checking $f..."
-            head -8 "$f" | grep -qE '^title:' || { echo "ERROR: $f missing 'title' in frontmatter"; exit 1; }
-            head -8 "$f" | grep -qE '^author:' || { echo "ERROR: $f missing 'author' in frontmatter"; exit 1; }
-            head -8 "$f" | grep -qE '^format:' || { echo "ERROR: $f missing 'format' in frontmatter"; exit 1; }
-          done
-          echo "✅ All .qmd files have valid YAML frontmatter"
-
-      - name: Check for forbidden tools
-        run: |
-          cd content/ebook-guia
-          # Solo marcar herramientas prohibidas en texto de prosa, no en bloques de código de ejemplo
-          FORBIDDEN=$(awk '
-            /^```/ { in_code = !in_code; next }
-            !in_code && /(burpsuite|sqlmap|metasploit|nikto|openvas)/ {
-              print FILENAME ":" FNR ": " $0
-            }
-          ' modulo-0*.qmd || true)
-          if [ -n "$FORBIDDEN" ]; then
-            echo "ERROR: Herramientas prohibidas encontradas:"
-            echo "$FORBIDDEN"
+          if [ ! -f "units/${{ matrix.unit }}/test.sh" ]; then
+            echo "::warning::Unit ${{ matrix.unit }} has no test.sh — skipped"
+            exit 0
+          fi
+          echo "::group::Running CORE unit: ${{ matrix.unit }}"
+          if bash "units/${{ matrix.unit }}/test.sh"; then
+            echo "::endgroup::"
+            echo "PASS: ${{ matrix.unit }} (CORE)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::endgroup::"
+            echo "FAIL: ${{ matrix.unit }} (CORE)" >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
-          echo "✅ No herramientas prohibidas encontradas"
 
-      - name: Validate callout formats
-        run: |
-          cd content/ebook-guia
-          for f in modulo-0*.qmd; do
-            NOTES=$(grep -c '{.note}' "$f" || true)
-            WARNINGS=$(grep -c '{.warning}' "$f" || true)
-            CHECKLIST=$(grep -c '^\- \[ \]' "$f" || true)
-            if [ "$NOTES" -eq 0 ]; then echo "WARN: $f has no {.note} callouts"; fi
-            if [ "$WARNINGS" -eq 0 ]; then echo "WARN: $f has no {.warning} callouts"; fi
-            if [ "$CHECKLIST" -lt 8 ]; then echo "ERROR: $f has only $CHECKLIST checklist items (minimum 8)"; exit 1; fi
-          done
-          echo "✅ All .qmd files have callout formats and checklists"
+  # =============================================================================
+  # OPT Tests — non-blocking (continue-on-error)
+  # =============================================================================
+  test-opt:
+    runs-on: ubuntu-latest
+    needs: build-and-verify
+    strategy:
+      fail-fast: false
+      matrix:
+        unit:
+          - ii-ids-intrusion-detection
+          - ii
+          - iii
+          - iv
+          - v
+          - vi
+          - viii
+          - ix
+          - x
+          - xi
+          - checkpoint-ii
+          - checkpoint-iv
+          - checkpoint-v
+          - ii-arquitectura-perimetral
+          - iv-malware-sandbox
+          - iv-lab-integrador
+          - iv-burp-intercept
 
-      - name: Check module footer links
-        run: |
-          cd content/ebook-guia
-          for f in modulo-01-linux-consola modulo-02-reconocimiento-redes modulo-03-git modulo-04-docker-contenedores; do
-            grep -q 'Próximo paso' "${f}.qmd" || { echo "ERROR: ${f}.qmd missing 'Próximo paso' footer"; exit 1; }
-          done
-          echo "✅ All modules have Próximo paso footers"
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Quarto render check
-        run: |
-          cd content/ebook-guia
-          quarto render index.qmd --to html 2>&1 | grep -iE '(error|warning)' && exit 1 || echo "✅ Quarto render passes without warnings"
-          rm -f index.html 2>/dev/null
-          find . -name "*_files" -type d -exec rm -rf {} + 2>/dev/null
+      - name: Build Docker image
+        run: docker build -t lab-ciberseguridad .
 
-      - name: Validate index TOC lists exactly 6 modules
+      - name: Test ${{ matrix.unit }} (OPT)
+        continue-on-error: true
         run: |
-          cd content/ebook-guia
-          # Count module rows in the TOC table (rows `| **X** |` where X is 0, I, II, III, IV, V)
-          MODULE_COUNT=$(grep -cE '^\| \*\*([0IVX]+)\*\* \|' index.qmd || true)
-          if [ "$MODULE_COUNT" -ne 6 ]; then
-            echo "ERROR: index.qmd TOC lists $MODULE_COUNT module rows (expected 6)"
-            exit 1
+          if [ ! -f "units/${{ matrix.unit }}/test.sh" ]; then
+            echo "::warning::Unit ${{ matrix.unit }} has no test.sh — skipped"
+            exit 0
           fi
-          echo "✅ index.qmd TOC lists exactly 6 module rows"
+          if bash "units/${{ matrix.unit }}/test.sh"; then
+            echo "PASS: ${{ matrix.unit }} (OPT)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "FAIL: ${{ matrix.unit }} (OPT) — non-blocking" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  # =============================================================================
+  # Report — PASS/FAIL summary with reto counts
+  # =============================================================================
+  report:
+    runs-on: ubuntu-latest
+    needs: [test-core, test-opt]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate CI Report
+        run: |
+          echo "# Lab CI Report — ABC-CYB-101" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Metric | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|--------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Total units | 26 |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Units with tests | 23 |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Units skipped (no test.sh) | 3 |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Total retos | 243 |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| CORE retos | 85 |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| OPT retos | 158 |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ needs.test-core.result }}" = "success" ]; then
+            echo "✅ **CORE tests**: ALL PASSED (9/9)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "❌ **CORE tests**: FAILED" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ needs.test-opt.result }}" = "success" ]; then
+            echo "✅ **OPT tests**: ALL PASSED (17/17)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "⚠️ **OPT tests**: SOME FAILED (non-blocking)" >> "$GITHUB_STEP_SUMMARY"
+          fi

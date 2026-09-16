@@ -10,13 +10,16 @@
 # =============================================================================
 
 services:
+  # ==========================================================================
+  # Production profile (default, hardened)
+  # ==========================================================================
   lab_fundamentos_cyber:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: lab-ciberseguridad
-    stdin_open: true    # Mantener stdin abierto (-i)
-    tty: true           # Asignar pseudo-TTY (-t)
+    stdin_open: true
+    tty: true
     read_only: true
     volumes:
       - lab-data:/home/estudiante/laboratorio
@@ -39,6 +42,38 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SETUID
+      - SETGID
+
+  # ==========================================================================
+  # CI profile — relaxed hardening for privileged validators in CI/local test
+  # Use: docker compose --profile ci up lab_fundamentos_cyber_ci
+  #      docker compose -p ci up lab_fundamentos_cyber_ci  (Compose v1)
+  # ==========================================================================
+  lab_fundamentos_cyber_ci:
+    profiles: ["ci"]
+    container_name: lab-ciberseguridad-ci
+    stdin_open: true
+    tty: true
+    read_only: false
+    volumes:
+      - lab-data:/home/estudiante/laboratorio
+      - ./resultados:/home/estudiante/laboratorio/resultados
+    environment:
+      - LAB_NAME=Fundamentos de Ciberseguridad ABC-CYB-101
+      - COURSE_VERSION=2.0
+      - STUDENT_USER=estudiante
+      - STUDENT_PASS=${STUDENT_PASS:-changeme}
+      - FRASE_OCULTA=Toda revolution comienza con un pass Los administradores nunca duermen !
+    networks:
+      lab-cyber:
+        ipv4_address: 172.20.0.10
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:false
     cap_add:
       - NET_ADMIN
       - NET_RAW

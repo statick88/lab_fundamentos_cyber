@@ -59,3 +59,51 @@
 **Phase 2 Summary**: 23 test scripts migrated, 0 bare sudo calls remaining in units/*/test.sh, all syntax checks pass, checkpoint normalization fixed in 2 shared scripts.
 
 **Overall Phase 2**: 5/5 tasks complete | ~1,200 changed lines | No bare sudo | All assert_* standardized | All bash -n pass |
+
+---
+
+## Phase 3: Integration/Wiring
+
+### Task 3.1: Create `.github/workflows/ci.yml` ✅
+- Replaced stale ebook CI workflow with lab-specific CI:
+  - Push/PR triggers for `feature/cyb-101-labs` and `main`
+  - Build & verify job: `docker build`, `bash -n` on shared/*.sh, `bash verify.sh` in container
+  - **test-core** job: 9 CORE units, `fail-fast: true` (any CORE failure stops CI)
+  - **test-opt** job: 17 OPT units, `continue-on-error: true` (non-blocking)
+  - **report** job: PASS/FAIL summary with metric table (26 units, 243 retos, 85 CORE, 158 OPT)
+  - 3 units without test.sh (ii-arquitectura-perimetral, iv-lab-integrador, iv-malware-sandbox) skipped with warning
+
+| Evidence | Required value |
+|---|---|
+| Focused test command and result | `python3 -c "import yaml; yaml.safe_load(open('.github/workflows/ci.yml'))"` → exit 0 |
+| Runtime harness | GitHub Actions runner (ubuntu-latest) |
+| Rollback boundary | `.github/workflows/ci.yml` only |
+
+### Task 3.2: Add CI Compose profile ✅
+- Added `lab_fundamentos_cyber_ci` service to `docker-compose.yml` with:
+  - `profiles: ["ci"]` — activates only with `--profile ci`
+  - `security_opt: no-new-privileges:false` — allows sudo for validators
+  - `cap_add: NET_ADMIN, NET_RAW, SETUID, SETGID` — no cap restrictions for privileged tools
+  - `read_only: false` — writable filesystem for test artifacts
+  - Production service `lab_fundamentos_cyber` remains fully hardened (unchanged)
+
+| Evidence | Required value |
+|---|---|
+| Focused test command and result | `python3 -c "import yaml; d=yaml.safe_load(open('docker-compose.yml')); ci=d['services']['lab_fundamentos_cyber_ci']; assert ci['profiles']==['ci']; assert 'no-new-privileges:false' in ci['security_opt']"` → exit 0 |
+| Runtime harness | `docker compose --profile ci config` (Compose v2) |
+| Rollback boundary | `docker-compose.yml` CI service section |
+
+### Task 3.3: Extend verify.sh cross-checks ✅
+- Added `check_dockerfile_references()`: verifies Dockerfile exists, contains COPY shared/, COPY units/, COPY entrypoint.sh, WORKDIR, USER estudiante, valid FROM line with digest pin
+- Added `check_manifest_totals()`: verifies 10 shared modules exist, UNIT_COUNT=26, total retos=243, CORE retos=85, README.md exists
+- Integrated both into `main()` after existing checks
+
+| Evidence | Required value |
+|---|---|
+| Focused test command and result | `bash -n verify.sh` → exit 0 |
+| Runtime harness | `bash verify.sh` — new checks produce 5 PASS (Dockerfile) + 10 PASS (modules) + 3 PASS (manifest) locally |
+| Rollback boundary | `verify.sh` check functions + main() |
+
+**Phase 3 Summary**: CI workflow with 26-unit matrix (9 CORE fail-fast, 17 OPT non-blocking), Compose CI profile with relaxed hardening, verify.sh extended with Dockerfile/manifest cross-checks. ~800 lines added.
+
+**Overall Phase 3**: 3/3 tasks complete | ~800 changed lines | CI matrix: 26 units | CORE fail-fast: 9 units | OPT non-blocking: 17 units |

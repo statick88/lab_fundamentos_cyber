@@ -196,6 +196,115 @@ check_image_poisoning() {
 }
 
 # =============================================================================
+# Task 3.3: Dockerfile Cross-Checks
+# =============================================================================
+check_dockerfile_references() {
+    log_info "Checking Dockerfile references..."
+    local fail=0
+
+    # Dockerfile must exist
+    if [ ! -f Dockerfile ]; then
+        log_fail "Dockerfile not found"
+        return 1
+    fi
+    log_pass "Dockerfile exists"
+
+    # Dockerfile must contain key paths
+    local required_refs=("COPY shared/" "COPY units/" "COPY entrypoint.sh" "WORKDIR" "USER estudiante")
+    for ref in "${required_refs[@]}"; do
+        if grep -q "$ref" Dockerfile 2>/dev/null; then
+            log_pass "Dockerfile contains: $ref"
+        else
+            log_fail "Dockerfile missing: $ref"
+            fail=1
+        fi
+    done
+
+    # Verify FROM line is present and valid
+    local from_line
+    from_line=$(grep -E "^FROM\s+" Dockerfile | head -1 || echo "")
+    if [ -z "$from_line" ]; then
+        log_fail "Dockerfile has no FROM instruction"
+        fail=1
+    else
+        log_pass "Dockerfile FROM instruction present: $from_line"
+    fi
+
+    return $fail
+}
+
+# =============================================================================
+# Task 3.3: Manifest Totals Cross-Check
+# =============================================================================
+check_manifest_totals() {
+    log_info "Checking manifest totals..."
+    local fail=0
+
+    # Shared modules must exist
+    local required_modules=(
+        "shared/common.sh"
+        "shared/validators.sh"
+        "shared/sudo-wrappers.sh"
+        "shared/eval.sh"
+        "shared/evaluar-unidad.sh"
+        "shared/retos-unidad.sh"
+        "shared/units_manifest.sh"
+        "shared/menu.sh"
+        "shared/unidad.sh"
+        "shared/interactive.sh"
+    )
+
+    for mod in "${required_modules[@]}"; do
+        if [ -f "$mod" ]; then
+            log_pass "Shared module exists: $mod"
+        else
+            log_fail "Shared module missing: $mod"
+            fail=1
+        fi
+    done
+
+    # UNIT_COUNT must be 26
+    local unit_count
+    unit_count=$(bash -c 'source shared/units_manifest.sh 2>/dev/null; echo "$UNIT_COUNT"' 2>/dev/null || echo "0")
+    if [ "$unit_count" = "26" ]; then
+        log_pass "UNIT_COUNT = 26 (all units present)"
+    else
+        log_fail "UNIT_COUNT = $unit_count (expected 26)"
+        fail=1
+    fi
+
+    # Verify total reto count via calculation
+    local total_retos
+    total_retos=$(bash -c 'source shared/units_manifest.sh 2>/dev/null; SUM=0; for r in "${UNIT_RETOS[@]}"; do SUM=$((SUM + r)); done; echo "$SUM"' 2>/dev/null || echo "0")
+    if [ "$total_retos" = "243" ]; then
+        log_pass "Total retos = 243"
+    else
+        log_fail "Total retos = $total_retos (expected 243)"
+        fail=1
+    fi
+
+    # Verify CORE reto count via calculation
+    local core_retos
+    core_retos=$(bash -c 'source shared/units_manifest.sh 2>/dev/null; SUM=0; for i in "${!UNIT_CORE[@]}"; do if [ "${UNIT_CORE[$i]}" = "1" ]; then SUM=$((SUM + UNIT_RETOS[$i])); fi; done; echo "$SUM"' 2>/dev/null || echo "0")
+    if [ "$core_retos" = "85" ]; then
+        log_pass "CORE retos = 85"
+    else
+        log_fail "CORE retos = $core_retos (expected 85)"
+        fail=1
+    fi
+
+    # README.md must exist
+    if [ -f README.md ]; then
+        log_pass "README.md exists"
+    else
+        log_fail "README.md not found"
+        fail=1
+    fi
+
+    return $fail
+}
+
+# =============================================================================
 # Main
 # =============================================================================
 main() {
@@ -214,6 +323,12 @@ main() {
     echo
 
     check_image_poisoning || overall_fail=1
+    echo
+
+    check_dockerfile_references || overall_fail=1
+    echo
+
+    check_manifest_totals || overall_fail=1
     echo
 
     if [ $overall_fail -eq 0 ]; then
