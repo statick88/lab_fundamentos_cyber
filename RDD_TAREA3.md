@@ -28,12 +28,14 @@
 
 ### Scope confirmado: 13 Retos CORE Módulo III (Opción A)
 
-| Unidad | Retos | CORE manifest | Módulo | Rol en Tarea 3 |
-|--------|-------|---------------|--------|-----------------|
-| `iii-iam-mfa` | 5 | 0 (flag mismatch) | M2 | IAM, MFA, sudoers, contraseñas, PAM |
-| `iii-compliance-iso27001` | 5 | 1 | M3 | ISO 27001, NIST CSF, SoA, riesgos |
-| `vii` retos específicos | 3 | 0 | M3 | Hardening de SO (ver tabla inferior) |
-| **TOTAL** | **13** | — | — | — |
+| Unidad | Retos | CORE manifest (ANTES→DESPUÉS) | Módulo | Rol en Tarea 3 |
+|--------|-------|-------------------------------|--------|-----------------|
+| `iii-iam-mfa` | 5 | 0 → **1** (C2) | M2 | IAM, MFA, sudoers, contraseñas, PAM |
+| `iii-compliance-iso27001` | 5 | 0 → **1** (corregido RDD) | M3 | ISO 27001, NIST CSF, SoA, riesgos |
+| `vii` retos específicos | 3 | 0 → **1** (C3, de 15 totales) | M3 | Hardening de SO (ver tabla inferior) |
+| **TOTAL CORE retos Tarea 3** | **13** | — | — | — |
+
+**Nota sobre CORE manifest**: Antes de esta corrección, `iii-iam-mfa` y `iii-compliance-iso27001` tenían CORE flag = 0 en `units_manifest.sh`. `vii` también tenía CORE = 0. Los 3 se activaron a 1 para Tarea 3. El total CORE baseline del manifest (60 retos de Tareas 1-2) no se ve afectado; Tarea 3 añade 13 retos CORE adicionales.
 
 **3 retos de `vii` seleccionados para los 13 CORE:**
 

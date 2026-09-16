@@ -87,8 +87,8 @@ UNIT_ICONOS=(
 )
 
 # Cantidad de retos por unidad (243 total, alineado con test.sh reales)
-# CORE: unit-I(10)+unit-II(10)+unit-IV(10)+unit-V(10)+i-risk-assessment(10)+i-asset-classification(10) = 60
-# OPT: 243 - 60 = 183
+# CORE baseline (Tareas 1-2): unit-I(10)+unit-II(10)+unit-IV(10)+unit-V(10)+i-risk-assessment(10)+i-asset-classification(10) = 60
+# CORE Tarea 3 adicional: iii-iam-mfa(5)+iii-compliance-iso27001(5)+vii(15) = 25
 UNIT_RETOS=(
   10   10    3   10    5
   15   10   10   10   10
@@ -99,14 +99,17 @@ UNIT_RETOS=(
 )
 
 # Clasificación pedagógica: 1 = CORE obligatorio, 0 = OPTATIVO/exploratorio
-# Total CORE: 60 retos. Total OPT: 183 retos.
+# Total CORE retos: 60 (Tareas 1-2 baseline) + 25 (Tarea 3: iii-iam-mfa:5 + iii-compliance:5 + vii:15) = 85
+# NOTA: Los flags CORE para iii-iam-mfa (idx 5), vii (idx 12), iii-compliance-iso27001 (idx 22)
+#       se activaron para Tarea 3. El conteo base de 60 CORE sigue siendo la referencia
+#       para Tareas 1 y 2. Ver RDD_TAREA3.md para detalle del scope de 13 CORE.
 # CORE: unit-I(10)+unit-II(10)+unit-IV(10)+unit-V(10)+i-risk-assessment(10)+i-asset-classification(10) = 60
 UNIT_CORE=(
-  1   1   0   0   0
+  1   1   0   0   1
   0   1   0   1   0
-  0   0   0   0   0
+  0   1   0   0   0
   0   0   0   0   1
-  1   0   0   0   0
+  1   1   0   0   0
   0
 )
 

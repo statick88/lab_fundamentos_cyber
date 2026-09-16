@@ -1,68 +1,51 @@
 #!/bin/bash
-# Unit III-iam-mfa: IAM, MFA y Control de Acceso — test.sh
+# Unit iii-iam-mfa: IAM, MFA y Control de Acceso — test.sh
+# Refactorizado (C4): usa /shared/validators.sh + /shared/sudo-wrappers.sh
 
 source /shared/common.sh
+source /shared/validators.sh
+source /shared/sudo-wrappers.sh
 
 UNIT_NAME="unit-III"
 TOTAL_RETOS=5
 
 reto1() {
-    local has_group=0 has_user=0
-    if getent group sysadmins >/dev/null 2>&1; then
-        has_group=1
-    fi
-    if id -u ops_admin >/dev/null 2>&1; then
-        has_user=1
-    fi
-    if [ "$has_group" -eq 1 ] && [ "$has_user" -eq 1 ]; then
+    # Live check: group + user exist
+    if assert_group_exists sysadmins && assert_user_exists ops_admin; then
         return 0
     fi
+    # Fallback: script contains creation commands
     local script="$HOME/laboratorio/iam/crear_grupo_usuario.sh"
-    if [ -f "$script" ]; then
-        grep -q "groupadd.*sysadmins" "$script" 2>/dev/null && grep -q "useradd.*ops_admin" "$script" 2>/dev/null
-    else
-        return 1
-    fi
+    assert_file_exists "$script" || return 1
+    assert_file_contains "$script" "groupadd.*sysadmins" || return 1
+    assert_file_contains "$script" "useradd.*ops_admin" || return 1
 }
 
 reto2() {
     local config_file="/etc/sudoers.d/lab-cyber"
-    if [ -f "$config_file" ]; then
-        local perms
-        perms=$(stat -c "%a" "$config_file" 2>/dev/null || stat -f "%Lp" "$config_file" 2>/dev/null || echo "")
-        if [ "$perms" = "440" ] || [ "$perms" = "0440" ]; then
-            visudo -c -f "$config_file" >/dev/null 2>&1
-        else
-            return 1
-        fi
-    else
+    assert_file_exists "$config_file" || return 1
+    # Verify permissions are 440 (root-read only)
+    local perms
+    perms=$(stat -c "%a" "$config_file" 2>/dev/null || stat -f "%Lp" "$config_file" 2>/dev/null || echo "")
+    if [ "$perms" != "440" ] && [ "$perms" != "0440" ]; then
+        echo "FAIL: Permisos esperados 440, obtendidos $perms" >&2
         return 1
     fi
+    assert_command_ok visudo -c -f "$config_file"
 }
 
 reto3() {
-    if [ -f /etc/login.defs ]; then
-        grep -qE "PASS_MAX_DAYS|PASS_MIN_DAYS" /etc/login.defs 2>/dev/null
-    else
-        return 1
-    fi
+    assert_file_contains /etc/login.defs "PASS_MAX_DAYS|PASS_MIN_DAYS"
 }
 
 reto4() {
-    if [ -f /etc/pam.d/common-auth ]; then
-        grep -qi "google_authenticator\|pam_google" /etc/pam.d/common-auth 2>/dev/null
-    else
-        return 1
-    fi
+    assert_file_contains /etc/pam.d/common-auth "google_authenticator|pam_google"
 }
 
 reto5() {
     local script="$HOME/laboratorio/iam/audit_privileged.sh"
-    if [ -f "$script" ] && [ -x "$script" ]; then
-        "$script" >/dev/null 2>&1
-    else
-        return 1
-    fi
+    assert_file_exists "$script" || return 1
+    assert_command_ok "$script"
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5)
