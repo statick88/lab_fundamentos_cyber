@@ -32,7 +32,9 @@ services:
       - LAB_NAME=Fundamentos de Ciberseguridad ABC-CYB-101
       - COURSE_VERSION=2.0
       - STUDENT_USER=estudiante
-      - STUDENT_PASS=${STUDENT_PASS:-changeme}
+      # Contraseña real definida en Dockerfile (linea 68): 'lab123'.
+      # STUDENT_PASS permite sobreescribir en .env local; sin el, el Dockerfile aplica 'lab123'.
+      - STUDENT_PASS=${STUDENT_PASS:-lab123}
       - FRASE_OCULTA=Toda revolution comienza con un pass Los administradores nunca duermen !
     networks:
       lab-cyber:
@@ -55,6 +57,9 @@ services:
   # ==========================================================================
   lab_fundamentos_cyber_ci:
     profiles: ["ci"]
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: lab-ciberseguridad-ci
     stdin_open: true
     tty: true
@@ -66,11 +71,13 @@ services:
       - LAB_NAME=Fundamentos de Ciberseguridad ABC-CYB-101
       - COURSE_VERSION=2.0
       - STUDENT_USER=estudiante
-      - STUDENT_PASS=${STUDENT_PASS:-changeme}
+      # Contraseña real definida en Dockerfile (linea 68): 'lab123'.
+      # STUDENT_PASS permite sobreescribir en .env local; sin el, el Dockerfile aplica 'lab123'.
+      - STUDENT_PASS=${STUDENT_PASS:-lab123}
       - FRASE_OCULTA=Toda revolution comienza con un pass Los administradores nunca duermen !
     networks:
       lab-cyber:
-        ipv4_address: 172.20.0.10
+        ipv4_address: 172.20.0.11
     restart: unless-stopped
     security_opt:
       - no-new-privileges:false
