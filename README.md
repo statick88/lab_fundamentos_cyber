@@ -14,6 +14,14 @@ docker compose up -d
 docker compose exec lab_fundamentos_cyber bash
 ```
 
+> **Nota**: Si `docker compose` (plugin) no está disponible, usa `docker-compose` (binario independiente):
+> ```bash
+> docker-compose build
+> docker-compose up -d
+> docker-compose exec lab_fundamentos_cyber bash
+> ```
+> Si obtienes `Pool overlaps with other one on this address space`, ejecuta `docker network prune -f` antes de levantar.
+
 Usuario: `estudiante` / Contraseña: `lab123`
 
 Dentro del contenedor: `menu` · `jugar` · `retos` · `evaluar` · `progreso`

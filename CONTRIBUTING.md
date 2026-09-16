@@ -67,6 +67,9 @@ docker compose up -d
 docker compose exec lab_fundamentos_cyber bash
 ```
 
+> Si `docker compose` no está disponible, usa `docker-compose` (binario independiente v5.x).
+> Si obtienes error de red superpuesta: `docker network prune -f` antes de `docker-compose up -d`.
+
 ### Comandos útiles
 
 | Comando | Qué hace |

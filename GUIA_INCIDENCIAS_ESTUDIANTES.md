@@ -90,6 +90,8 @@ bash reset.sh --progreso     # Limpieza completa (también reinicia progreso)
 | Las reglas de UFW no persisten | El archivo `/etc/ufw/user.rules` fue sobreescrito | Ejecuta `bash reset.sh` y reconfigura |
 | El contador de progreso no avanza | El progreso se almacena en `/var/lab-state/progress` (root, modo 0660) | El estudiante no puede modificarlo directamente. Usa `evaluar` para validar. |
 | El contenedor no inicia | La imagen está desactualizada | `docker compose build --no-cache && docker compose up -d` |
+| `Pool overlaps with other one on this address space` | Otra red de Docker usa el mismo subnet `172.20.0.0/24` | `docker network prune -f` y luego `docker-compose up -d` |
+| `unknown command: docker compose` | No hay plugin Docker Compose v2 | Usa `docker-compose` (binario v5.x) en lugar de `docker compose` |
 
 ---
 
