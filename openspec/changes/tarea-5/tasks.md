@@ -3,73 +3,59 @@
 ## Review Workload Forecast
 
 | Field | Value |
-|-------|-------|
-| Estimated changed lines | ~2000 (across 5 tasks) |
+|---|---|
+| Estimated changed lines | ~2,000 |
 | 400-line budget risk | High |
 | Chained PRs recommended | Yes |
 | Delivery strategy | auto-chain |
-| Decision needed before apply | Yes |
+| Chain strategy | feature-branch-chain |
 
-Decision needed before apply: Yes (split vs. exception)
+Decision needed before apply: Yes
 Chained PRs recommended: Yes
 Chain strategy: feature-branch-chain
 400-line budget risk: High
 
-### Suggested Work Units (feature-branch-chain topology)
+### Existing Task List
 
-| Unit | Goal | Target PR | Focus | Rollback boundary |
-|------|------|-----------|-------|-------------------|
-| Task 1 | Tarea 1 - Riesgos y Clasificación | PR 1 (tracker) | units/i-risk-assessment, units/i-asset-classification | Remove task directories |
-| Task 2 | Tarea 2 - Firewalls perimetrales | PR 2 | units/ii-firewalls-redes, units/ii-arquitectura-perimetral | Revert firewall configs |
-| Task 3 | Tarea 3 - Hardening e IAM/MFA | PR 3 | units/iii-iam-mfa, units/iii-compliance-iso27001 | Revert system changes |
-| Task 4 | Tarea 4 - Vulnerabilidades y Cripto | PR 4 | units/iv-criptografia-cvss, units/iv-malware-sandbox | Revert crypto/YARA changes |
-| Task 5 | Tarea 5 - Logging, SIEM, BCP | PR 5 (merges to main) | units/v-logging-siem-bcp | Remove logging artifacts |
+| Task | Scope | PR | Focused test command | Runtime harness | Rollback boundary |
+|---|---|---|---|---|---|
+| Task 1 | Tarea 1 - Riesgos y Clasificación | PR 1 (tracker) | `bash verify.sh` | `docker run --rm lab-ciberseguridad` | Remove task directories |
+| Task 2 | Tarea 2 - Firewalls perimetrales | PR 2 | `bash verify.sh` | `docker compose config` | Revert firewall configs |
+| Task 3 | Tarea 3 - Hardening e IAM/MFA | PR 3 | `bash units/iii-iam-mfa/test.sh` | `bash units/iii-iam-mfa/test.sh` | Revert system changes |
+| Task 4 | Tarea 4 - Vulnerabilidades y Cripto | PR 4 | `bash verify.sh` | `bash -n shared/*.sh` | Revert crypto/YARA changes |
+| Task 5 | Tarea 5 - Logging, SIEM, BCP | PR 5 (merges to main) | `bash verify.sh` | `docker build -t lab-ciberseguridad .` | Remove logging artifacts |
 
-### Phase Progression
+## Phase 1: Foundation/Infrastructure
 
-| Phase | Status | Next |
-|-------|--------|------|
-| proposal | completed | (already exist: task-1-proposal.md through task-5-proposal.md) |
-| specs | completed | (already exist: task-1-spec.md through task-5-spec.md) |
-| tasks | completed | (already exist: task-1-tasks.md through task-5-tasks.md) |
-| apply | pending | Implement 5 tasks via feature-branch-chain |
-| verify | pending | Validate implementation against specs |
-| archive | pending | Close change and persist final state |
+- [x] 1.1 RED: Create `verify.sh` with a failing container-escape assertion. Given hardened image, when capabilities/security options are inspected, then only allowed caps remain; SYS_ADMIN and Docker socket are absent.
+- [x] 1.2 RED: Add failing sudo-escalation assertion to `verify.sh`. Given non-CI profile, when `estudiante` elevates, then no new privileges are acquired.
+- [x] 1.3 RED: Add failing progress-tampering assertion to `verify.sh`. Given `estudiante`, when writing `/var/lab-state/progress`, then denied; root append succeeds.
+- [x] 1.4 RED: Add failing image-poisoning assertion to `verify.sh`. Given Dockerfile, when base image is inspected, then digest is pinned.
+- [x] 1.5 Harden `Dockerfile` and `docker-compose.yml`: `USER estudiante`, cap drop/add, `no-new-privileges:true`, read-only rootfs, writable `/tmp` (read-only), `/var/log/nginx` (read-only), `/var/lab-state` (read-only), no privileged/socket.
+- [x] 1.6 Move state to root-owned `/var/lab-state` (read-only) in `Dockerfile` and `shared/eval.sh`; set directory `0755`, progress `root:sudo`/`0640`, student read-only, root append explicit.
 
-### Task Interfaces
+## Phase 2: Core Implementation
 
-**Task 1 Input**: sdd-tasks/task-1-tasks.md, sdd-specs/task-1-spec.md  
-**Task 1 Output**: Completed risk analysis and asset classification in lab environment
+- [ ] 2.1 Extend `shared/validators.sh` and `shared/sudo-wrappers.sh` with missing helpers and contracts.
+- [ ] 2.2 Migrate `units/i/test.sh`, `units/i-risk-assessment/test.sh`, `units/i-asset-classification/test.sh`, `units/ii/test.sh`, `units/ii-firewalls-redes/test.sh`, `units/ii-ids-intrusion-detection/test.sh`, and `units/checkpoint-ii/test.sh` to shared sourcing/assertions; remove bare `sudo`/inline checks.
+- [ ] 2.3 Migrate `units/iii/test.sh`, `units/iii-iam-mfa/test.sh`, `units/iii-compliance-iso27001/test.sh`, `units/iv/test.sh`, `units/iv-criptografia-cvss/test.sh`, and `units/iv-burp-intercept/test.sh` similarly.
+- [ ] 2.4 Migrate `units/v/test.sh`, `units/v-logging-siem-bcp/test.sh`, `units/vi/test.sh`, `units/vii/test.sh`, `units/viii/test.sh`, `units/ix/test.sh`, `units/x/test.sh`, `units/xi/test.sh`, `units/checkpoint-iv/test.sh`, and `units/checkpoint-v/test.sh` similarly.
+- [ ] 2.5 Fix checkpoint-II cases in `shared/evaluar-unidad.sh` and `shared/retos-unidad.sh`.
 
-**Task 2 Input**: sdd-tasks/task-2-tasks.md, sdd-specs/task-2-spec.md  
-**Task 2 Output**: Configured firewall rules, network zone documentation in lab environment
+## Phase 3: Integration/Wiring
 
-**Task 3 Input**: sdd-tasks/task-3-tasks.md, sdd-specs/task-3-spec.md  
-**Task 3 Output**: Hardened system config, IAM/MFA setup, compliance mapping in lab environment
+- [ ] 3.1 Create `.github/workflows/ci.yml` with push/PR triggers for `feature/cyb-101-labs` and `main`, 26-unit matrix, missing-test skip, CORE fail-fast, and PASS/FAIL report.
+- [ ] 3.2 Add CI Compose profile (`no-new-privileges:false`, whitelisted sudo) while keeping production hardened.
+- [ ] 3.3 Extend `verify.sh` cross-checks for Dockerfile, manifest totals (26/243/85), shared modules, and docs links.
 
-**Task 4 Input**: sdd-tasks/task-4-tasks.md, sdd-specs/task-4-spec.md  
-**Task 4 Output**: Cryptography results, malware analysis, vulnerability detection in lab environment
+## Phase 4: Testing/Verification
 
-**Task 5 Input**: sdd-tasks/task-5-tasks.md, sdd-specs/task-5-spec.md  
-**Task 5 Output**: Logging/SIEM/incident response/BCP documentation in lab environment
+- [ ] 4.1 Run `bash -n shared/*.sh units/*/test.sh` and `bash units/iii-iam-mfa/test.sh`; Given valid image, when validators load, then all five retos pass.
+- [ ] 4.2 Run `bash verify.sh`; Given built image, when verification executes, then shared modules/manifest load and all checks pass.
+- [ ] 4.3 Run `docker compose config` and container checks; Given hardened service, when inspected, then non-root, allowed caps, read-only rootfs, writable paths, and state modes match.
+- [ ] 4.4 Run `bash verify.sh`; Given 26 manifest units, when docs are scanned, then 26 guides and validator signatures/examples exist.
 
-### Delivery Strategy "ask-on-risk" Consideration
+## Phase 5: Cleanup/Documentation
 
-After sdd-tasks completes, gatekeeper checks delivery strategy:
-- Forecast indicates high risk or >400 changed lines equivalent
-- STOP and ask whether to split into chained PRs or proceed with size:exception
-- For this task: user selected auto-chain with feature-branch-chain, so no ask needed
-- If user had selected ask-on-risk: ask whether to split into chained PRs or proceed with size:exception
-
-### Chain Strategy "feature-branch-chain" Detail
-
-When delivery_strategy results in chained PRs:
-- PR #1 targets the tracker branch (main)
-- PR #2 targets the immediate previous PR branch (PR #1's branch)
-- PR #3 targets PR #2's branch
-- PR #4 targets PR #3's branch
-- PR #5 (tracker) merges to main
-
-This keeps review diffs focused and enables rollback control and coordinated releases.
-
-**Cache**: Cache the chain strategy for the session. Pass it as `chain_strategy` to sdd-tasks and sdd-apply prompts alongside delivery_strategy. Do not ask again unless the user changes scope.
+- [ ] 5.1 Update `docs/validators-standard.md`, 26 unit guides, `docs/troubleshooting.md`, `CONTRIBUTING.md`, and `README.md` with CI, quickstart, API, and troubleshooting links.
+- [ ] 5.2 Remove temporary fallback code; verify no direct `sudo` or inline validators remain with `bash verify.sh`.

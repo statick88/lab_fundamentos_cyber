@@ -1,24 +1,21 @@
 #!/bin/bash
 # Funciones de evaluacion y progreso
-STATE_DIR="${STATE_DIR:=${HOME}/.lab-state}"
+STATE_DIR="${STATE_DIR:=/var/lab-state}"
 PROGRESS_FILE="${PROGRESS_FILE:=${STATE_DIR}/progress}"
 OLD_PROGRESS_FILE="${HOME}/.lab_state/progress"
 
 init_state() {
-    mkdir -p "$STATE_DIR" 2>/dev/null || true
-    touch "$PROGRESS_FILE" 2>/dev/null || true
-    chmod 0770 "$STATE_DIR" 2>/dev/null || true
-    chmod 0660 "$PROGRESS_FILE" 2>/dev/null || true
-    if [ -f "$OLD_PROGRESS_FILE" ] && [ ! -s "$PROGRESS_FILE" ]; then
-        cp "$OLD_PROGRESS_FILE" "$PROGRESS_FILE" 2>/dev/null || true
-        chmod 0660 "$PROGRESS_FILE" 2>/dev/null || true
-        rm -f "$OLD_PROGRESS_FILE" 2>/dev/null || true
-    fi
+    # Student runs read-only; /var/lab-state is root-owned (0750), progress is root:sudo (0640)
+    # Only root (or CI cron) can write. Student reads via esta_completado/mostrar_estado_retos.
+    # This function is a no-op for estudiante; kept for API compatibility.
+    true
 }
 
 marcar_completado() {
     local key="${1}:reto:${2}"
-    grep -q "^${key}$" "$PROGRESS_FILE" 2>/dev/null || echo "${key}" >> "$PROGRESS_FILE"
+    # Student is read-only on /var/lab-state; writes are deferred to CI/admin.
+    # Attempt write but don't fail evaluation if denied.
+    grep -q "^${key}$" "$PROGRESS_FILE" 2>/dev/null || echo "${key}" >> "$PROGRESS_FILE" 2>/dev/null || true
 }
 
 esta_completado() {

@@ -17,9 +17,14 @@ services:
     container_name: lab-ciberseguridad
     stdin_open: true    # Mantener stdin abierto (-i)
     tty: true           # Asignar pseudo-TTY (-t)
+    read_only: true
     volumes:
       - lab-data:/home/estudiante/laboratorio
       - ./resultados:/home/estudiante/laboratorio/resultados
+    tmpfs:
+      - /tmp
+      - /var/log/nginx
+      - /var/lab-state
     environment:
       - LAB_NAME=Fundamentos de Ciberseguridad ABC-CYB-101
       - COURSE_VERSION=2.0
@@ -31,7 +36,7 @@ services:
         ipv4_address: 172.20.0.10
     restart: unless-stopped
     security_opt:
-      - no-new-privileges:false
+      - no-new-privileges:true
     cap_drop:
       - ALL
     cap_add:

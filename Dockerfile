@@ -6,7 +6,7 @@
 # fail2ban (solo configuración), logrotate.
 # =============================================================================
 
-FROM ubuntu:24.04
+FROM ubuntu:24.04@sha256:b35f8c42edf2f1c13abcb5434d8c2034a3f174a517cf0ca71ff3a1acb8a23640
 
 # Etiquetas del contenedor
 LABEL maintainer="DevSecOps Lab"
@@ -81,10 +81,10 @@ RUN mkdir -p /etc/fail2ban /var/log/fail2ban && \
     touch /var/log/auth.log /var/log/ufw.log && \
     mkdir -p /var/lab-state && \
     chown root:sudo /var/lab-state && \
-    chmod 0770 /var/lab-state && \
+    chmod 0750 /var/lab-state && \
     touch /var/lab-state/progress && \
     chown root:sudo /var/lab-state/progress && \
-    chmod 0660 /var/lab-state/progress && \
+    chmod 0640 /var/lab-state/progress && \
     chown -R estudiante:estudiante /home/estudiante && \
     sed -i 's|^user .*;|user root;|' /etc/nginx/nginx.conf && \
     mkdir -p /tmp/nginx/body /tmp/nginx/proxy /tmp/nginx/fastcgi /tmp/nginx/uwsgi /tmp/nginx/scgi && \
