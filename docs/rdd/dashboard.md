@@ -32,6 +32,14 @@
 
 ---
 
+## Student Weakness Log (from RDD receipts)
+
+| Reto | Alumno | Debilidad | Acción | Estado |
+|------|--------|-----------|--------|--------|
+| Reto 6 | -- | Correlación SIEM (3.5/5.0) | Receipt de revisión creado | ⏳ Revisión en curso |
+
+---
+
 ## Professor RDD Decisions Log
 
 | Fecha | Decisión | Motivo (Evidence) | Estado |
