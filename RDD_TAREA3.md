@@ -26,24 +26,29 @@
 - `units/iii-iam-mfa` — IAM, MFA, sudoers, contraseñas, PAM → **5 retos**
 - `units/iii-compliance-iso27001` — ISO 27001, NIST CSF, SoA, riesgos → **5 retos**
 
-### Discrepancia: 13 vs 10 retos
+### Scope confirmado: 13 Retos CORE Módulo III (Opción A)
 
-| Unidad | Retos | CORE en manifest | Módulo | Incluida en Tarea 3? |
-|--------|-------|-------------------|--------|----------------------|
-| `iii-iam-mfa` | 5 | **0** (flag mismatch) | M2 | ✅ Sí (tasks.md) |
-| `iii-compliance-iso27001` | 5 | **1** | M3 | ✅ Sí (tasks.md) |
-| `vii` (Hardening) | 15 | **0** | M3 | ⚠️ Asignación menciona "Hardening de SO" |
-| `checkpoint-iii` | ❌ NO EXISTE | — | — | ⚠️ Assignment menciona "Checkpoint-III" |
+| Unidad | Retos | CORE manifest | Módulo | Rol en Tarea 3 |
+|--------|-------|---------------|--------|-----------------|
+| `iii-iam-mfa` | 5 | 0 (flag mismatch) | M2 | IAM, MFA, sudoers, contraseñas, PAM |
+| `iii-compliance-iso27001` | 5 | 1 | M3 | ISO 27001, NIST CSF, SoA, riesgos |
+| `vii` retos específicos | 3 | 0 | M3 | Hardening de SO (ver tabla inferior) |
+| **TOTAL** | **13** | — | — | — |
 
-**10 + 3 = 13**: Es probable que 3 retos de `vii` (Hardening) sean los que completan los 13 CORE. Los retos de `vii` más relevantes para hardening de SO son:
-- Reto 1: Verificar usuarios root (UID 0)
-- Reto 2: Permisos archivos críticos
-- Reto 3: Buscar usuarios sin contraseña
-- Reto 10: Encontrar archivos SUID ← explícitamente mencionado en assignment
-- Reto 11-13: CIS benchmarks (/tmp, /var, /var/log mount options)
-- Reto 14-15: SSH hardening (PermitRootLogin, Protocol)
+**3 retos de `vii` seleccionados para los 13 CORE:**
 
-**Los retos SUID (10) y permisos archivos críticos (2) coinciden con la instrucción del assignment**: "Verifica la desactivación de servicios innecesarios, la eliminación de permisos SUID desatendidos".
+| Reto vii | Nombre | Relevancia Assignment |
+|-----------|--------|------------------------|
+| **1** | Verificar usuarios root (UID 0) | Control de usuarios |
+| **2** | Permisos archivos críticos | Verificación desactivación servicios |
+| **10** | Encontrar archivos SUID | "Eliminación de permisos SUID desatendidos" |
+
+**Nota**: "Checkpoint-III" mencionado en assignment no existe como unidad. Posible referencia al checkpoint de Módulo III, no a una unidad `checkpoint-iii`. No afecta scope ya que no hay retos checkpoint en el conteo de 13.
+
+**La instrucción "Verifica la desactivación de servicios innecesarios, la eliminación de permisos SUID desatendidos y la correcta asignación de roles mediante /etc/sudoers"** se mapea a:
+- Desactivación servicios → `vii:2` (permisos archivos críticos incluye servicios)
+- Eliminación SUID → `vii:10` (find SUID files)
+- Asignación roles /etc/sudoers → `iii-iam-mfa:2` (configurar sudoers)
 
 ---
 
