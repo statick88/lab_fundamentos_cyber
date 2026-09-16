@@ -36,11 +36,11 @@ Chain strategy: feature-branch-chain
 
 ## Phase 2: Core Implementation
 
-- [ ] 2.1 Extend `shared/validators.sh` and `shared/sudo-wrappers.sh` with missing helpers and contracts.
-- [ ] 2.2 Migrate `units/i/test.sh`, `units/i-risk-assessment/test.sh`, `units/i-asset-classification/test.sh`, `units/ii/test.sh`, `units/ii-firewalls-redes/test.sh`, `units/ii-ids-intrusion-detection/test.sh`, and `units/checkpoint-ii/test.sh` to shared sourcing/assertions; remove bare `sudo`/inline checks.
-- [ ] 2.3 Migrate `units/iii/test.sh`, `units/iii-iam-mfa/test.sh`, `units/iii-compliance-iso27001/test.sh`, `units/iv/test.sh`, `units/iv-criptografia-cvss/test.sh`, and `units/iv-burp-intercept/test.sh` similarly.
-- [ ] 2.4 Migrate `units/v/test.sh`, `units/v-logging-siem-bcp/test.sh`, `units/vi/test.sh`, `units/vii/test.sh`, `units/viii/test.sh`, `units/ix/test.sh`, `units/x/test.sh`, `units/xi/test.sh`, `units/checkpoint-iv/test.sh`, and `units/checkpoint-v/test.sh` similarly.
-- [ ] 2.5 Fix checkpoint-II cases in `shared/evaluar-unidad.sh` and `shared/retos-unidad.sh`.
+- [x] 2.1 Extend `shared/validators.sh` and `shared/sudo-wrappers.sh` with missing helpers and contracts.
+- [x] 2.2 Migrate `units/i/test.sh`, `units/i-risk-assessment/test.sh`, `units/i-asset-classification/test.sh`, `units/ii/test.sh`, `units/ii-firewalls-redes/test.sh`, `units/ii-ids-intrusion-detection/test.sh`, and `units/checkpoint-ii/test.sh` to shared sourcing/assertions; remove bare `sudo`/inline checks.
+- [x] 2.3 Migrate `units/iii/test.sh`, `units/iii-iam-mfa/test.sh`, `units/iii-compliance-iso27001/test.sh`, `units/iv/test.sh`, `units/iv-criptografia-cvss/test.sh`, and `units/iv-burp-intercept/test.sh` similarly.
+- [x] 2.4 Migrate `units/v/test.sh`, `units/v-logging-siem-bcp/test.sh`, `units/vi/test.sh`, `units/vii/test.sh`, `units/viii/test.sh`, `units/ix/test.sh`, `units/x/test.sh`, `units/xi/test.sh`, `units/checkpoint-iv/test.sh`, and `units/checkpoint-v/test.sh` similarly.
+- [x] 2.5 Fix checkpoint-II cases in `shared/evaluar-unidad.sh` and `shared/retos-unidad.sh`.
 
 ## Phase 3: Integration/Wiring
 

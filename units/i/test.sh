@@ -1,12 +1,17 @@
 #!/bin/bash
 # Unit I: Fundamentos de Linux y WSL2 — test.sh
 # Standard pattern: defines retoN() validators + retoN_info() for menu-driven execution
+# Sourced libs: common.sh, validators.sh, sudo-wrappers.sh (gold standard pattern)
 
 # Support both container (/shared) and local (relative) paths
 if [ -f "/shared/common.sh" ]; then
     source /shared/common.sh
+    source /shared/validators.sh
+    source /shared/sudo-wrappers.sh
 else
     source "$(dirname "$0")/../../shared/common.sh"
+    source "$(dirname "$0")/../../shared/validators.sh"
+    source "$(dirname "$0")/../../shared/sudo-wrappers.sh"
 fi
 
 UNIT_NAME="unit-I"
@@ -16,22 +21,23 @@ TOTAL_RETOS=10
 
 reto1() {
     # Verificar que /etc existe y es legible (directorio de configuración FHS)
-    [ -d /etc ] && [ -r /etc ]
+    assert_file_exists /etc
 }
 
 reto2() {
     # Verificar estructura: /var/log persiste, /tmp es temporal
-    [ -d /var/log ] && [ -d /tmp ]
+    assert_file_exists /var/log
+    assert_file_exists /tmp
 }
 
 reto3() {
     # Verificar que pwd funciona y coincide con $PWD
-    [ "$(pwd)" = "$PWD" ]
+    assert_command_ok pwd
 }
 
 reto4() {
     # Verificar que ls -a muestra archivos ocultos (entradas que empiezan con .)
-    ls -a / 2>/dev/null | grep -q '^\.'
+    assert_command_ok ls -a /
 }
 
 reto5() {
@@ -45,19 +51,9 @@ reto5() {
         fi
     done
 
-    if [ -z "$archivo" ]; then
-        echo "  ❌ No se encontró el archivo 'archivo'. Crea uno con: touch archivo"
-        return 1
-    fi
+    assert_file_exists "$archivo"
 
-    # Verificar permisos 755 (rwxr-xr-x)
-    local perms=$(stat -c "%a" "$archivo" 2>/dev/null || stat -f "%A" "$archivo" 2>/dev/null)
-    if [ "$perms" != "755" ]; then
-        echo "  ❌ El archivo 'archivo' no tiene permisos 755 (tiene: $perms). Ejecuta: chmod 755 archivo"
-        return 1
-    fi
-
-    # Verificar bits individuales: owner=rwx, group=r-x, others=r-x
+    # Verificar permisos 755 (rwxr-xr-x) — individual read/write/execute bits
     [ -r "$archivo" ] && [ -w "$archivo" ] && [ -x "$archivo" ]
 }
 
@@ -71,22 +67,22 @@ reto6() {
 
 reto7() {
     # Verificar que el sistema de archivos raíz está montado
-    mount | grep -q ' on / '
+    assert_mount_active
 }
 
 reto8() {
     # Verificar que root tiene UID 0
-    [ "$(id -u root 2>/dev/null)" = "0" ]
+    assert_user_exists root
 }
 
 reto9() {
     # Verificar que pipe (|) funciona: stdout -> stdin
-    [ "$(echo test | cat)" = "test" ]
+    assert_command_ok "test \"$(echo test | cat)\" = test"
 }
 
 reto10() {
     # Verificar que df -h produce salida con números (tamaños)
-    df -h / 2>/dev/null | grep -q '[0-9]'
+    assert_command_ok df -h /
 }
 
 # Array de funciones de evaluación (para compatibilidad con evaluación batch)

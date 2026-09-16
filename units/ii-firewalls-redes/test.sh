@@ -1,81 +1,79 @@
 #!/bin/bash
 # Unit II: Filtrado de Red y Firewalls — test.sh
+# Sourced libs: common.sh, validators.sh, sudo-wrappers.sh (gold standard pattern)
 
-source /shared/common.sh
+# Dual-path sourcing
+if [ -f "/shared/common.sh" ]; then
+    source /shared/common.sh
+    source /shared/validators.sh
+    source /shared/sudo-wrappers.sh
+else
+    source "$(dirname "$0")/../../shared/common.sh"
+    source "$(dirname "$0")/../../shared/validators.sh"
+    source "$(dirname "$0")/../../shared/sudo-wrappers.sh"
+fi
 
 UNIT_NAME="unit-II"
 TOTAL_RETOS=10
 
 reto1() {
-    [ -f "$HOME/laboratorio/redes/captura_http.pcapng" ]
-    grep -qi "GET / HTTP" "$HOME/laboratorio/redes/captura_http.pcapng" 2>/dev/null
+    assert_file_contains "$HOME/laboratorio/redes/captura_http.pcapng" "GET / HTTP"
 }
 
 reto2() {
-    grep -q "^https" /etc/services 2>/dev/null
+    assert_file_contains /etc/services "^https"
 }
 
 reto3() {
-    [ -f "$HOME/laboratorio/redes/captura_ssh.pcapng" ]
-    grep -qi "SSH" "$HOME/laboratorio/redes/captura_ssh.pcapng" 2>/dev/null
+    assert_file_contains "$HOME/laboratorio/redes/captura_ssh.pcapng" "SSH"
 }
 
 reto4() {
-    grep -q "^domain" /etc/services 2>/dev/null
+    assert_file_contains /etc/services "^domain"
 }
 
 reto5() {
-    if command -v sudo >/dev/null 2>&1 && sudo -n ufw status >/dev/null 2>&1; then
-        sudo ufw status | grep -q "22/tcp"
-    else
-        [ -f "$HOME/laboratorio/redes/ufw_ssh.sh" ] && [ -x "$HOME/laboratorio/redes/ufw_ssh.sh" ]
-    fi
+    # UFW: permitir SSH — verificar via sudo o script del estudiante
+    assert_sudo_ok ufw status || {
+        assert_file_exists "$HOME/laboratorio/redes/ufw_ssh.sh"
+        assert_file_contains "$HOME/laboratorio/redes/ufw_ssh.sh" "22"
+    }
 }
 
 reto6() {
-    if command -v sudo >/dev/null 2>&1 && sudo -n ufw status >/dev/null 2>&1; then
-        sudo ufw status | grep -q "23/tcp"
-    else
-        [ -f "$HOME/laboratorio/redes/ufw_telnet.sh" ] && [ -x "$HOME/laboratorio/redes/ufw_telnet.sh" ]
-    fi
+    # UFW: denegar Telnet — verificar via sudo o script del estudiante
+    assert_sudo_ok ufw status || {
+        assert_file_exists "$HOME/laboratorio/redes/ufw_telnet.sh"
+        assert_file_contains "$HOME/laboratorio/redes/ufw_telnet.sh" "23"
+    }
 }
 
 reto7() {
-    if command -v sudo >/dev/null 2>&1 && sudo -n ufw status >/dev/null 2>&1; then
-        sudo ufw status | grep -qE "80/tcp|443/tcp"
-    else
-        [ -f "$HOME/laboratorio/redes/ufw_web.sh" ] && [ -x "$HOME/laboratorio/redes/ufw_web.sh" ]
-    fi
+    # UFW: permitir HTTP/HTTPS — verificar via sudo o script del estudiante
+    assert_sudo_ok ufw status || {
+        assert_file_exists "$HOME/laboratorio/redes/ufw_web.sh"
+        assert_file_contains "$HOME/laboratorio/redes/ufw_web.sh" "80"
+        assert_file_contains "$HOME/laboratorio/redes/ufw_web.sh" "443"
+    }
 }
 
 reto8() {
-    if command -v sudo >/dev/null 2>&1 && sudo -n iptables -L INPUT -n -v >/dev/null 2>&1; then
-        sudo iptables -L INPUT -n -v | grep -q "DROP"
-    else
-        [ -f "$HOME/laboratorio/redes/iptables_block.sh" ] && [ -x "$HOME/laboratorio/redes/iptables_block.sh" ]
-    fi
+    # iptables DROP a IP — verificar via sudo o script del estudiante
+    assert_sudo_ok iptables -L INPUT -n -v || {
+        assert_file_exists "$HOME/laboratorio/redes/iptables_block.sh"
+    }
 }
 
 reto9() {
-    if command -v sudo >/dev/null 2>&1 && sudo -n iptables -L >/dev/null 2>&1; then
-        sudo iptables -L >/dev/null 2>&1
-    else
-        command -v iptables >/dev/null 2>&1
-        [ -f "$HOME/laboratorio/redes/iptables_list.sh" ] && [ -x "$HOME/laboratorio/redes/iptables_list.sh" ]
-    fi
+    # Listar reglas iptables — verificar via sudo o script del estudiante
+    assert_sudo_ok iptables -L || {
+        assert_file_exists "$HOME/laboratorio/redes/iptables_list.sh"
+    }
 }
 
 reto10() {
-    if [ -f "$HOME/laboratorio/redes/captura_scan.pcapng" ]; then
-        if command -v tcpdump >/dev/null 2>&1; then
-            tcpdump -nn -r "$HOME/laboratorio/redes/captura_scan.pcapng" 2>/dev/null | grep -c "SYN" >/dev/null 2>&1 && return 0
-        fi
-        local size
-        size=$(stat -c %s "$HOME/laboratorio/redes/captura_scan.pcapng" 2>/dev/null || stat -f %z "$HOME/laboratorio/redes/captura_scan.pcapng" 2>/dev/null || echo 0)
-        [ "$size" -gt 1024 ]
-    else
-        return 1
-    fi
+    assert_file_exists "$HOME/laboratorio/redes/captura_scan.pcapng"
+    assert_command_ok "test -s $HOME/laboratorio/redes/captura_scan.pcapng"
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10)
@@ -149,7 +147,6 @@ reto5_info() {
     echo ""
     echo "Crea un script o archivo de configuración que defina una regla UFW"
     echo "para permitir SSH (puerto 22/tcp)."
-    echo "Guárdalo en tu directorio de laboratorio."
     echo ""
     echo "Comandos útiles:"
     echo "  nano ~/laboratorio/redes/ufw_ssh.sh"

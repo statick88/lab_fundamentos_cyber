@@ -1,12 +1,17 @@
 #!/bin/bash
 # Unit i-risk-assessment: Evaluación de Riesgos con matriz ISO 31000 — test.sh
 # 10 retos CORE: escenario, matriz, tratamientos, justificación
+# Sourced libs: common.sh, validators.sh, sudo-wrappers.sh (gold standard pattern)
 
 # Dual-path sourcing
 if [ -f "/shared/common.sh" ]; then
     source /shared/common.sh
+    source /shared/validators.sh
+    source /shared/sudo-wrappers.sh
 else
     source "$(dirname "$0")/../../shared/common.sh"
+    source "$(dirname "$0")/../../shared/validators.sh"
+    source "$(dirname "$0")/../../shared/sudo-wrappers.sh"
 fi
 
 UNIT_NAME="unit-i-risk-assessment"
@@ -17,21 +22,15 @@ LAB_DIR="$HOME/laboratorio/risk-assessment"
 # ── Reto 1: Verificar existencia del escenario ─────────────────
 reto1() {
     local scenario="$LAB_DIR/escenario.json"
-    if [ ! -f "$scenario" ]; then
-        echo "FAIL: escenario.json no existe en $LAB_DIR" >&2
-        return 1
-    fi
+    assert_file_exists "$scenario"
     # Verificar que contiene la empresa
-    grep -q "DataGuard" "$scenario" 2>/dev/null || grep -q "empresa" "$scenario" 2>/dev/null
+    assert_file_contains "$scenario" "DataGuard" || assert_file_contains "$scenario" "empresa"
 }
 
 # ── Reto 2: Validar que el escenario tiene 5 activos ───────────
 reto2() {
     local scenario="$LAB_DIR/escenario.json"
-    if [ ! -f "$scenario" ]; then
-        echo "FAIL: escenario.json no existe" >&2
-        return 1
-    fi
+    assert_file_exists "$scenario"
     # Contar IDs de activos (A1-A5)
     local count
     count=$(grep -o '"id": "A[1-5]"' "$scenario" 2>/dev/null | wc -l | tr -d ' ')
@@ -45,10 +44,7 @@ reto2() {
 # ── Reto 3: Verificar amenazas para cada activo ────────────────
 reto3() {
     local scenario="$LAB_DIR/escenario.json"
-    if [ ! -f "$scenario" ]; then
-        echo "FAIL: escenario.json no existe" >&2
-        return 1
-    fi
+    assert_file_exists "$scenario"
     # Verificar que cada activo tiene al menos 1 amenaza
     local threats
     threats=$(grep -c '"nombre"' "$scenario" 2>/dev/null || echo 0)
@@ -63,18 +59,17 @@ reto3() {
 reto4() {
     # Verificar que existe la plantilla o un archivo de análisis completado
     local template="$LAB_DIR/plantilla-analisis.md"
-    if [ -f "$template" ]; then
-        # Verificar que tiene datos más allá del template
-        local filled
-        filled=$(grep -c '|.*|.*|.*|' "$template" 2>/dev/null || echo 0)
-        if [ "$filled" -gt 5 ]; then
-            return 0
-        fi
-    fi
-    # Buscar archivo de análisis alternativo
-    local analysis
-    analysis=$(find "$LAB_DIR" -maxdepth 1 -type f -name "*analisis*" -o -name "*matrix*" -o -name "*matriz*" 2>/dev/null | head -1)
-    if [ -n "$analysis" ] && [ -f "$analysis" ]; then
+    assert_file_exists "$template" || {
+        # Buscar archivo de análisis alternativo
+        local analysis
+        analysis=$(find "$LAB_DIR" -maxdepth 1 -type f -name "*analisis*" -o -name "*matrix*" -o -name "*matriz*" 2>/dev/null | head -1)
+        assert_file_exists "$analysis"
+        return 0
+    }
+    # Verificar que tiene datos más allá del template
+    local filled
+    filled=$(grep -c '|.*|.*|.*|' "$template" 2>/dev/null || echo 0)
+    if [ "$filled" -gt 5 ]; then
         return 0
     fi
     echo "FAIL: Tabla de probabilidad × impacto no completada" >&2
@@ -84,10 +79,7 @@ reto4() {
 # ── Reto 5: Asignar nivel de riesgo a cada amenaza ────────────
 reto5() {
     local scenario="$LAB_DIR/escenario.json"
-    if [ ! -f "$scenario" ]; then
-        echo "FAIL: escenario.json no existe" >&2
-        return 1
-    fi
+    assert_file_exists "$scenario"
     # Verificar que hay scores de probabilidad (1-5) e impacto (1-5)
     local probs
     probs=$(grep -o '"probabilidad": [1-5]' "$scenario" 2>/dev/null | wc -l | tr -d ' ')
@@ -103,28 +95,20 @@ reto5() {
 # ── Reto 6: Clasificar riesgos por nivel (Bajo/Medio/Alto/Crítico) ──
 reto6() {
     local template="$LAB_DIR/plantilla-analisis.md"
-    if [ -f "$template" ]; then
-        if grep -qi "BAJO\|MEDIO\|ALTO\|CRÍTICO\|CRITICO" "$template" 2>/dev/null; then
-            return 0
-        fi
-    fi
-    # Buscar archivos de clasificación
-    local classified
-    classified=$(find "$LAB_DIR" -maxdepth 1 -type f \( -name "*clasif*" -o -name "*nivel*" \) 2>/dev/null | head -1)
-    if [ -n "$classified" ] && [ -f "$classified" ]; then
+    assert_file_contains "$template" "BAJO\|MEDIO\|ALTO\|CRÍTICO\|CRITICO" || {
+        # Buscar archivos de clasificación
+        local classified
+        classified=$(find "$LAB_DIR" -maxdepth 1 -type f \( -name "*clasif*" -o -name "*nivel*" \) 2>/dev/null | head -1)
+        assert_file_exists "$classified"
         return 0
-    fi
-    echo "FAIL: Clasificación de niveles de riesgo no encontrada" >&2
-    return 1
+    }
+    return 0
 }
 
 # ── Reto 7: Definir tratamiento para al menos 3 amenazas ──────
 reto7() {
     local scenario="$LAB_DIR/escenario.json"
-    if [ ! -f "$scenario" ]; then
-        echo "FAIL: escenario.json no existe" >&2
-        return 1
-    fi
+    assert_file_exists "$scenario"
     # Verificar que hay controles definidos para al menos 3 amenazas
     local controls
     controls=$(grep -c '"controles"' "$scenario" 2>/dev/null || echo 0)
@@ -138,37 +122,29 @@ reto7() {
 # ── Reto 8: Calcular riesgo inherente y residual ──────────────
 reto8() {
     local template="$LAB_DIR/plantilla-analisis.md"
-    if [ -f "$template" ]; then
-        if grep -qi "inherente\|residual" "$template" 2>/dev/null; then
-            return 0
-        fi
+    assert_file_exists "$template"
+    if grep -qi "inherente\|residual" "$template" 2>/dev/null; then
+        return 0
     fi
     # Buscar archivos con cálculos de riesgo
     local risk_files
     risk_files=$(find "$LAB_DIR" -maxdepth 1 -type f \( -name "*risk*" -o -name "*riesgo*" \) 2>/dev/null | head -1)
-    if [ -n "$risk_files" ] && [ -f "$risk_files" ]; then
-        return 0
-    fi
-    echo "FAIL: Cálculos de riesgo inherente/residual no encontrados" >&2
-    return 1
+    assert_file_exists "$risk_files"
+    return 0
 }
 
 # ── Reto 9: Generar justificación económica ────────────────────
 reto9() {
     local template="$LAB_DIR/plantilla-analisis.md"
-    if [ -f "$template" ]; then
-        if grep -qi "costo\|económico\|inversión\|ROI" "$template" 2>/dev/null; then
-            return 0
-        fi
+    assert_file_exists "$template"
+    if grep -qi "costo\|económico\|inversión\|ROI" "$template" 2>/dev/null; then
+        return 0
     fi
     # Buscar archivos de justificación
     local econ_files
     econ_files=$(find "$LAB_DIR" -maxdepth 1 -type f \( -name "*costo*" -o -name "*econom*" -o -name "*justif*" \) 2>/dev/null | head -1)
-    if [ -n "$econ_files" ] && [ -f "$econ_files" ]; then
-        return 0
-    fi
-    echo "FAIL: Justificación económica no encontrada" >&2
-    return 1
+    assert_file_exists "$econ_files"
+    return 0
 }
 
 # ── Reto 10: Documentar plan de seguimiento ────────────────────
@@ -176,18 +152,12 @@ reto10() {
     # Verificar que existe documentación de seguimiento
     local followup
     followup=$(find "$LAB_DIR" -maxdepth 1 -type f \( -name "*seguimiento*" -o -name "*tracking*" -o -name "*plan*" \) 2>/dev/null | head -1)
-    if [ -n "$followup" ] && [ -f "$followup" ]; then
-        return 0
-    fi
-    # Verificar que la plantilla tiene sección de seguimiento
-    local template="$LAB_DIR/plantilla-analisis.md"
-    if [ -f "$template" ]; then
-        if grep -qi "seguimiento\|tracking\|monitoreo\|revisión" "$template" 2>/dev/null; then
-            return 0
-        fi
-    fi
-    echo "FAIL: Plan de seguimiento no documentado" >&2
-    return 1
+    assert_file_exists "$followup" || {
+        # Verificar que la plantilla tiene sección de seguimiento
+        local template="$LAB_DIR/plantilla-analisis.md"
+        assert_file_exists "$template"
+        assert_file_contains "$template" "seguimiento\|tracking\|monitoreo\|revisión"
+    }
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10)

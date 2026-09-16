@@ -1,12 +1,17 @@
 #!/bin/bash
 # Unit II-ids: Detección de Intrusos con Suricata — test.sh
 # 3 retos OPT: Suricata install/status, local.rules validation, alert generation
+# Sourced libs: common.sh, validators.sh, sudo-wrappers.sh (gold standard pattern)
 
 # Dual-path sourcing
 if [ -f "/shared/common.sh" ]; then
     source /shared/common.sh
+    source /shared/validators.sh
+    source /shared/sudo-wrappers.sh
 else
     source "$(dirname "$0")/../../shared/common.sh"
+    source "$(dirname "$0")/../../shared/validators.sh"
+    source "$(dirname "$0")/../../shared/sudo-wrappers.sh"
 fi
 
 UNIT_NAME="unit-II-ids"
@@ -15,70 +20,23 @@ TOTAL_RETOS=3
 LAB_DIR="$HOME/laboratorio/ids"
 
 # ── Reto 1: Verificar instalación y estado de Suricata ──────────
-# Valida que Suricata esté instalado y el binario funcione.
 reto1() {
-    # Verificar que suricata existe como comando
-    if ! command -v suricata >/dev/null 2>&1; then
-        echo "FAIL: suricata no encontrado en PATH" >&2
-        return 1
-    fi
-    # Verificar que el binario ejecuta correctamente (con -V para versión)
-    local ver_output
-    ver_output=$(suricata -V 2>&1 || true)
-    if echo "$ver_output" | grep -qi "suricata"; then
-        return 0
-    fi
-    echo "FAIL: suricata instalado pero no responde correctamente" >&2
-    return 1
+    assert_command_ok suricata -V
 }
 
 # ── Reto 2: Validar reglas personalizadas (local.rules) ─────────
-# Valida que exista local.rules con las 3 reglas de detección.
 reto2() {
     local rules_file="$LAB_DIR/local.rules"
-    if [ ! -f "$rules_file" ]; then
-        echo "FAIL: $rules_file no existe" >&2
-        return 1
-    fi
-    # Verificar presencia de las 3 reglas (sid:1000001, sid:1000002, sid:1000003)
-    local has_ssh=0 has_sqli=0 has_portscan=0
-    grep -q "sid:1000001" "$rules_file" 2>/dev/null && has_ssh=1
-    grep -q "sid:1000002" "$rules_file" 2>/dev/null && has_sqli=1
-    grep -q "sid:1000003" "$rules_file" 2>/dev/null && has_portscan=1
-
-    if [ "$has_ssh" -eq 1 ] && [ "$has_sqli" -eq 1 ] && [ "$has_portscan" -eq 1 ]; then
-        return 0
-    fi
-    echo "FAIL: local.rules incompleto (faltan reglas SSH=$has_ssh SQLi=$has_sqli PortScan=$has_portscan)" >&2
-    return 1
+    assert_file_exists "$rules_file"
+    assert_file_contains "$rules_file" "sid:1000001"
+    assert_file_contains "$rules_file" "sid:1000002"
+    assert_file_contains "$rules_file" "sid:1000003"
 }
 
 # ── Reto 3: Generar y verificar alertas ─────────────────────────
-# Valida que existan logs de alertas generados por Suricata.
 reto3() {
-    # Verificar que exista el directorio de logs
     local log_dir="$LAB_DIR/suricata-logs"
-    if [ ! -d "$log_dir" ]; then
-        echo "FAIL: Directorio de logs $log_dir no existe" >&2
-        return 1
-    fi
-    # Verificar que exista fast.log con contenido de alertas
-    local fast_log="$log_dir/fast.log"
-    if [ -f "$fast_log" ] && [ -s "$fast_log" ]; then
-        return 0
-    fi
-    # Alternativa: verificar que simulated_traffic.log existe como evidencia
-    # de que el estudiante procesó tráfico
-    if [ -f "$LAB_DIR/simulated_traffic.log" ]; then
-        # Verificar que hay evidencia de análisis
-        local alert_files
-        alert_files=$(find "$log_dir" -type f -name "*.log" -o -name "*.json" 2>/dev/null)
-        if [ -n "$alert_files" ]; then
-            return 0
-        fi
-    fi
-    echo "FAIL: No se encontraron alertas generadas en $log_dir" >&2
-    return 1
+    assert_file_exists "$log_dir/fast.log"
 }
 
 validators=(reto1 reto2 reto3)

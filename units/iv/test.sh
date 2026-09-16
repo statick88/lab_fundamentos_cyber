@@ -1,75 +1,55 @@
 #!/bin/bash
 # Unit IV: User Management — test.sh
-# Automated validation of 10 challenges
-# System-Bound unit: uses /shared/sudo-wrappers.sh for privileged assertions
+# Refactorizado (C4): usa /shared/validators.sh + /shared/sudo-wrappers.sh
 
-# Support both container (/shared) and local (relative) paths
-if [ -f "/shared/common.sh" ]; then
-    source /shared/common.sh
-else
-    source "$(dirname "$0")/../../shared/common.sh"
-fi
-if [ -f "/shared/sudo-wrappers.sh" ]; then
-    source /shared/sudo-wrappers.sh
-else
-    source "$(dirname "$0")/../../shared/sudo-wrappers.sh"
-fi
+source /shared/common.sh
+source /shared/validators.sh
+source /shared/sudo-wrappers.sh
 
 UNIT_NAME="unit-IV"
 TOTAL_RETOS=10
 
 reto1() {
-    # Verificar que el usuario practicante existe
     assert_user_exists practicante
 }
 
 reto2() {
-    # Verificar que el grupo desarrolladores existe
     assert_group_exists desarrolladores
 }
 
 reto3() {
-    # Verificar que practicante esta en el grupo desarrolladores
     assert_user_in_group practicante desarrolladores
 }
 
 reto4() {
-    # Verificar que practicante tiene contrasena configurada
-    sudo passwd -S practicante 2>/dev/null | grep -q "P"
+    assert_sudo_ok passwd -S practicante
 }
 
 reto5() {
-    # Verificar que el shell de practicante es /bin/sh
-    grep practicante /etc/passwd | grep -q "/bin/sh"
+    assert_file_contains /etc/passwd "practicante.*bin/sh"
 }
 
 reto6() {
-    # Verificar que el directorio home existe y tiene ownership correcto
-    [ -d "/home/practicante" ]
+    [ -d "/home/practicante" ] || return 1
     assert_file_owner "/home/practicante" "practicante"
 }
 
 reto7() {
-    # Verificar que el archivo tiene el propietario correcto
-    [ -f "/tmp/archivo_practicante.txt" ]
     assert_file_owner "/tmp/archivo_practicante.txt" "practicante"
 }
 
 reto8() {
-    # Verificar que el directorio tiene permisos 755
-    [ -d "/tmp/proyecto" ]
+    local permisos
     permisos=$(stat -c "%a" /tmp/proyecto 2>/dev/null || stat -f "%Lp" /tmp/proyecto 2>/dev/null)
     [ "$permisos" = "755" ]
 }
 
 reto9() {
-    # Verificar que practicante fue eliminado
-    ! id practicante >/dev/null 2>&1
+    ! assert_user_exists practicante
 }
 
 reto10() {
-    # Verificar que el grupo desarrolladores fue eliminado
-    ! getent group desarrolladores >/dev/null 2>&1
+    ! assert_group_exists desarrolladores
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10)
@@ -191,7 +171,7 @@ reto10_info() {
     separador
 }
 
-# ── Standalone execution mode ────────────────────────────────
+# ── Standalone execution mode ────────────────────────────────────────
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

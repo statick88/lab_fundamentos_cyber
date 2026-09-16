@@ -1,133 +1,110 @@
 #!/bin/bash
-# Unit IV: Burp Suite Intercepción de Tráfico HTTP — test.sh
+# Unit IV: Burp Suite Intercepcion de Trafico HTTP — test.sh
+# Refactorizado (C4): usa /shared/validators.sh + /shared/sudo-wrappers.sh
 
-# Support both container (/shared) and local (relative) paths
-if [ -f "/shared/common.sh" ]; then
-    source /shared/common.sh
-else
-    source "$(dirname "$0")/../../shared/common.sh"
-fi
+source /shared/common.sh
+source /shared/validators.sh
+source /shared/sudo-wrappers.sh
 
 UNIT_NAME="unit-IV-burp"
 TOTAL_RETOS=3
 
-source /shared/eval.sh
-
-echo -e "${CYAN}=== Evaluación Burp Suite Intercepción HTTP ===${RESET}\n"
-
-# Reto 1: Configurar proxy Burp interceptando tráfico básico
 reto1() {
-    # Verificar que el archivo de configuración existe
     local config="$HOME/laboratorio/burp/intercept_config.conf"
-    if [ -f "$config" ]; then
-        # Verificar que contiene las configuraciones básicas
-        grep -q "localhost:8080" "$config" 2>/dev/null && \
-        grep -q "http://localhost:5000" "$config" 2>/dev/null && \
-        return 0
-    fi
-    return 1
+    assert_file_exists "$config" || return 1
+    assert_file_contains "$config" "localhost:8080" || return 1
+    assert_file_contains "$config" "http://localhost:5000" || return 1
 }
 
-# Reto 2: Interceptar petición HTTP y modificar parámetro crítico
 reto2() {
-    # Verificar que se interceptó una petición y modificó el parámetro
     local modificado="$HOME/laboratorio/burp/modificado.txt"
-    if [ -f "$modificado" ] && [ "$(cat "$modificado" 2>/dev/null)" = "1" ]; then
-        return 0
-    fi
-    # Alternativa: verificar log de modificaciones
+    assert_file_contains "$modificado" "1" || return 1
     local log_modif="$HOME/laboratorio/burp/proxy_log.txt"
-    if [ -f "$log_modif" ] && grep -q "MODIFICADO" "$log_modif" 2>/dev/null; then
-        return 0
-    fi
-    return 1
+    assert_file_contains "$log_modif" "MODIFICADO" || return 1
 }
 
-# Reto 3: Validar bypass o modificación exitosa
 reto3() {
-    # Verificar ambos indicadores de éxito
     local modificado="$HOME/laboratorio/burp/modificado.txt"
     local log_modif="$HOME/laboratorio/burp/proxy_log.txt"
-    
     local count=0
-    [ -f "$modificado" ] && [ "$(cat "$modificado" 2>/dev/null)" = "1" ] && count=$((count+1))
-    [ -f "$log_modif" ] && grep -q "MODIFICADO" "$log_modif" 2>/dev/null && count=$((count+1))
-    
+    assert_file_contains "$modificado" "1" && count=$((count+1)) || true
+    assert_file_contains "$log_modif" "MODIFICADO" && count=$((count+1)) || true
     [ "$count" -ge 2 ]
 }
 
 validators=(reto1 reto2 reto3)
 
 challenge_names=(
-    "Configurar proxy Burp interceptando tráfico GET básico"
-    "Interceptar y modificar parámetro precio en petición POST"
-    "Validar bypass/modificación exitosa mediante logs"
+    "Configurar proxy Burp interceptando trafico GET basico"
+    "Interceptar y modificar parametro precio en peticion POST"
+    "Validar bypass/modificacion exitosa mediante logs"
 )
 
 ICONOS=("📡" "🔧" "✅")
 
 reto1_info() {
     separador
-    echo -e "${CYAN}Reto 1: Configurar proxy Burp interceptando tráfico${NC}"
+    echo -e "${CYAN}Reto 1: Configurar proxy Burp interceptando trafico${NC}"
     echo ""
     echo "Configura el proxy upstream en Burp Suite:"
     echo "  • Host: localhost"
     echo "  • Puerto: 8080"
     echo "  • Target: http://localhost:5000"
     echo ""
-    echo "Verifica interceptando una petición GET a http://localhost:5000/"
-    echo "y observa los detalles en la pestaña Intercept"
+    echo "Verifica interceptando una peticion GET a http://localhost:5000/"
+    echo "y observa los detalles en la pestana Intercept"
     separador
 }
 
 reto2_info() {
     separador
-    echo -e "${CYAN}Reto 2: Interceptar y modificar parámetro crítico${NC}"
+    echo -e "${CYAN}Reto 2: Interceptar y modificar parametro critico${NC}"
     echo ""
-    echo "Realiza una petición POST al endpoint /compra"
-    echo "Modifica el parámetro precio (ej. de \$999 a \$50)"
+    echo "Realiza una peticion POST al endpoint /compra"
+    echo "Modifica el parametro precio (ej. de \$999 a \$50)"
     echo "o el rol (de 'usuario' a 'admin')"
     echo ""
-    echo "Validación: el script cliente debe detectar la modificación"
+    echo "Validacion: el script cliente debe detectar la modificacion"
     separador
 }
 
 reto3_info() {
     separador
-    echo -e "${CYAN}Reto 3: Validar bypass/modificación exitosa${NC}"
+    echo -e "${CYAN}Reto 3: Validar bypass/modificacion exitosa${NC}"
     echo ""
-    echo "Confirma que los logs del proxy reflejan la modificación"
+    echo "Confirma que los logs del proxy reflejan la modificacion"
     echo "y que el archivo modificado.txt contiene el estado 1"
-    echo "Inspecciona la pestaña 'Intercept' y 'Logger' en Burp"
+    echo "Inspecciona la pestana 'Intercept' y 'Logger' en Burp"
     separador
 }
 
-echo -e "${CYUNIT}Ejecutando evaluación de 3 retos...${RESET}"
-echo ""
+# ── Standalone execution mode ────────────────────────────────────────
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit IV Burp Suite Intercepcion HTTP — Retos"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-pass_count=0
-fail_count=0
+    PASSED=0
+    FAILED=0
 
-for i in "${!validators[@]}"; do
-    echo -n "Ejecutando ${challenge_names[$i]}... "
-    if "${validators[$i]}" >/dev/null 2>&1; then
-        echo -e "${VERDE}✔ PASADO${RESET}"
-        pass_count=$((pass_count+1))
-    else
-        echo -e "${ROJO}✘ FALLIDO${RESET}"
-        # Intentar mostrar razón
-        case $i in
-            0) echo "  Razón: Configuración de proxy Burp incompleta" ;;
-            1) echo "  Razón: No se detectó modificación de parámetro" ;;
-            2) echo "  Razón: Fallo en validación de logs" ;;
-        esac
-        fail_count=$((fail_count+1))
-    fi
-done
+    for i in $(seq 1 "$TOTAL_RETOS"); do
+        validator="${validators[$((i-1))]}"
+        name="${challenge_names[$((i-1))]}"
 
-echo ""
-separador
-echo -e "Resultados: ${VERDE}${pass_count} pasados${RESET} | ${ROJO}${fail_count} fallidos${RESET}"
-separador
-[ "$fail_count" -eq 0 ] && celebrar "Todos los retos Burp completados"
-echo -e "\n${AMARILHO}Revisa los logs en $HOME/laboratorio/burp/ para detalles${RESET}"
+        if $validator >/dev/null 2>&1; then
+            echo "  [PASS] Reto $i: $name"
+            PASSED=$((PASSED + 1))
+        else
+            echo "  [FAIL] Reto $i: $name"
+            FAILED=$((FAILED + 1))
+        fi
+    done
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Unit IV Burp Results: $PASSED/$TOTAL_RETOS passed, $FAILED failed"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    [ "$FAILED" -eq 0 ]
+fi

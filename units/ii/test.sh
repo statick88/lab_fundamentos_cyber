@@ -1,18 +1,18 @@
 #!/bin/bash
 # Unit II: Package Management — test.sh
 # Automated validation of 10 challenges
-# Standard validators: /shared/validators.sh
+# Standard validators: /shared/validators.sh, /shared/sudo-wrappers.sh
+# Sourced libs: common.sh, validators.sh, sudo-wrappers.sh (gold standard pattern)
 
 # Support both container (/shared) and local (relative) paths
 if [ -f "/shared/common.sh" ]; then
     source /shared/common.sh
+    source /shared/validators.sh
+    source /shared/sudo-wrappers.sh
 else
     source "$(dirname "$0")/../../shared/common.sh"
-fi
-if [ -f "/shared/validators.sh" ]; then
-    source /shared/validators.sh
-else
     source "$(dirname "$0")/../../shared/validators.sh"
+    source "$(dirname "$0")/../../shared/sudo-wrappers.sh"
 fi
 
 UNIT_NAME="unit-II"
@@ -25,12 +25,13 @@ reto1() {
 
 reto2() {
     # Verificar que vim esta instalado
-    dpkg -l vim 2>/dev/null | grep -q "^ii"
+    assert_file_exists /usr/bin/vim || assert_file_exists /usr/bin/vim.basic
 }
 
 reto3() {
     # Verificar que curl y tree estan instalados
-    dpkg -l curl tree 2>/dev/null | grep -q "^ii"
+    assert_file_exists /usr/bin/curl
+    assert_file_exists /usr/bin/tree
 }
 
 reto4() {
@@ -40,8 +41,7 @@ reto4() {
 
 reto5() {
     # Verificar que apt-cache search funciona
-    output=$(apt-cache search editor 2>/dev/null)
-    [ -n "$output" ]
+    assert_command_ok apt-cache search editor
 }
 
 reto6() {
@@ -61,13 +61,14 @@ reto8() {
 
 reto9() {
     # Verificar que vim fue eliminado (pero no purge)
-    ! dpkg -l vim 2>/dev/null | grep -q "^ii"
+    assert_file_not_exists /usr/bin/vim
+    assert_file_not_exists /usr/bin/vim.basic
 }
 
 reto10() {
     # Verificar que curl fue eliminado completamente
-    ! dpkg -l curl 2>/dev/null | grep -q "^ii"
-    [ ! -d /etc/curl ] 2>/dev/null
+    assert_file_not_exists /usr/bin/curl
+    assert_file_not_exists /etc/curl
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10)

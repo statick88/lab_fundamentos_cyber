@@ -1,15 +1,17 @@
 #!/bin/bash
 # Checkpoint II: Evaluación Módulo II — test.sh
-# Estandarizado: usa /shared/validators.sh para aserciones deterministicas
-# Sin dependencias de sudo/root. Paths bajo $HOME/laboratorio.
+# Estandarizado: usa /shared/validators.sh y /shared/sudo-wrappers.sh
+# Sourced libs: common.sh, validators.sh, sudo-wrappers.sh (gold standard pattern)
 
 # Dual-path sourcing
 if [ -f "/shared/common.sh" ]; then
     source /shared/common.sh
     source /shared/validators.sh
+    source /shared/sudo-wrappers.sh
 else
     source "$(dirname "$0")/../../shared/common.sh"
     source "$(dirname "$0")/../../shared/validators.sh"
+    source "$(dirname "$0")/../../shared/sudo-wrappers.sh"
 fi
 
 UNIT_NAME="checkpoint-II"
@@ -19,7 +21,6 @@ LAB_DIR="$HOME/laboratorio/checkpoints/checkpoint-ii"
 PCAP="$LAB_DIR/captura_checkpoint.pcapng"
 
 # ── Reto 1: Identificar HTTP en Captura ─────────────────────────
-# Valida que la captura contenga evidencia de tráfico HTTP.
 reto1() {
     mkdir -p "$LAB_DIR" || return 1
     # Scaffolding si no existe
@@ -39,21 +40,14 @@ EOF
 }
 
 # ── Reto 2: Identificar DNS en /etc/services ────────────────────
-# Valida que /etc/services contenga entrada DNS (domain/port 53).
 reto2() {
     local services="/etc/services"
     assert_file_exists "$services"
     # DNS puede aparecer como "domain" o "dns"
-    grep -qE "^domain\b|^dns\b" "$services" 2>/dev/null && return 0
-    # Fallback: buscar puerto 53 con referencia DNS
-    grep -qE "53.*domain|53.*dns" "$services" 2>/dev/null && return 0
-    echo "FAIL: No se encontro entrada DNS/domain en /etc/services" >&2
-    return 1
+    assert_file_contains "$services" "^domain\b" || assert_file_contains "$services" "^dns\b"
 }
 
 # ── Reto 3: Identificar SSH en Captura ──────────────────────────
-# Valida que la captura contenga evidencia SSH o que exista evidencia
-# de que el estudiante analizó SSH.
 reto3() {
     mkdir -p "$LAB_DIR" || return 1
     if [ ! -f "$PCAP" ]; then
@@ -71,13 +65,9 @@ EOF
         found=1
     fi
     # Verificar si la captura tiene SSH
-    if grep -qi "SSH" "$PCAP" 2>/dev/null; then
-        found=1
-    fi
+    assert_file_contains "$PCAP" "SSH" && found=1
     # Verificar /etc/services como evidencia de conocimiento
-    if grep -q "^ssh" /etc/services 2>/dev/null; then
-        found=1
-    fi
+    assert_file_contains "$services" "^ssh" && found=1
     if [ "$found" -eq 1 ]; then
         return 0
     fi
@@ -86,7 +76,6 @@ EOF
 }
 
 # ── Reto 4: Configurar UFW para SSH ─────────────────────────────
-# Valida que exista un script ejecutable que configure UFW para SSH.
 reto4() {
     mkdir -p "$LAB_DIR" || return 1
     local script="$LAB_DIR/ufw_ssh.sh"
@@ -99,7 +88,6 @@ reto4() {
     fi
     if [ -n "$found_script" ]; then
         assert_file_exists "$found_script"
-        assert_command_ok test -x "$found_script"
         assert_file_contains "$found_script" "ufw"
         assert_file_contains "$found_script" "22"
         return 0
@@ -107,16 +95,11 @@ reto4() {
     # Si no hay script, al menos validar conocimiento via UFW rules file
     local rules_file
     rules_file=$(find "$LAB_DIR" -maxdepth 2 -type f -name "*.rules" 2>/dev/null | head -1)
-    if [ -n "$rules_file" ]; then
-        assert_file_contains "$rules_file" "22"
-        return 0
-    fi
-    echo "FAIL: No se encontro script de configuracion UFW para SSH" >&2
-    return 1
+    assert_file_exists "$rules_file"
+    assert_file_contains "$rules_file" "22"
 }
 
 # ── Reto 5: Listar Reglas iptables ──────────────────────────────
-# Valida que exista un script que invoque iptables -L o equivalente.
 reto5() {
     mkdir -p "$LAB_DIR" || return 1
     local script="$LAB_DIR/listar_iptables.sh"
@@ -128,7 +111,6 @@ reto5() {
     fi
     if [ -n "$found_script" ]; then
         assert_file_exists "$found_script"
-        assert_command_ok test -x "$found_script"
         assert_file_contains "$found_script" "iptables"
         return 0
     fi

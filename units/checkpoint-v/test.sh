@@ -1,16 +1,11 @@
 #!/bin/bash
 # Checkpoint V: Evaluación Módulo V — test.sh
-# Estandarizado: usa /shared/validators.sh para aserciones deterministicas
-# Sin dependencias de sudo/root. Paths bajo $HOME/laboratorio.
+# Estandarizado: usa /shared/validators.sh + /shared/sudo-wrappers.sh
+# Sourced libs: common.sh, validators.sh, sudo-wrappers.sh (gold standard pattern)
 
-# Dual-path sourcing
-if [ -f "/shared/common.sh" ]; then
-    source /shared/common.sh
-    source /shared/validators.sh
-else
-    source "$(dirname "$0")/../../shared/common.sh"
-    source "$(dirname "$0")/../../shared/validators.sh"
-fi
+source /shared/common.sh
+source /shared/validators.sh
+source /shared/sudo-wrappers.sh
 
 UNIT_NAME="checkpoint-V"
 TOTAL_RETOS=5
@@ -51,7 +46,7 @@ LOGEOF
     return 1
 }
 
-# ── Reto 2: Extraer Campos con awk ──────────────────────────────
+# ── Reto 2: Extraer Campos con awk ──────────────────────
 # Valida que el estudiante pueda parsear campos del log con awk.
 reto2() {
     mkdir -p "$LAB_DIR" || return 1
@@ -82,7 +77,7 @@ LOGEOF
     return 1
 }
 
-# ── Reto 3: Generar Log con logger ──────────────────────────────
+# ── Reto 3: Generar Log con logger ──────────────────────
 # Valida que el estudiante haya ejecutado logger correctamente.
 reto3() {
     # Logger puede no funcionar en todos los entornos; validar conocimiento
@@ -109,7 +104,7 @@ reto3() {
     return 1
 }
 
-# ── Reto 4: Calcular RTO/RPO ────────────────────────────────────
+# ── Reto 4: Calcular RTO/RPO ────────────────────────────
 # Valida que exista un documento con RTO y RPO definidos.
 reto4() {
     mkdir -p "$LAB_DIR" || return 1

@@ -44,6 +44,13 @@ if [ -z "$UNIT_DIR" ]; then
     exit 1
 fi
 
+# Normalizar nombres de checkpoint para coincidir con UNIT_NAMES (romano mayúscula)
+case "$CURRENT_UNIT" in
+    checkpoint-ii) CURRENT_UNIT="checkpoint-II" ;;
+    checkpoint-iv) CURRENT_UNIT="checkpoint-IV" ;;
+    checkpoint-v) CURRENT_UNIT="checkpoint-V" ;;
+esac
+
 UNIT_DIR_PATH="$HOME/laboratorio/units/$UNIT_DIR"
 MANUAL_FILE="$UNIT_DIR_PATH/manual.sh"
 

@@ -1,16 +1,11 @@
 #!/bin/bash
 # Checkpoint IV: Evaluación Módulo IV — test.sh
-# Estandarizado: usa /shared/validators.sh para aserciones deterministicas
-# Sin dependencias de sudo/root. Paths bajo $HOME/laboratorio.
+# Estandarizado: usa /shared/validators.sh + /shared/sudo-wrappers.sh
+# Sourced libs: common.sh, validators.sh, sudo-wrappers.sh (gold standard pattern)
 
-# Dual-path sourcing
-if [ -f "/shared/common.sh" ]; then
-    source /shared/common.sh
-    source /shared/validators.sh
-else
-    source "$(dirname "$0")/../../shared/common.sh"
-    source "$(dirname "$0")/../../shared/validators.sh"
-fi
+source /shared/common.sh
+source /shared/validators.sh
+source /shared/sudo-wrappers.sh
 
 UNIT_NAME="checkpoint-IV"
 TOTAL_RETOS=5

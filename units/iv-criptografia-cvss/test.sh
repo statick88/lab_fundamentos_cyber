@@ -1,7 +1,10 @@
 #!/bin/bash
-# Unit IV: Criptografía y CVSS — test.sh
+# Unit IV: Criptografia y CVSS — test.sh
+# Refactorizado (C4): usa /shared/validators.sh + /shared/sudo-wrappers.sh
 
 source /shared/common.sh
+source /shared/validators.sh
+source /shared/sudo-wrappers.sh
 
 UNIT_NAME="unit-IV"
 TOTAL_RETOS=10
@@ -139,7 +142,7 @@ reto4_info() {
     echo "  7.0-8.9 = High"
     echo "  9.0-10.0 = Critical"
     echo ""
-    echo "Comandos útiles: awk 'BEGIN {if (score >= 7.0 && score <= 8.9) print \"High\"}'"
+    echo "Comandos utiles: awk 'BEGIN {if (score >= 7.0 && score <= 8.9) print \"High\"}'"
     separador
 }
 
@@ -150,7 +153,7 @@ reto5_info() {
     echo "Analiza auth.log para identificar el vector de ataque."
     echo "Busca 'Failed password' y determina si es fuerza bruta SSH."
     echo ""
-    echo "Comandos útiles:"
+    echo "Comandos utiles:"
     echo "  grep 'Failed password' /var/log/auth.log"
     echo "  grep -c 'Failed password' /var/log/auth.log"
     separador
@@ -163,7 +166,7 @@ reto6_info() {
     echo "Identifica intentos de SQL injection en access.log."
     echo "Busca patrones: union, select, insert, drop, --"
     echo ""
-    echo "Comandos útiles:"
+    echo "Comandos utiles:"
     echo "  grep -i 'union.*select' /var/log/apache2/access.log"
     echo "  grep -iE 'union|select|insert|drop' /var/log/apache2/access.log"
     separador
@@ -176,7 +179,7 @@ reto7_info() {
     echo "Identifica intentos de path traversal en access.log."
     echo "Busca patrones: ../, /etc/passwd, /etc/shadow, cgi-bin"
     echo ""
-    echo "Comandos útiles:"
+    echo "Comandos utiles:"
     echo "  grep -i '\.\./' /var/log/apache2/access.log"
     echo "  grep -i 'etc/passwd' /var/log/apache2/access.log"
     separador
@@ -189,7 +192,7 @@ reto8_info() {
     echo "Analiza un correo de phishing simulado."
     echo "Busca: X-Priority alto, Reply-To sospechoso, links acortados."
     echo ""
-    echo "Comandos útiles: grep, awk para extraer headers"
+    echo "Comandos utiles: grep, awk para extraer headers"
     separador
 }
 
@@ -200,7 +203,7 @@ reto9_info() {
     echo "Genera hashes SHA-256 de archivos 'maliciosos' simulados."
     echo "Usa sha256sum sobre malware_simulado.bin."
     echo ""
-    echo "Comandos útiles:"
+    echo "Comandos utiles:"
     echo "  sha256sum malware_simulado.bin"
     separador
 }
@@ -212,7 +215,7 @@ reto10_info() {
     echo "Compara los hashes calculados contra baseline_hashes.txt."
     echo "Usa diff o cmp para verificar diferencias."
     echo ""
-    echo "Comandos útiles:"
+    echo "Comandos utiles:"
     echo "  sha256sum malware_simulado.bin > actual.txt"
     echo "  diff baseline_hashes.txt actual.txt"
     separador

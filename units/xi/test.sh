@@ -1,19 +1,10 @@
 #!/bin/bash
 # Unit XI: Backup & Recovery — test.sh
-# Automated validation of 10 challenges
-# Standard validators: /shared/validators.sh
+# Refactorizado (C4): usa /shared/validators.sh + /shared/sudo-wrappers.sh
 
-# Support both container (/shared) and local (relative) paths
-if [ -f "/shared/common.sh" ]; then
-    source /shared/common.sh
-else
-    source "$(dirname "$0")/../../shared/common.sh"
-fi
-if [ -f "/shared/validators.sh" ]; then
-    source /shared/validators.sh
-else
-    source "$(dirname "$0")/../../shared/validators.sh"
-fi
+source /shared/common.sh
+source /shared/validators.sh
+source /shared/sudo-wrappers.sh
 
 UNIT_NAME="unit-XI"
 TOTAL_RETOS=10

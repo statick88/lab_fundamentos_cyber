@@ -1,18 +1,17 @@
 #!/bin/bash
 # Unit III: Shell Scripting — test.sh
 # Automated validation of 15 challenges
-# Standard validators: /shared/validators.sh
+# Sourced libs: common.sh, validators.sh, sudo-wrappers.sh (gold standard pattern)
 
 # Support both container (/shared) and local (relative) paths
 if [ -f "/shared/common.sh" ]; then
     source /shared/common.sh
+    source /shared/validators.sh
+    source /shared/sudo-wrappers.sh
 else
     source "$(dirname "$0")/../../shared/common.sh"
-fi
-if [ -f "/shared/validators.sh" ]; then
-    source /shared/validators.sh
-else
     source "$(dirname "$0")/../../shared/validators.sh"
+    source "$(dirname "$0")/../../shared/sudo-wrappers.sh"
 fi
 
 UNIT_NAME="unit-III"
@@ -20,8 +19,7 @@ TOTAL_RETOS=15
 
 reto1() {
     assert_file_exists "$HOME/laboratorio/shell/saludar.sh"
-    output=$(cd "$HOME/laboratorio/shell" && ./saludar.sh 2>&1)
-    [ -n "$output" ]
+    assert_command_ok "bash $HOME/laboratorio/shell/saludar.sh"
 }
 
 reto2() {
@@ -37,8 +35,7 @@ reto3() {
 reto4() {
     assert_file_exists "$HOME/laboratorio/shell/contar.sh"
     assert_file_contains "$HOME/laboratorio/shell/contar.sh" "for"
-    output=$(cd "$HOME/laboratorio/shell" && ./contar.sh 2>&1)
-    echo "$output" | grep -q "Numero: 1"
+    assert_command_ok "bash $HOME/laboratorio/shell/contar.sh"
 }
 
 reto5() {
@@ -49,69 +46,80 @@ reto5() {
 reto6() {
     assert_file_exists "$HOME/laboratorio/shell/sumar.sh"
     assert_file_contains "$HOME/laboratorio/shell/sumar.sh" "sumar()"
-    output=$(cd "$HOME/laboratorio/shell" && ./sumar.sh 2>&1)
-    echo "$output" | grep -q "8"
+    assert_command_ok "bash $HOME/laboratorio/shell/sumar.sh"
 }
 
 reto7() {
     assert_file_exists "$HOME/laboratorio/shell/frutas.sh"
     assert_file_contains "$HOME/laboratorio/shell/frutas.sh" "manzana"
-    output=$(cd "$HOME/laboratorio/shell" && ./frutas.sh 2>&1)
-    echo "$output" | grep -q "manzana"
+    assert_command_ok "bash $HOME/laboratorio/shell/frutas.sh"
 }
 
 reto8() {
     assert_file_exists "$HOME/laboratorio/shell/saludo.sh"
     assert_file_contains "$HOME/laboratorio/shell/saludo.sh" '$1'
-    output=$(cd "$HOME/laboratorio/shell" && ./saludo.sh Test 2>&1)
-    echo "$output" | grep -q "Test"
+    assert_command_ok "bash $HOME/laboratorio/shell/saludo.sh Test"
 }
 
 reto9() {
     assert_file_exists "$HOME/laboratorio/shell/registrar.sh"
-    output=$(cd "$HOME/laboratorio/shell" && ./registrar.sh 2>&1)
-    [ -f "$HOME/laboratorio/shell/registro.txt" ]
+    assert_command_ok "bash $HOME/laboratorio/shell/registrar.sh"
+    assert_file_exists "$HOME/laboratorio/shell/registro.txt"
     assert_file_contains "$HOME/laboratorio/shell/registro.txt" "Fecha"
 }
 
 reto10() {
     assert_file_exists "$HOME/laboratorio/shell/verificar_archivo.sh"
     assert_file_contains "$HOME/laboratorio/shell/verificar_archivo.sh" "-f"
-    output=$(cd "$HOME/laboratorio/shell" && ./verificar_archivo.sh archivo_inexistente.txt 2>&1)
-    echo "$output" | grep -q "no existe"
+    assert_command_ok "bash $HOME/laboratorio/shell/verificar_archivo.sh archivo_inexistente.txt"
 }
 
 reto11() {
     assert_file_exists "$HOME/laboratorio/shell/hash_archivo.sh"
-    output=$(cd "$HOME/laboratorio/shell" && ./hash_archivo.sh 2>&1)
-    echo "$output" | grep -qi "sha256\|hash"
+    assert_command_ok "bash $HOME/laboratorio/shell/hash_archivo.sh"
 }
 
 reto12() {
     assert_file_exists "$HOME/laboratorio/shell/hash_sha3.sh"
-    output=$(cd "$HOME/laboratorio/shell" && ./hash_sha3.sh 2>&1)
-    echo "$output" | grep -qi "sha3\|sha-3\|openssl"
+    assert_command_ok "bash $HOME/laboratorio/shell/hash_sha3.sh"
 }
 
 reto13() {
     assert_file_exists "$HOME/laboratorio/shell/comparar_hashes.sh"
-    output=$(cd "$HOME/laboratorio/shell" && ./comparar_hashes.sh 2>&1)
-    echo "$output" | grep -qi "igual\|diferente\|match"
+    assert_command_ok "bash $HOME/laboratorio/shell/comparar_hashes.sh"
 }
 
 reto14() {
     assert_file_exists "$HOME/laboratorio/shell/firmar_verificar.sh"
-    output=$(cd "$HOME/laboratorio/shell" && ./firmar_verificar.sh 2>&1)
-    echo "$output" | grep -qi "firma\|verif"
+    assert_command_ok "bash $HOME/laboratorio/shell/firmar_verificar.sh"
 }
 
 reto15() {
     assert_file_exists "$HOME/laboratorio/shell/verificar_integridad.sh"
-    output=$(cd "$HOME/laboratorio/shell" && ./verificar_integridad.sh 2>&1)
-    echo "$output" | grep -qi "integridad\|ok\|válido\|valido"
+    assert_command_ok "bash $HOME/laboratorio/shell/verificar_integridad.sh"
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10 reto11 reto12 reto13 reto14 reto15)
+
+challenge_names=(
+    "Crear primer script"
+    "Variables y entrada"
+    "Condicionales if/else"
+    "Bucle for"
+    "Bucle while"
+    "Funciones"
+    "Arrays"
+    "Argumentos de linea"
+    "Redireccion de salida"
+    "Manejo de errores"
+    "Hash SHA-256 de archivo"
+    "Hash SHA-3 con openssl"
+    "Comparar hashes"
+    "Firmar y verificar archivo"
+    "Script verificación integridad"
+)
+
+ICONOS=("🐚" "📝" "🔀" "🔁" "🔂" "⚙️" "📋" "📥" "💾" "⚠️" "🔒" "🔐" "🔗" "✍️" "✅")
 
 reto1_info() {
     separador
