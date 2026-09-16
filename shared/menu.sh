@@ -11,8 +11,6 @@ mostrar_menu_principal() {
     separador
     for ((i=0; i<UNIT_COUNT; i++)); do
         local idx=$((i+1))
-        local core_count
-        core_count=$(count_core_retos "$idx")
         local total_count=${UNIT_RETOS[$i]}
         printf "  ${VERDE}[%2d]${RESET} %s %s [%d retos]\n" "$idx" "${UNIT_ICONOS[$i]}" "${UNIT_TITLES[$i]}" "$total_count"
     done
