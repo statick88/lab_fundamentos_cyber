@@ -17,6 +17,14 @@ log_pass() { echo -e "${GREEN}[PASS]${RESET} $*"; }
 log_fail() { echo -e "${RED}[FAIL]${RESET} $*"; }
 log_warn() { echo -e "${YELLOW}[WARN]${RESET} $*"; }
 
+detect_container() {
+    # Returns 0 if running inside a Docker/containerd/k8s container
+    [ -f /.dockerenv ] && return 0
+    [ -n "${container:-}" ] && return 0
+    grep -qaE 'docker|kubepods|containerd' /proc/1/cgroup 2>/dev/null && return 0
+    return 1
+}
+
 # =============================================================================
 # Task 1.1: Container Escape Assertion
 # =============================================================================
@@ -95,6 +103,13 @@ check_sudo_escalation() {
 # =============================================================================
 check_progress_tampering() {
     log_info "Checking progress state tamper protection..."
+
+    if ! detect_container; then
+        log_warn "Not running inside a container; skipping /var/lab-state checks (host-only)"
+        log_warn "Run 'docker run --rm <image> bash verify.sh' to validate container runtime state"
+        return 0
+    fi
+
     local fail=0
 
     local state_dir="/var/lab-state"
