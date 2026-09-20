@@ -1,8 +1,7 @@
 #!/bin/bash
 # Unit i-risk-assessment: Evaluación de Riesgos con matriz ISO 31000 — test.sh
-# 10 retos CORE: escenario, matriz, tratamientos, justificación
+# Student work is evaluated only from explicit deliverables in $HOME/laboratorio/risk-assessment.
 
-# Dual-path sourcing
 if [ -f "/shared/common.sh" ]; then
     source /shared/common.sh
 else
@@ -11,351 +10,134 @@ fi
 
 UNIT_NAME="unit-i-risk-assessment"
 TOTAL_RETOS=10
-
 LAB_DIR="$HOME/laboratorio/risk-assessment"
 
-trim_field() {
-    local value="$1"
-    value="${value#${value%%[![:space:]]*}}"
-    value="${value%${value##*[![:space:]]}}"
-    printf '%s' "$value"
+nonspace_chars() {
+    [ -f "$1" ] || { echo 0; return; }
+    tr -d '[:space:]' < "$1" | wc -c | tr -d ' '
 }
 
-risk_table_completed_rows() {
-    local template="$LAB_DIR/plantilla-analisis.md"
-    [ -f "$template" ] || { echo 0; return; }
-    awk -F'|' '
-        function trim(s){gsub(/^[ \t]+|[ \t]+$/, "", s); return s}
-        /^\|/ {
-            amenaza=trim($2); prob=trim($3); impacto=trim($4); inherente=trim($5); controles=trim($6); residual=trim($7); tratamiento=trim($8);
-            if (amenaza != "" && amenaza !~ /Amenaza|---/ && prob ~ /^[1-5]$/ && impacto ~ /^[1-5]$/ && inherente ~ /^[0-9]+$/ && controles != "" && residual ~ /^[0-9]+$/ && tratamiento != "") count++;
-        }
-        END {print count+0}
-    ' "$template"
+has_asset_ids() {
+    local file="$1" asset
+    [ -f "$file" ] || return 1
+    for asset in A1 A2 A3 A4 A5; do
+        grep -q "$asset" "$file" || return 1
+    done
 }
 
-risk_table_rows_with_treatment() {
-    local template="$LAB_DIR/plantilla-analisis.md"
-    [ -f "$template" ] || { echo 0; return; }
-    awk -F'|' '
-        function trim(s){gsub(/^[ \t]+|[ \t]+$/, "", s); return s}
-        /^\|/ {
-            amenaza=trim($2); tratamiento=trim($8); controles=trim($6);
-            if (amenaza != "" && amenaza !~ /Amenaza|---/ && controles != "" && tratamiento != "") count++;
-        }
-        END {print count+0}
-    ' "$template"
-}
-
-section_body_chars() {
-    local file="$1" heading_regex="$2"
+risk_matrix_rows() {
+    local file="$LAB_DIR/risk_matrix.md"
     [ -f "$file" ] || { echo 0; return; }
-    awk -v h="$heading_regex" '
-        $0 ~ h {inside=1; next}
-        inside && /^## / {inside=0}
-        inside {gsub(/[[:space:]]/, ""); n += length($0)}
-        END {print n+0}
+    awk -F'|' '
+        function trim(s){gsub(/^[ \t]+|[ \t]+$/, "", s); return s}
+        /^\|/ {
+            threat=trim($2); probability=trim($3); impact=trim($4); inherent=trim($5); controls=trim($6); residual=trim($7); treatment=trim($8)
+            if (threat != "" && threat !~ /Amenaza|---/ && probability ~ /^[1-5]$/ && impact ~ /^[1-5]$/ && inherent ~ /^[0-9]+$/ && controls != "" && residual ~ /^[0-9]+$/ && treatment != "") count++
+        }
+        END {print count+0}
     ' "$file"
 }
 
-# ── Reto 1: Verificar existencia del escenario ─────────────────
+# Reto 1: resumen explícito del escenario elaborado por el estudiante.
 reto1() {
-    local scenario="$LAB_DIR/escenario.json"
-    if [ ! -f "$scenario" ]; then
-        echo "FAIL: escenario.json no existe en $LAB_DIR" >&2
-        return 1
-    fi
-    # Verificar que contiene la empresa
-    grep -q "DataGuard" "$scenario" 2>/dev/null || grep -q "empresa" "$scenario" 2>/dev/null
+    local file="$LAB_DIR/scenario_summary.md"
+    grep -qi "DataGuard" "$file" 2>/dev/null && grep -qiE '(5|cinco)[[:space:]]+activos' "$file" && grep -qiE '(10|diez)[[:space:]]+amenazas' "$file"
 }
 
-# ── Reto 2: Validar que el escenario tiene 5 activos ───────────
+# Reto 2: inventario propio que cubre A1-A5 y activos/amenazas.
 reto2() {
-    local scenario="$LAB_DIR/escenario.json"
-    if [ ! -f "$scenario" ]; then
-        echo "FAIL: escenario.json no existe" >&2
-        return 1
-    fi
-    # Contar IDs de activos (A1-A5)
-    local count
-    count=$(grep -o '"id": "A[1-5]"' "$scenario" 2>/dev/null | wc -l | tr -d ' ')
-    if [ "$count" -ge 5 ]; then
-        return 0
-    fi
-    echo "FAIL: Solo $count activos encontrados (se esperan 5)" >&2
-    return 1
+    local file="$LAB_DIR/risk_inventory.md"
+    has_asset_ids "$file" && grep -qi "activo" "$file" && grep -qi "amenaza" "$file"
 }
 
-# ── Reto 3: Verificar amenazas para cada activo ────────────────
+# Reto 3: el resumen debe documentar las amenazas del caso, no la referencia.
 reto3() {
-    local scenario="$LAB_DIR/escenario.json"
-    if [ ! -f "$scenario" ]; then
-        echo "FAIL: escenario.json no existe" >&2
-        return 1
-    fi
-    # Verificar que cada activo tiene al menos 1 amenaza
-    local threats
-    threats=$(grep -c '"nombre"' "$scenario" 2>/dev/null || echo 0)
-    if [ "$threats" -ge 10 ]; then
-        return 0
-    fi
-    echo "FAIL: Solo $threats amenazas encontradas (se esperan al menos 10)" >&2
-    return 1
+    local file="$LAB_DIR/scenario_summary.md"
+    grep -qi "DataGuard" "$file" 2>/dev/null && grep -qiE '(10|diez)[[:space:]]+amenazas' "$file"
 }
 
-# ── Reto 4: Completar tabla de probabilidad × impacto ──────────
-reto4() {
-    local rows
-    rows=$(risk_table_completed_rows)
-    if [ "$rows" -ge 5 ]; then
-        return 0
-    fi
-    echo "FAIL: Tabla de probabilidad × impacto no completada por el estudiante ($rows/5 filas completas)" >&2
-    return 1
-}
-
-# ── Reto 5: Asignar nivel de riesgo a cada amenaza ────────────
-reto5() {
-    local rows
-    rows=$(risk_table_completed_rows)
-    if [ "$rows" -ge 5 ]; then
-        return 0
-    fi
-    echo "FAIL: Niveles de riesgo no asignados en la matriz completada ($rows/5 filas completas)" >&2
-    return 1
-}
-
-# ── Reto 6: Clasificar riesgos por nivel (Bajo/Medio/Alto/Crítico) ──
-reto6() {
-    local template="$LAB_DIR/plantilla-analisis.md"
-    if [ ! -f "$template" ]; then
-        echo "FAIL: plantilla-analisis.md no existe" >&2
-        return 1
-    fi
-    local filled_levels
-    filled_levels=$(awk -F'|' '
-        function trim(s){gsub(/^[ \t]+|[ \t]+$/, "", s); return s}
-        /^\|[[:space:]]*(BAJO|MEDIO|ALTO|CR/ { amenazas=trim($4); if (amenazas != "") count++ }
-        END {print count+0}
-    ' "$template")
-    if [ "$filled_levels" -ge 3 ]; then
-        return 0
-    fi
-    echo "FAIL: Clasificación de niveles de riesgo sin amenazas asignadas ($filled_levels/3 niveles mínimos)" >&2
-    return 1
-}
-
-# ── Reto 7: Definir tratamiento para al menos 3 amenazas ──────
-reto7() {
-    local rows
-    rows=$(risk_table_rows_with_treatment)
-    if [ "$rows" -ge 3 ]; then
-        return 0
-    fi
-    echo "FAIL: Tratamientos/controles del estudiante insuficientes ($rows/3 amenazas)" >&2
-    return 1
-}
-
-# ── Reto 8: Calcular riesgo inherente y residual ──────────────
+# Retos 4, 5 y 8: matriz entregada por el estudiante.
+reto4() { [ "$(risk_matrix_rows)" -ge 5 ]; }
+reto5() { [ "$(risk_matrix_rows)" -ge 5 ]; }
 reto8() {
-    local rows
-    rows=$(risk_table_completed_rows)
-    if [ "$rows" -ge 5 ]; then
-        return 0
-    fi
-    echo "FAIL: Cálculos de riesgo inherente/residual incompletos ($rows/5 filas completas)" >&2
-    return 1
+    local file="$LAB_DIR/residual_risk.md"
+    grep -qi "inherente" "$file" 2>/dev/null && grep -qi "residual" "$file" && grep -qiE '(cálcul|calculo|probabilidad|impacto|[0-9]+[[:space:]]*\*)' "$file"
 }
 
-# ── Reto 9: Generar justificación económica ────────────────────
+# Reto 6: tres niveles con amenazas asignadas en un archivo de estudiante.
+reto6() {
+    local file="$LAB_DIR/risk_levels.md" level count=0
+    [ -f "$file" ] || return 1
+    for level in bajo low medio medium alto high crítico critical; do
+        if grep -qiE "$level.*[A-Za-zÁÉÍÓÚáéíóú]" "$file"; then
+            count=$((count + 1))
+        fi
+    done
+    [ "$count" -ge 3 ]
+}
+
+# Reto 7: tres tratamientos que incluyen controles y justificación.
+reto7() {
+    local file="$LAB_DIR/treatment_plan.md"
+    [ -f "$file" ] || return 1
+    [ "$(grep -icE '(^[-*]|^\|).*(mitigar|transferir|aceptar|evitar|tratamiento)' "$file")" -ge 3 ] && grep -qiE 'control|mfa|rbac|cifrado|backup|monitoreo' "$file" && grep -qi 'justific' "$file"
+}
+
+# Reto 9: justificación económica propia y sustantiva.
 reto9() {
-    local template="$LAB_DIR/plantilla-analisis.md"
-    local chars
-    chars=$(section_body_chars "$template" '^## Justificación económica')
-    if [ "$chars" -ge 120 ]; then
-        return 0
-    fi
-    echo "FAIL: Justificación económica sin desarrollo propio suficiente (${chars}/120 caracteres no vacíos)" >&2
-    return 1
+    local file="$LAB_DIR/economic_justification.md"
+    [ "$(nonspace_chars "$file")" -ge 120 ] && grep -qiE 'costo|coste' "$file" && grep -qiE 'reducci[oó]n' "$file" && grep -qi 'riesgo' "$file"
 }
 
-# ── Reto 10: Documentar plan de seguimiento ────────────────────
+# Reto 10: seguimiento explícito; no se aceptan archivos de plantilla o fixtures.
 reto10() {
-    local followup
-    followup=$(find "$LAB_DIR" -maxdepth 1 -type f ! -name "plantilla-*" \( -name "*seguimiento*" -o -name "*tracking*" -o -name "*plan*" \) 2>/dev/null | head -1)
-    if [ -n "$followup" ] && [ -f "$followup" ]; then
-        local chars
-        chars=$(tr -d '[:space:]' < "$followup" 2>/dev/null | wc -c | tr -d ' ')
-        if [ "$chars" -ge 120 ]; then
+    local file
+    for file in "$LAB_DIR/seguimiento.md" "$LAB_DIR/followup_plan.md"; do
+        if [ "$(nonspace_chars "$file")" -ge 120 ]; then
             return 0
         fi
-    fi
-
-    local template="$LAB_DIR/plantilla-analisis.md"
-    local chars
-    chars=$(section_body_chars "$template" '^## Plan de seguimiento|^## Seguimiento')
-    if [ "$chars" -ge 120 ]; then
-        return 0
-    fi
-
-    echo "FAIL: Plan de seguimiento no documentado con desarrollo suficiente" >&2
+    done
     return 1
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10)
 challenge_names=(
-    "Verificar existencia del escenario"
-    "Validar 5 activos en el escenario"
-    "Verificar amenazas para cada activo"
-    "Completar tabla probabilidad × impacto"
-    "Asignar nivel de riesgo a cada amenaza"
+    "Documentar el resumen del escenario"
+    "Inventariar A1-A5 y sus amenazas"
+    "Documentar al menos 10 amenazas"
+    "Completar matriz probabilidad × impacto"
+    "Asignar niveles de riesgo en la matriz"
     "Clasificar riesgos por nivel"
-    "Definir tratamiento para al menos 3 amenazas"
+    "Definir tres tratamientos justificados"
     "Calcular riesgo inherente y residual"
     "Generar justificación económica"
     "Documentar plan de seguimiento"
 )
-
 ICONOS=("📋" "🏢" "⚠️" "📊" "🎯" "🏷️" "🔧" "🔢" "💰" "📅")
 
-reto1_info() {
-    separador
-    echo -e "${CYAN}Reto 1: Verificar existencia del escenario${NC}"
-    echo ""
-    echo "Comprueba que escenario.json existe y contiene la empresa DataGuard."
-    echo ""
-    echo "Comandos útiles:"
-    echo "  cat ~/laboratorio/risk-assessment/escenario.json"
-    separador
-}
+reto1_info() { separador; echo -e "${CYAN}Reto 1: Resume el caso en scenario_summary.md${NC}"; echo "Consulta fixtures/escenario.json y entrega scenario_summary.md con DataGuard, 5 activos y 10 amenazas."; separador; }
+reto2_info() { separador; echo -e "${CYAN}Reto 2: Crea risk_inventory.md${NC}"; echo "Documenta A1-A5, los activos y sus amenazas; fixtures/escenario.json es solo referencia."; separador; }
+reto3_info() { separador; echo -e "${CYAN}Reto 3: Documenta las amenazas${NC}"; echo "Actualiza scenario_summary.md con al menos 10 amenazas del caso."; separador; }
+reto4_info() { separador; echo -e "${CYAN}Reto 4: Crea risk_matrix.md${NC}"; echo "Incluye al menos 5 filas completas: probabilidad, impacto, inherente, controles, residual y tratamiento."; separador; }
+reto5_info() { separador; echo -e "${CYAN}Reto 5: Asigna niveles en risk_matrix.md${NC}"; echo "Completa las filas de la matriz con su nivel/tratamiento."; separador; }
+reto6_info() { separador; echo -e "${CYAN}Reto 6: Crea risk_levels.md${NC}"; echo "Asigna amenazas a por lo menos tres niveles (bajo, medio, alto o crítico)."; separador; }
+reto7_info() { separador; echo -e "${CYAN}Reto 7: Crea treatment_plan.md${NC}"; echo "Define tres tratamientos con controles y justificación."; separador; }
+reto8_info() { separador; echo -e "${CYAN}Reto 8: Crea residual_risk.md${NC}"; echo "Documenta los cálculos de riesgo inherente y residual."; separador; }
+reto9_info() { separador; echo -e "${CYAN}Reto 9: Crea economic_justification.md${NC}"; echo "Explica costo, reducción y riesgo en al menos 120 caracteres no vacíos."; separador; }
+reto10_info() { separador; echo -e "${CYAN}Reto 10: Crea seguimiento.md o followup_plan.md${NC}"; echo "Documenta el seguimiento en al menos 120 caracteres no vacíos."; separador; }
 
-reto2_info() {
-    separador
-    echo -e "${CYAN}Reto 2: Validar 5 activos en el escenario${NC}"
-    echo ""
-    echo "Verifica que el escenario contiene 5 activos (A1-A5)."
-    echo ""
-    echo "Comandos útiles:"
-    echo "  grep '\"id\": \"A' escenario.json | wc -l"
-    separador
-}
-
-reto3_info() {
-    separador
-    echo -e "${CYAN}Reto 3: Verificar amenazas para cada activo${NC}"
-    echo ""
-    echo "Cada activo debe tener al menos 1 amenaza definida."
-    echo ""
-    echo "Comandos útiles:"
-    echo "  grep '\"nombre\"' escenario.json | wc -l"
-    separador
-}
-
-reto4_info() {
-    separador
-    echo -e "${CYAN}Reto 4: Completar tabla probabilidad × impacto${NC}"
-    echo ""
-    echo "Completa la matriz de probabilidad e impacto para cada amenaza."
-    echo ""
-    echo "Comandos útiles:"
-    echo "  nano ~/laboratorio/risk-assessment/plantilla-analisis.md"
-    separador
-}
-
-reto5_info() {
-    separador
-    echo -e "${CYAN}Reto 5: Asignar nivel de riesgo a cada amenaza${NC}"
-    echo ""
-    echo "Asigna nivel (Bajo/Medio/Alto/Crítico) a cada amenaza."
-    echo ""
-    echo "Comandos útiles:"
-    echo "  cat ~/laboratorio/risk-assessment/plantilla-analisis.md"
-    separador
-}
-
-reto6_info() {
-    separador
-    echo -e "${CYAN}Reto 6: Clasificar riesgos por nivel${NC}"
-    echo ""
-    echo "Clasifica todas las amenazas en niveles de riesgo."
-    echo ""
-    echo "Comandos útiles:"
-    echo "  nano ~/laboratorio/risk-assessment/clasificacion.md"
-    separador
-}
-
-reto7_info() {
-    separador
-    echo -e "${CYAN}Reto 7: Definir tratamiento para al menos 3 amenazas${NC}"
-    echo ""
-    echo "Para al menos 3 amenazas, define tratamiento."
-    echo ""
-    echo "Comandos útiles:"
-    echo "  nano ~/laboratorio/risk-assessment/tratamientos.md"
-    separador
-}
-
-reto8_info() {
-    separador
-    echo -e "${CYAN}Reto 8: Calcular riesgo inherente y residual${NC}"
-    echo ""
-    echo "Calcula riesgo inherente y residual para cada amenaza."
-    echo ""
-    echo "Comandos útiles:"
-    echo "  nano ~/laboratorio/risk-assessment/calculos.md"
-    separador
-}
-
-reto9_info() {
-    separador
-    echo -e "${CYAN}Reto 9: Generar justificación económica${NC}"
-    echo ""
-    echo "Documenta la justificación económica de cada tratamiento."
-    echo ""
-    echo "Comandos útiles:"
-    echo "  nano ~/laboratorio/risk-assessment/economia.md"
-    separador
-}
-
-reto10_info() {
-    separador
-    echo -e "${CYAN}Reto 10: Documentar plan de seguimiento${NC}"
-    echo ""
-    echo "Crea un plan de seguimiento para los riesgos."
-    echo ""
-    echo "Comandos útiles:"
-    echo "  nano ~/laboratorio/risk-assessment/seguimiento.md"
-    separador
-}
-
-# ── Standalone execution mode ─────────────────────────────────────
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "  i-risk-assessment: Evaluación de Riesgos ISO 31000 — Retos"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-    PASSED=0
-    FAILED=0
-
+    PASSED=0; FAILED=0
     for i in $(seq 1 "$TOTAL_RETOS"); do
-        validator="${validators[$((i-1))]}"
-        name="${challenge_names[$((i-1))]}"
-        icon="${ICONOS[$((i-1))]}"
-
-        if $validator >/dev/null 2>&1; then
-            echo "  [PASS] Reto $i: $name $icon"
-            PASSED=$((PASSED + 1))
-        else
-            echo "  [FAIL] Reto $i: $name"
-            FAILED=$((FAILED + 1))
-        fi
+        validator="${validators[$((i-1))]}"; name="${challenge_names[$((i-1))]}"; icon="${ICONOS[$((i-1))]}"
+        if "$validator" >/dev/null 2>&1; then echo "  [PASS] Reto $i: $name $icon"; PASSED=$((PASSED + 1)); else echo "  [FAIL] Reto $i: $name"; FAILED=$((FAILED + 1)); fi
     done
-
-    echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "  i-risk-assessment Results: $PASSED/$TOTAL_RETOS passed, $FAILED failed"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
     [ "$FAILED" -eq 0 ]
 fi
