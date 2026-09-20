@@ -48,4 +48,4 @@ Resolve and harden Tarea 3 RDD validation so canonical units generate progress o
 - [x] IAM/MFA Docker setup-only via `~/.current_unit=unit-III`: `0/5`, evaluator exit `5`, `/var/lab-state/progress` remained `0` bytes.
 
 ## Commit Evidence
-- Pending.
+- IAM/MFA work-unit commit: `8a624ed` (`fix: require student deliverables for tarea 3 IAM receipts`)
