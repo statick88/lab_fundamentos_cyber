@@ -50,4 +50,4 @@ Resolve and harden Tarea 3 RDD validation so canonical units generate progress o
 - Compliance work-unit commit: `5547fca` (`fix: require student deliverables for tarea 3 compliance receipts`).
 - Compliance evidence commit: `4ac54ad` (`chore: record ODD evidence for tarea 3 compliance`).
 - Unit VII work-unit commit: `0183b3a` (`fix: require student deliverables for tarea 3 hardening receipts`).
-- Final evidence commit: pending.
+- Final evidence normalization commit: `d38f295` (`chore: record ODD evidence for tarea 3 hardening`).
