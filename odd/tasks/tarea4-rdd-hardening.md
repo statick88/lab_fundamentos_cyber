@@ -17,6 +17,9 @@ Harden Tarea 4 / Unit IV cryptography and CVSS RDD flow so progress receipts are
 - Preserve `UNIT_NAME="unit-IV"` and `TOTAL_RETOS=10` unless repository mapping requires otherwise.
 - Work on branch `tareas` as requested by the user.
 
+## Commit Evidence
+- Work-unit commit: `98f67f1` (`fix: require student deliverables for unit IV RDD receipts`)
+
 ## Evidence
 - `test.sh` now validates distinct student analysis files instead of setup-created files, a bundled calculator, or ambient logs.
 - `setup.sh` creates only non-deliverable fixtures under `fixtures/`, including the phishing header fixture and a baseline derived from the fixture binary.
