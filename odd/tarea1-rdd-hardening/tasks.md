@@ -20,6 +20,9 @@ Harden Tarea 1 RDD validation for risk assessment and asset classification so se
 - Preserve each unit's `UNIT_NAME` and `TOTAL_RETOS=10`.
 - Work on branch `tareas` as requested by the user.
 
+## Commit Evidence
+- Work-unit commit: `4a1dabc` (`fix: require student deliverables for tarea 1 RDD receipts`)
+
 ## Evidence
 - `units/i-risk-assessment/setup.sh` now creates only `fixtures/escenario.json` and `plantilla-analisis.template.md`; validators require explicit student files such as `scenario_summary.md`, `risk_inventory.md`, `risk_matrix.md`, `treatment_plan.md`, `residual_risk.md`, `economic_justification.md`, and `seguimiento.md`/`followup_plan.md`.
 - `units/i-asset-classification/setup.sh` now creates only `fixtures/escenario.json`, `fixtures/asset_registry.csv`, `fixtures/csf_mapping.md`, and `plantilla-clasificacion.template.md`; validators require explicit student files such as `scenario_summary.md`, `asset_inventory.*`, `cia_ratings.md`, `csf_mapping_student.md`, `asset_classification.md`, `asset_prioritization.md`, `asset_controls.md`, and `final_report.md`/`resumen_final.md`.
