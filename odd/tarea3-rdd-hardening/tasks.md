@@ -12,7 +12,7 @@ Resolve and harden Tarea 3 RDD validation so canonical units generate progress o
 ## Tasks
 - [x] Explore Tarea 3 canonical structure and setup-only false receipt paths.
 - [x] Harden IAM/MFA setup and validators (student-deliverable-only; canonical `unit-III` retained).
-- [ ] Harden compliance setup and validators.
+- [x] Harden compliance setup and validators.
 - [ ] Harden hardening/unit VII validators for Tarea 3 scope.
 - [ ] Run Docker setup-only verification for canonical Tarea 3 units and progress checks.
 - [ ] Commit and push verified work units to `tareas`.
@@ -42,10 +42,19 @@ Resolve and harden Tarea 3 RDD validation so canonical units generate progress o
 - `units/iii-iam-mfa/test.sh` requires explicit deliverables under `~/laboratorio/iam` and rejects placeholders, ambient host state, and echo-only audit scripts.
 - The manifest already identifies `iii-iam-mfa` as `unit-III`; `TOTAL_RETOS=5` and canonical evaluator routing remain unchanged.
 
+## Compliance Hardening Evidence
+- `iii-compliance-iso27001/setup.sh` creates only placeholder-bearing references under `~/laboratorio/governance/referencias`; it creates no validator target, student answer, result evidence, or receipt.
+- `iii-compliance-iso27001/test.sh` retains `TOTAL_RETOS=5`, routes receipts through `unit-III-compliance`, and requires explicit student deliverables rather than setup scaffolds.
+- The hardened checks require complete distinct risk records, substantive SoA controls, mandatory policy sections, explicit mapped matrix criteria, and a real student-written control checker with student-produced PASS/FAIL evidence.
+
 ## Verification
+- [x] Compliance: `bash -n units/iii-compliance-iso27001/setup.sh units/iii-compliance-iso27001/test.sh` passed.
+- [x] Compliance: `git diff --check -- units/iii-compliance-iso27001/setup.sh units/iii-compliance-iso27001/test.sh odd/tasks/tarea3-rdd-hardening.md odd/tarea3-rdd-hardening/tasks.md` passed.
+- [x] Compliance Docker setup-only via `~/.current_unit=unit-III-compliance`: `0/5`, evaluator exit `5`, `/var/lab-state/progress` remained `0` bytes.
 - [x] IAM/MFA: `bash -n units/iii-iam-mfa/setup.sh units/iii-iam-mfa/test.sh` passed.
 - [x] IAM/MFA: `git diff --check -- units/iii-iam-mfa/setup.sh units/iii-iam-mfa/test.sh odd/tasks/tarea3-rdd-hardening.md odd/tarea3-rdd-hardening/tasks.md` passed.
 - [x] IAM/MFA Docker setup-only via `~/.current_unit=unit-III`: `0/5`, evaluator exit `5`, `/var/lab-state/progress` remained `0` bytes.
 
 ## Commit Evidence
 - IAM/MFA work-unit commit: `8a624ed` (`fix: require student deliverables for tarea 3 IAM receipts`)
+- Compliance work-unit commit: Pending.
