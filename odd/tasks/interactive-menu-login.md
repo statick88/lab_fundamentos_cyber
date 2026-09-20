@@ -16,7 +16,7 @@ Ensure students can enter the `lab_fundamentos_cyber` container with a login she
 - Do not commit or push without explicit user request.
 
 ## Commit Evidence
-- Pending: user did not authorize a commit.
+- Work-unit commit: `552c113` (`fix: load lab menu in login shells`)
 
 ## Evidence
 - Added `bash_profile` and copied it into `/home/estudiante/.bash_profile` in `Dockerfile`.
