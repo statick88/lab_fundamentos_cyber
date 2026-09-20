@@ -57,4 +57,4 @@ Resolve and harden Tarea 3 RDD validation so canonical units generate progress o
 
 ## Commit Evidence
 - IAM/MFA work-unit commit: `8a624ed` (`fix: require student deliverables for tarea 3 IAM receipts`)
-- Compliance work-unit commit: Pending.
+- Compliance work-unit commit: `5547fca` (`fix: require student deliverables for tarea 3 compliance receipts`)
