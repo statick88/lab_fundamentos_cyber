@@ -13,8 +13,8 @@ Resolve and harden Tarea 3 RDD validation so canonical units generate progress o
 - [x] Explore Tarea 3 canonical structure and setup-only false receipt paths.
 - [x] Harden IAM/MFA setup and validators (student-deliverable-only; canonical `unit-III` retained).
 - [x] Harden compliance setup and validators.
-- [ ] Harden hardening/unit VII validators for Tarea 3 scope.
-- [ ] Run Docker setup-only verification for canonical Tarea 3 units and progress checks.
+- [x] Harden Unit VII's 15 validators to require explicit deliverables.
+- [x] Run Docker setup-only verification for all canonical Tarea 3 units and progress checks.
 - [ ] Commit and push verified work units to `tareas`.
 
 ## Constraints
@@ -24,37 +24,20 @@ Resolve and harden Tarea 3 RDD validation so canonical units generate progress o
 - Prefer explicit student deliverables under each lab directory.
 - Setup may create reference fixtures/templates only; those files must not pass validators.
 
-## Exploration Evidence
-- Canonical evaluator names from `shared/units_manifest.sh`:
-  - IAM/MFA: `unit-III` -> `units/iii-iam-mfa`
-  - Compliance: `unit-III-compliance` -> `units/iii-compliance-iso27001`
-  - Hardening: `unit-VII` -> `units/vii`
-- `RDD_TAREA3.md` describes intended scope as 13 retos: IAM/MFA 5 + compliance 5 + VII retos 1, 2, 10.
-- Manifest currently marks all three units as CORE, which counts 25 retos because CORE is unit-level, not reto-level.
-- Known risks:
-  - `iii-iam-mfa` has ambient-state validators and setup-created audit script can pass.
-  - `iii-compliance-iso27001` validators are content-weak and can pass superficial edits.
-  - `vii` validators rely heavily on ambient state, create their own evidence in retos 7/8, and do not inspect setup scripts.
-  - Naming mismatch: compliance test `UNIT_NAME` differs from manifest name; legacy `iii` also uses `unit-III` and can collide with IAM receipts.
+## Unit VII Hardening Status
+- `UNIT_NAME="unit-VII"` and `TOTAL_RETOS=15` remain unchanged.
+- Setup creates only harmless reference inputs and placeholder-bearing `.template` files under `~/laboratorio/security/fixtures`; it creates no student deliverables, answer scripts, keys, or receipts.
+- All 15 validators now check named student-owned files directly under `~/laboratorio/security`, never `/etc`, mounts, logs, sudo, SSH configuration, host services, or validator-created state.
+- Retos 1, 2, and 10 require `uid0_audit.md`, `critical_files_permissions.md`, and `suid_remediation_plan.md` (with optional student `suid_remediation.sh`) respectively.
+- The remaining retos require explicit process, sudo, port, SUID/SGID, SSH policy/permission, log, firewall, mount, sshd, auditd/AIDE, and summary deliverables.
 
-## IAM/MFA Hardening Evidence
-- `units/iii-iam-mfa/setup.sh` now creates reference-only templates under `~/laboratorio/iam/referencias`; it no longer creates validator target files, scripts, student answers, or progress receipts.
-- `units/iii-iam-mfa/test.sh` validates only explicit student deliverables under `~/laboratorio/iam`, rejects placeholders, and avoids ambient account, `/etc`, PAM, sudoers, and validator-generated evidence.
-- `TOTAL_RETOS=5` and `UNIT_NAME="unit-III"` are retained. The manifest canonical name for `iii-iam-mfa` is already `unit-III`, so no routing/name change was needed for receipt consistency.
-
-## Compliance Hardening Evidence
-- `iii-compliance-iso27001/setup.sh` now creates only placeholder-bearing references under `~/laboratorio/governance/referencias`; it creates no validator target, student answer, result evidence, or receipt.
-- `iii-compliance-iso27001/test.sh` uses the canonical receipt route `unit-III-compliance` and retains `TOTAL_RETOS=5`.
-- Validators now require explicit student `risk_register.csv`, `soa.json`, `security_policy.md`, `risk_matrix.csv` or `.md`, `controls_check.sh`, and student-produced `controls_check_results.txt` deliverables. They reject reference placeholders, superficial rows, array length-only SoAs, arbitrary risk-matrix labels, echo-only scripts, and evaluator-created evidence.
+## Prior Evidence
+- Canonical evaluator names from `shared/units_manifest.sh`: IAM/MFA `unit-III`, compliance `unit-III-compliance`, hardening `unit-VII`.
+- Manifest marks all three units as CORE; Unit VII setup-only must therefore yield `0/15`.
+- IAM/MFA work-unit commit: `8a624ed` (`fix: require student deliverables for tarea 3 IAM receipts`).
+- Compliance work-unit commit: `5547fca` (`fix: require student deliverables for tarea 3 compliance receipts`).
 
 ## Verification
-- [x] Compliance: `bash -n units/iii-compliance-iso27001/setup.sh units/iii-compliance-iso27001/test.sh` passed.
-- [x] Compliance: `git diff --check -- units/iii-compliance-iso27001/setup.sh units/iii-compliance-iso27001/test.sh odd/tasks/tarea3-rdd-hardening.md odd/tarea3-rdd-hardening/tasks.md` passed.
-- [x] Compliance Docker setup-only via `~/.current_unit=unit-III-compliance`: `0/5`, evaluator exit `5`, `/var/lab-state/progress` remained `0` bytes.
-- [x] IAM/MFA: `bash -n units/iii-iam-mfa/setup.sh units/iii-iam-mfa/test.sh` passed.
-- [x] IAM/MFA: `git diff --check -- units/iii-iam-mfa/setup.sh units/iii-iam-mfa/test.sh odd/tasks/tarea3-rdd-hardening.md odd/tarea3-rdd-hardening/tasks.md` passed.
-- [x] IAM/MFA Docker setup-only via `~/.current_unit=unit-III`: `0/5`, evaluator exit `5`, `/var/lab-state/progress` remained `0` bytes.
-
-## Commit Evidence
-- IAM/MFA work-unit commit: `8a624ed` (`fix: require student deliverables for tarea 3 IAM receipts`)
-- Compliance work-unit commit: `5547fca` (`fix: require student deliverables for tarea 3 compliance receipts`)
+- [x] Unit VII: `bash -n units/vii/setup.sh units/vii/test.sh` passed.
+- [x] Unit VII: `git diff --check -- units/vii/setup.sh units/vii/test.sh odd/tasks/tarea3-rdd-hardening.md odd/tarea3-rdd-hardening/tasks.md` passed.
+- [x] Unit VII Docker setup-only via `~/.current_unit=unit-VII`: `0/15`, evaluator exit `15`, `/var/lab-state/progress` remained `0` bytes.
