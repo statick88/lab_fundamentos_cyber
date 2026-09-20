@@ -1,7 +1,11 @@
 #!/bin/bash
 # Funciones de evaluacion y progreso
-STATE_DIR="${STATE_DIR:=${HOME}/.lab-state}"
+# Fuente canónica RDD: /var/lab-state/progress. ~/.lab-state/progress se mantiene
+# como ruta de compatibilidad mediante symlink para comandos docentes.
+STATE_DIR="${STATE_DIR:=/var/lab-state}"
 PROGRESS_FILE="${PROGRESS_FILE:=${STATE_DIR}/progress}"
+COMPAT_STATE_DIR="${HOME}/.lab-state"
+COMPAT_PROGRESS_FILE="${COMPAT_STATE_DIR}/progress"
 OLD_PROGRESS_FILE="${HOME}/.lab_state/progress"
 
 init_state() {
@@ -9,11 +13,19 @@ init_state() {
     touch "$PROGRESS_FILE" 2>/dev/null || true
     chmod 0770 "$STATE_DIR" 2>/dev/null || true
     chmod 0660 "$PROGRESS_FILE" 2>/dev/null || true
+
     if [ -f "$OLD_PROGRESS_FILE" ] && [ ! -s "$PROGRESS_FILE" ]; then
         cp "$OLD_PROGRESS_FILE" "$PROGRESS_FILE" 2>/dev/null || true
         chmod 0660 "$PROGRESS_FILE" 2>/dev/null || true
         rm -f "$OLD_PROGRESS_FILE" 2>/dev/null || true
     fi
+
+    mkdir -p "$COMPAT_STATE_DIR" 2>/dev/null || true
+    if [ -e "$COMPAT_PROGRESS_FILE" ] && [ ! -L "$COMPAT_PROGRESS_FILE" ] && [ ! -s "$PROGRESS_FILE" ]; then
+        cp "$COMPAT_PROGRESS_FILE" "$PROGRESS_FILE" 2>/dev/null || true
+    fi
+    rm -f "$COMPAT_PROGRESS_FILE" 2>/dev/null || true
+    ln -sf "$PROGRESS_FILE" "$COMPAT_PROGRESS_FILE" 2>/dev/null || true
 }
 
 marcar_completado() {

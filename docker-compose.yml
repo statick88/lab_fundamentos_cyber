@@ -19,12 +19,15 @@ services:
     tty: true           # Asignar pseudo-TTY (-t)
     volumes:
       - lab-data:/home/estudiante/laboratorio
+      - lab-state:/var/lab-state
       - ./resultados:/home/estudiante/laboratorio/resultados
     environment:
       - LAB_NAME=Fundamentos de Ciberseguridad ABC-CYB-101
       - COURSE_VERSION=2.0
       - STUDENT_USER=estudiante
       - STUDENT_PASS=${STUDENT_PASS:-changeme}
+      - STATE_DIR=/var/lab-state
+      - PROGRESS_FILE=/var/lab-state/progress
       - FRASE_OCULTA=Toda revolution comienza con un pass Los administradores nunca duermen !
     networks:
       lab-cyber:
@@ -42,6 +45,8 @@ services:
 
 volumes:
   lab-data:
+    driver: local
+  lab-state:
     driver: local
 
 networks:

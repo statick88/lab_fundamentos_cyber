@@ -100,7 +100,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 - Contenedor aislado en red bridge 172.20.0.0/24 con driver_opts: sin IP masquerade, bind solo a 127.0.0.1
 - Capabilities limitadas: NET_ADMIN, NET_RAW, SETUID, SETGID (sin SYS_ADMIN, sin privileged)
-- Progreso almacenado en /var/lab-state (root-owned, no escribible por estudiante)
+- Progreso almacenado canónicamente en `/var/lab-state/progress`; `~/.lab-state/progress` es una ruta de compatibilidad hacia el mismo recibo.
 - Validadores estrictos: CVSS requiere script Python con métricas y operaciones matemáticas; logs verifican archivos reales con antigüedad mínima
 - No se descargan archivos externos durante los retos
 - Todo el malware es simulado (archivos de texto inocuos)
@@ -280,7 +280,7 @@ Cada módulo incluye ejercicios prácticos con evidencia, advertencias de seguri
 - **Reset script**: Limpia configuraciones entre clases
 - **243 retos prácticos** con evaluación automática
 - **Clasificación CORE/OPT**: 60 obligatorios + 183 optativos para sesiones de 24h
-- **Anti-tampering**: Progreso en /var/lab-state (root-owned, no escribible por estudiante)
+- **Anti-tampering**: Progreso canónico en `/var/lab-state/progress`, persistido por volumen Docker; `~/.lab-state/progress` apunta al mismo recibo.
 - **Validadores estrictos**: CVSS requiere script Python con anti-bypass; logs verifican archivos reales; firewall valida estado ufw/iptables con sudo
 - **Red aislada**: driver_opts sin IP masquerade, bind a 127.0.0.1
 

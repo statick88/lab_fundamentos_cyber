@@ -14,6 +14,48 @@ TOTAL_RETOS=10
 
 LAB_DIR="$HOME/laboratorio/asset-classification"
 
+asset_table_completed_rows() {
+    local template="$LAB_DIR/plantilla-clasificacion.md"
+    [ -f "$template" ] || { echo 0; return; }
+    awk -F'|' '
+        function trim(s){gsub(/^[ \t]+|[ \t]+$/, "", s); return s}
+        /^\|[[:space:]]*A[1-5][[:space:]]*\|/ {
+            activo=trim($2); tipo=trim($3); clas=tolower(trim($4)); c=trim($5); i=trim($6); d=trim($7); just=trim($8);
+            if (activo ~ /^A[1-5]$/ && tipo != "" && clas ~ /^(público|publico|interno|confidencial|restringido)$/ && c ~ /^[1-5]$/ && i ~ /^[1-5]$/ && d ~ /^[1-5]$/ && length(just) >= 20) count++;
+        }
+        END {print count+0}
+    ' "$template"
+}
+
+asset_priority_completed_rows() {
+    local template="$LAB_DIR/plantilla-clasificacion.md"
+    [ -f "$template" ] || { echo 0; return; }
+    awk -F'|' '
+        function trim(s){gsub(/^[ \t]+|[ \t]+$/, "", s); return s}
+        /^\|[[:space:]]*A[1-5][[:space:]]*\|/ {
+            activo=trim($2); priority=trim($3); criteria=trim($4);
+            if (activo ~ /^A[1-5]$/ && priority ~ /^[1-5]$/ && length(criteria) >= 20) count++;
+        }
+        END {print count+0}
+    ' "$template"
+}
+
+asset_controls_completed_count() {
+    local template="$LAB_DIR/plantilla-clasificacion.md"
+    [ -f "$template" ] || { echo 0; return; }
+    local count=0 asset
+    for asset in A1 A2 A3 A4 A5; do
+        if grep -iE "${asset}.*(control|medida|salvaguarda|mitigaci[oó]n|mfa|rbac|cifrado|backup|monitoreo|segmentaci[oó]n)" "$template" >/dev/null 2>&1; then
+            count=$((count + 1))
+        fi
+    done
+    echo "$count"
+}
+
+non_template_report() {
+    find "$LAB_DIR" -maxdepth 1 -type f \( -name "*resumen*" -o -name "*informe*" -o -name "*summary*" -o -name "*report*" -o -name "*final*" \) 2>/dev/null | head -1
+}
+
 # ── Reto 1: Verificar existencia del escenario ─────────────────
 reto1() {
     local scenario="$LAB_DIR/escenario.json"
@@ -111,145 +153,61 @@ reto5() {
 
 # ── Reto 6: Verificar niveles de clasificación asignados ───────
 reto6() {
-    local template="$LAB_DIR/plantilla-clasificacion.md"
-    local csv="$LAB_DIR/data/asset_registry.csv"
-    local scenario="$LAB_DIR/escenario.json"
-    # Verificar en escenario.json que los 4 niveles aparecen
-    local levels_found=0
-    if [ -f "$scenario" ]; then
-        grep -qi "restringido" "$scenario" 2>/dev/null && levels_found=$((levels_found + 1))
-        grep -qi "confidencial" "$scenario" 2>/dev/null && levels_found=$((levels_found + 1))
-        grep -qi "interno" "$scenario" 2>/dev/null && levels_found=$((levels_found + 1))
-        grep -qi "publico\|público" "$scenario" 2>/dev/null && levels_found=$((levels_found + 1))
-    fi
-    if [ "$levels_found" -ge 2 ]; then
+    local rows
+    rows=$(asset_table_completed_rows)
+    if [ "$rows" -ge 5 ]; then
         return 0
     fi
-    # Verificar en CSV
-    if [ -f "$csv" ]; then
-        levels_found=0
-        grep -qi "restringido" "$csv" 2>/dev/null && levels_found=$((levels_found + 1))
-        grep -qi "confidencial" "$csv" 2>/dev/null && levels_found=$((levels_found + 1))
-        grep -qi "interno" "$csv" 2>/dev/null && levels_found=$((levels_found + 1))
-        grep -qi "publico\|público" "$csv" 2>/dev/null && levels_found=$((levels_found + 1))
-        if [ "$levels_found" -ge 2 ]; then
-            return 0
-        fi
-    fi
-    # Verificar en plantilla completada
-    if [ -f "$template" ]; then
-        if grep -qi "restringido\|confidencial\|interno\|publico\|público" "$template" 2>/dev/null; then
-            return 0
-        fi
-    fi
-    echo "FAIL: Niveles de clasificación (Public/Internal/Confidential/Restricted) no asignados" >&2
+    echo "FAIL: Niveles de clasificación no asignados por el estudiante en A1-A5 ($rows/5 filas completas)" >&2
     return 1
 }
 
 # ── Reto 7: Verificar plantilla de inventario completada ────────
 reto7() {
-    local template="$LAB_DIR/plantilla-clasificacion.md"
-    if [ ! -f "$template" ]; then
-        echo "FAIL: plantilla-clasificacion.md no existe en $LAB_DIR" >&2
-        return 1
-    fi
-    # Verificar que tiene datos más allá de la plantilla vacía
-    # Contar filas de tabla con datos (más allá de separadores)
-    local filled_rows
-    filled_rows=$(grep -c '| A[1-5] |.*|.*|.*|.*|.*|' "$template" 2>/dev/null || echo 0)
-    if [ "$filled_rows" -ge 5 ]; then
+    local rows
+    rows=$(asset_table_completed_rows)
+    if [ "$rows" -ge 5 ]; then
         return 0
     fi
-    # Verificar que tiene contenido más allá de headers vacíos
-    local data_entries
-    data_entries=$(grep -ci 'restringido\|confidencial\|interno\|público\|publico' "$template" 2>/dev/null || echo 0)
-    if [ "$data_entries" -ge 3 ]; then
-        return 0
-    fi
-    echo "FAIL: Plantilla de clasificación no completada (solo $filled_rows filas con datos, $data_entries clasificaciones)" >&2
+    echo "FAIL: Plantilla de clasificación no completada con justificaciones suficientes ($rows/5 filas completas)" >&2
     return 1
 }
 
 # ── Reto 8: Verificar justificación CIA en plantilla ────────────
 reto8() {
-    local template="$LAB_DIR/plantilla-clasificacion.md"
-    if [ ! -f "$template" ]; then
-        echo "FAIL: plantilla-clasificacion.md no existe" >&2
-        return 1
-    fi
-    # Verificar que tiene justificaciones de clasificación
-    local justifications
-    justifications=$(grep -ci 'justificación\|justificacion\|criterio\|por qué\|porque' "$template" 2>/dev/null || echo 0)
-    if [ "$justifications" -ge 2 ]; then
+    local classified priority
+    classified=$(asset_table_completed_rows)
+    priority=$(asset_priority_completed_rows)
+    if [ "$classified" -ge 5 ] && [ "$priority" -ge 5 ]; then
         return 0
     fi
-    # Verificar que tiene priorización (ID.AM-05)
-    local priority
-    priority=$(grep -ci 'prioridad\|priorización\|criticidad' "$template" 2>/dev/null || echo 0)
-    if [ "$priority" -ge 2 ]; then
-        return 0
-    fi
-    echo "FAIL: Justificación de clasificación CIA o priorización no documentada en plantilla" >&2
+    echo "FAIL: Justificación CIA o priorización incompleta (clasificación=$classified/5, prioridad=$priority/5)" >&2
     return 1
 }
 
 # ── Reto 9: Verificar que los 5 activos tienen controles definidos ──
 reto9() {
-    local template="$LAB_DIR/plantilla-clasificacion.md"
-    local scenario="$LAB_DIR/escenario.json"
-    local csv="$LAB_DIR/data/asset_registry.csv"
-    # Verificar controles en escenario.json
-    local controls=0
-    if [ -f "$scenario" ]; then
-        controls=$(grep -c '"controles"\|"control"\|"medida"' "$scenario" 2>/dev/null || echo 0)
-    fi
+    local controls
+    controls=$(asset_controls_completed_count)
     if [ "$controls" -ge 5 ]; then
         return 0
     fi
-    # Verificar controles en plantilla
-    if [ -f "$template" ]; then
-        local ctrl_template
-        ctrl_template=$(grep -ci 'control\|medida\|salvaguarda\|protección\|proteccion' "$template" 2>/dev/null || echo 0)
-        if [ "$ctrl_template" -ge 3 ]; then
-            return 0
-        fi
-    fi
-    # Verificar archivos de controles
-    local control_files
-    control_files=$(find "$LAB_DIR" -maxdepth 2 -type f \( -name "*control*" -o -name "*salvaguarda*" -o -name "*medidas*" \) 2>/dev/null | head -1)
-    if [ -n "$control_files" ] && [ -f "$control_files" ]; then
-        return 0
-    fi
-    echo "FAIL: Controles de seguridad no definidos para los activos (se esperan al menos 5)" >&2
+    echo "FAIL: Controles de seguridad no definidos por activo ($controls/5 activos)" >&2
     return 1
 }
 
 # ── Reto 10: Verificar documento de resumen/informe final ──────
 reto10() {
-    # Buscar archivo de resumen o informe final
     local report
-    report=$(find "$LAB_DIR" -maxdepth 1 -type f \( -name "*resumen*" -o -name "*informe*" -o -name "*summary*" -o -name "*report*" -o -name "*final*" \) 2>/dev/null | head -1)
+    report=$(non_template_report)
     if [ -n "$report" ] && [ -f "$report" ]; then
-        return 0
-    fi
-    # Verificar que la plantilla tiene sección de resumen/entregables
-    local template="$LAB_DIR/plantilla-clasificacion.md"
-    if [ -f "$template" ]; then
-        if grep -qi "resumen\|entregable\|informe\|conclusión\|conclusion\|resumen ejecutivo" "$template" 2>/dev/null; then
+        local chars
+        chars=$(tr -d '[:space:]' < "$report" 2>/dev/null | wc -c | tr -d ' ')
+        if [ "$chars" -ge 300 ]; then
             return 0
         fi
     fi
-    # Buscar archivo markdown que pueda ser el resumen
-    local any_md
-    any_md=$(find "$LAB_DIR" -maxdepth 1 -type f -name "*.md" ! -name "plantilla-*" ! -name "csf*" 2>/dev/null | head -1)
-    if [ -n "$any_md" ] && [ -f "$any_md" ]; then
-        local md_size
-        md_size=$(wc -l < "$any_md" 2>/dev/null || echo 0)
-        if [ "$md_size" -ge 10 ]; then
-            return 0
-        fi
-    fi
-    echo "FAIL: Documento de resumen o informe final no encontrado" >&2
+    echo "FAIL: Documento de resumen o informe final no encontrado con desarrollo suficiente" >&2
     return 1
 }
 

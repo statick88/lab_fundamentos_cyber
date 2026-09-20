@@ -199,6 +199,19 @@ is_reto_core() {
     fi
 }
 
+count_core_retos() {
+    local unit_idx="$1"
+    if [ "$unit_idx" -lt 1 ] || [ "$unit_idx" -gt "$UNIT_COUNT" ]; then
+        echo 0
+        return
+    fi
+    if [ "${UNIT_CORE[$((unit_idx-1))]}" = "1" ]; then
+        echo "${UNIT_RETOS[$((unit_idx-1))]}"
+    else
+        echo 0
+    fi
+}
+
 get_unit_module() {
     local idx="$1"
     if [ "$idx" -ge 1 ] && [ "$idx" -le "$UNIT_COUNT" ]; then
