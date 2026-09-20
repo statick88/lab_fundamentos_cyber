@@ -18,6 +18,9 @@ Harden Tarea 2 / Unit II firewall and network filtering RDD flow so progress rec
 - Validators must not depend on `/etc/services`, ambient UFW/iptables state, or evidence generated during validation.
 - Work on branch `tareas` as requested by the user.
 
+## Commit Evidence
+- Work-unit commit: `86189fc` (`fix: require student deliverables for unit II RDD receipts`)
+
 ## Evidence
 - Setup now creates only `fixtures/captura_{http,https,ssh,dns,scan}.pcapng` and a non-executable `fixtures/README.template`.
 - Retos 1–4 and 10 require dedicated student analysis files; firewall retos require real, command-anchored UFW/iptables deliverables.
