@@ -6,57 +6,70 @@ source /shared/common.sh
 UNIT_NAME="unit-V"
 TOTAL_RETOS=10
 
+LAB_DIR="$HOME/laboratorio/logging"
+
+has_content() {
+    [ -s "$1" ]
+}
+
 reto1() {
-    logger -p local0.info "test-lab-log-v-ret1" 2>/dev/null || true
-    grep -q "test-lab-log-v-ret1" /var/log/syslog 2>/dev/null || grep -q "test-lab-log-v-ret1" /var/log/user.log 2>/dev/null
+    has_content "$LAB_DIR/logger_evidence.log" && \
+        grep -qiE "logger|local[0-7]|test-lab-log-v-ret1" "$LAB_DIR/logger_evidence.log"
 }
 
 reto2() {
-    [ -f /etc/logrotate.d ] || mkdir -p /etc/logrotate.d
-    # Verify logrotate config can be created for custom file
-    echo "/var/log/mi_app.log {" > /tmp/test_logrotate.conf
-    echo "  daily" >> /tmp/test_logrotate.conf
-    echo "  rotate 7" >> /tmp/test_logrotate.conf
-    echo "  compress" >> /tmp/test_logrotate.conf
-    echo "}" >> /tmp/test_logrotate.conf
-    grep -q "mi_app.log" /tmp/test_logrotate.conf
+    has_content "$LAB_DIR/logrotate_mi_app.conf" && \
+        grep -qE '^/?[^[:space:]]*mi_app\.log[[:space:]]*\{' "$LAB_DIR/logrotate_mi_app.conf" && \
+        grep -qiE '^[[:space:]]*daily' "$LAB_DIR/logrotate_mi_app.conf" && \
+        grep -qiE '^[[:space:]]*rotate[[:space:]]+7' "$LAB_DIR/logrotate_mi_app.conf" && \
+        grep -qiE '^[[:space:]]*compress' "$LAB_DIR/logrotate_mi_app.conf"
 }
 
 reto3() {
-    eval_log_analysis "$HOME/laboratorio/logging/mi_app.log" "error|fail|critical" 1 student
+    has_content "$LAB_DIR/grep_errors.txt" && \
+        grep -qiE 'error|fail|critical|crit' "$LAB_DIR/grep_errors.txt"
 }
 
 reto4() {
-    eval_log_analysis "$HOME/laboratorio/logging/apache_access.log" "192.168.1" 1 student
+    has_content "$LAB_DIR/awk_extract.txt" && \
+        grep -q '13:55' "$LAB_DIR/awk_extract.txt"
 }
 
 reto5() {
-    eval_log_analysis "$HOME/laboratorio/logging/apache_access.log" "192.168" 1 student
+    has_content "$LAB_DIR/sed_masked.log" && \
+        grep -q 'ENMASCARADA' "$LAB_DIR/sed_masked.log" && \
+        ! grep -qE '192\.168\.[0-9]+\.[0-9]+' "$LAB_DIR/sed_masked.log"
 }
 
 reto6() {
-    eval_log_analysis "$HOME/laboratorio/logging/auth_sys.log" "13:55:38.*systemd" 1 student
+    has_content "$LAB_DIR/correlation_report.md" && \
+        grep -q '13:55:38' "$LAB_DIR/correlation_report.md" && \
+        grep -qiE 'auth_sys\.log|mi_app\.log' "$LAB_DIR/correlation_report.md"
 }
 
 reto7() {
-    [ -f "$HOME/laboratorio/logging/monitor_procesos.sh" ] && [ -x "$HOME/laboratorio/logging/monitor_procesos.sh" ]
-    [ -f "$HOME/laboratorio/logging/monitor_procesos.sh" ] && grep -qi "ps\|ss\|netstat\|awk" "$HOME/laboratorio/logging/monitor_procesos.sh" 2>/dev/null
+    [ -f "$LAB_DIR/monitor_procesos.sh" ] && [ -x "$LAB_DIR/monitor_procesos.sh" ] && \
+        grep -qiE 'ps|ss|netstat|/proc' "$LAB_DIR/monitor_procesos.sh"
 }
 
 reto8() {
-    [ -f "$HOME/laboratorio/logging/backup_script.sh" ] && [ -x "$HOME/laboratorio/logging/backup_script.sh" ]
-    [ -f "$HOME/laboratorio/logging/backup_script.sh" ] && grep -qi "tar\|rsync\|3.*2.*1\|offsite" "$HOME/laboratorio/logging/backup_script.sh" 2>/dev/null
+    [ -f "$LAB_DIR/backup_script.sh" ] && [ -x "$LAB_DIR/backup_script.sh" ] && \
+        grep -qiE 'tar|rsync|3.*2.*1|offsite' "$LAB_DIR/backup_script.sh"
 }
 
 reto9() {
-    [ -f "$HOME/laboratorio/logging/rto_rpo.md" ] || [ -f "$HOME/laboratorio/logging/rto_rpo.txt" ] || \
-    find "$HOME/laboratorio/logging" -maxdepth 1 -type f \( -name "*rto*" -o -name "*rpo*" \) 2>/dev/null | head -1 | grep -q "."
+    has_content "$LAB_DIR/rto_rpo.md" && \
+        grep -qi 'RTO' "$LAB_DIR/rto_rpo.md" && \
+        grep -qi 'RPO' "$LAB_DIR/rto_rpo.md"
 }
 
 reto10() {
-    [ -f "$HOME/laboratorio/logging/playbook_ir.md" ] || [ -f "$HOME/laboratorio/logging/playbook_ir.txt" ] || \
-    find "$HOME/laboratorio/logging" -maxdepth 1 -type f \( -name "*ir*" -o -name "*playbook*" \) 2>/dev/null | head -1 | grep -q "."
-    grep -qi "preparación\|detección\|contención\|erradicación\|recuperación" "$HOME/laboratorio/logging/playbook_ir.md" 2>/dev/null || grep -qi "preparacion\|deteccion\|contencion\|erradicacion\|recuperacion" "$HOME/laboratorio/logging/playbook_ir.txt" 2>/dev/null
+    has_content "$LAB_DIR/playbook_ir.md" && \
+        grep -qiE 'preparación|preparacion' "$LAB_DIR/playbook_ir.md" && \
+        grep -qiE 'detección|deteccion' "$LAB_DIR/playbook_ir.md" && \
+        grep -qiE 'contención|contencion' "$LAB_DIR/playbook_ir.md" && \
+        grep -qiE 'erradicación|erradicacion' "$LAB_DIR/playbook_ir.md" && \
+        grep -qiE 'recuperación|recuperacion' "$LAB_DIR/playbook_ir.md"
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10)
@@ -108,8 +121,8 @@ reto3_info() {
     echo "Busca líneas que contengan: error, fail, critical."
     echo ""
     echo "Comandos útiles:"
-    echo "  grep -E 'error|fail|critical' mi_app.log"
-    echo "  grep -ciE 'error|fail|critical' mi_app.log  (contar)"
+    echo "  grep -E 'error|fail|critical' fixtures/mi_app.log > grep_errors.txt"
+    echo "  grep -ciE 'error|fail|critical' fixtures/mi_app.log  (contar)"
     separador
 }
 
@@ -121,8 +134,8 @@ reto4_info() {
     echo "Muestra solo las líneas del rango horario 13:55."
     echo ""
     echo "Comandos útiles:"
-    echo "  awk '\$4 ~ /13:55/ {print \$0}' apache_access.log"
-    echo "  awk '{print \$1, \$7}' apache_access.log"
+    echo "  awk '\$4 ~ /13:55/ {print \$0}' fixtures/apache_access.log > awk_extract.txt"
+    echo "  awk '{print \$1, \$7}' fixtures/apache_access.log"
     separador
 }
 
@@ -134,7 +147,7 @@ reto5_info() {
     echo "Reemplaza 192.168.x.x por ENMASCARADA."
     echo ""
     echo "Comandos útiles:"
-    echo "  sed 's/192\\.168\\.[0-9]\\+\\.[0-9]\\+/ENMASCARADA/g' apache_access.log"
+    echo "  sed 's/192\\.168\\.[0-9]\\+\\.[0-9]\\+/ENMASCARADA/g' fixtures/apache_access.log > sed_masked.log"
     separador
 }
 
@@ -146,8 +159,8 @@ reto6_info() {
     echo "Busca eventos que ocurrieron en el mismo timestamp (13:55:38)."
     echo ""
     echo "Comandos útiles:"
-    echo "  grep '13:55:38' auth_sys.log mi_app.log"
-    echo "  join -j 1 <(sort auth_sys.log) <(sort mi_app.log)"
+    echo "  grep '13:55:38' fixtures/auth_sys.log fixtures/mi_app.log > correlation_report.md"
+    echo "  join -j 1 <(sort fixtures/auth_sys.log) <(sort fixtures/mi_app.log)"
     separador
 }
 

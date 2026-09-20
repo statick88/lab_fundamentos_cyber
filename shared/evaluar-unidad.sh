@@ -10,49 +10,28 @@ if [ -z "$CURRENT_UNIT" ]; then
 fi
 
 if [ -z "$CURRENT_UNIT" ]; then
-    advertencia "No hay unidad seleccionada. Usa 'unidad <1-25>' para seleccionar una."
+    advertencia "No hay unidad seleccionada. Usa 'unidad <1-26>' para seleccionar una."
     exit 1
 fi
 
-# Extraer número de unidad del nombre (unit-II -> II)
-UNIT_ROMAN=$(echo "$CURRENT_UNIT" | sed 's/unit-//')
+# Resolver la unidad desde el manifiesto centralizado para evitar rutas legacy.
+# Ej.: unit-V debe apuntar a units/v-logging-siem-bcp, no a units/v.
+UNIT_PATH=$(resolve_unit_path "$CURRENT_UNIT")
 
-# Mapear romano a directorio lowercase (case-insensitive para soportar I-RISK)
-UNIT_ROMAN_LC=$(echo "$UNIT_ROMAN" | tr '[:upper:]' '[:lower:]')
-case "$UNIT_ROMAN_LC" in
-    i) UNIT_DIR="i" ;;
-    ii) UNIT_DIR="ii" ;;
-    iii) UNIT_DIR="iii" ;;
-    iv) UNIT_DIR="iv" ;;
-    v) UNIT_DIR="v" ;;
-    vi) UNIT_DIR="vi" ;;
-    vii) UNIT_DIR="vii" ;;
-    viii) UNIT_DIR="viii" ;;
-    ix) UNIT_DIR="ix" ;;
-    x) UNIT_DIR="x" ;;
-    xi) UNIT_DIR="xi" ;;
-    i-risk) UNIT_DIR="i-risk-assessment" ;;
-    i-asset) UNIT_DIR="i-asset-classification" ;;
-    ii-arp) UNIT_DIR="ii-arquitectura-perimetral" ;;
-    iv-burp) UNIT_DIR="iv-burp-intercept" ;;
-    iv-malware) UNIT_DIR="iv-malware-sandbox" ;;
-    iv-integrador) UNIT_DIR="iv-lab-integrador" ;;
-    *) UNIT_DIR="" ;;
-esac
-
-if [ -z "$UNIT_DIR" ]; then
+if [ -z "$UNIT_PATH" ]; then
     error "No se pudo determinar el directorio de la unidad: $CURRENT_UNIT"
     exit 1
 fi
 
-TEST_FILE="$HOME/laboratorio/units/$UNIT_DIR/test.sh"
+TEST_FILE="$UNIT_PATH/test.sh"
 
 if [ ! -f "$TEST_FILE" ]; then
     error "Test no encontrado: $TEST_FILE"
     exit 1
 fi
 
-# Obtener índice para la frase (1-11)
+# Extraer número de unidad del nombre (unit-II -> II) solo para frase final.
+UNIT_ROMAN=$(echo "$CURRENT_UNIT" | sed 's/unit-//')
 case "$UNIT_ROMAN" in
     I) IDX=1 ;;
     II) IDX=2 ;;
@@ -71,10 +50,14 @@ esac
 echo -e "${CYAN_B}Evaluando $CURRENT_UNIT...${RESET}"
 echo ""
 
-bash "$TEST_FILE"
+source "$TEST_FILE"
+ejecutar_evaluacion "$UNIT_NAME" "$TOTAL_RETOS" "${validators[@]}"
+status=$?
 
 # Mostrar frase si la unidad está completada
-if [ $IDX -gt 0 ] && unidad_completada "$CURRENT_UNIT"; then
+if [ "$IDX" -gt 0 ] && unidad_completada "$CURRENT_UNIT"; then
     echo ""
     mostrar_frase_unidad "$IDX"
 fi
+
+exit "$status"
