@@ -16,6 +16,9 @@ Fix Tarea 1 RDD infrastructure so progress receipts are canonical, persistent, a
 - Keep technical artifacts in English unless existing project Spanish text requires preserving Spanish UI copy.
 - No commits without explicit user request.
 
+## Commit Evidence
+- Work-unit commit: `95eb78d` (`fix: harden tarea 1 RDD progress infrastructure`)
+
 ## Evidence
 - `bash -n entrypoint.sh shared/eval.sh shared/units_manifest.sh shared/menu.sh units/i-risk-assessment/test.sh units/i-asset-classification/test.sh` passed.
 - `docker-compose config` renders `STATE_DIR=/var/lab-state`, `PROGRESS_FILE=/var/lab-state/progress`, and named volume `lab-state:/var/lab-state`.

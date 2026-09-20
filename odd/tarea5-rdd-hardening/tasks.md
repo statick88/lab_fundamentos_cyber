@@ -16,6 +16,9 @@ Harden Tarea 5 / Unit V RDD flow so logging, SIEM, BCP, backup, and IR receipts 
 - Do not commit or push without explicit user request.
 - Keep progress canonical at `/var/lab-state/progress`.
 
+## Commit Evidence
+- Work-unit commit: `32f7825` (`fix: require student deliverables for unit V RDD receipts`)
+
 ## Evidence
 - `bash -n shared/evaluar-unidad.sh units/v-logging-siem-bcp/test.sh units/v-logging-siem-bcp/setup.sh` passed.
 - `git diff --check` passed.
