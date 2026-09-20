@@ -64,7 +64,7 @@ git clone https://github.com/statick88/lab_fundamentos_cyber.git
 cd lab_fundamentos_cyber
 docker compose build
 docker compose up -d
-docker compose exec lab_fundamentos_cyber bash
+docker compose exec lab_fundamentos_cyber bash -l
 ```
 
 > Si `docker compose` no está disponible, usa `docker-compose` (binario independiente v5.x).

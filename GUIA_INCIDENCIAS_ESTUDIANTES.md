@@ -45,10 +45,10 @@ passwd estudiante
 # 3. Presiona Ctrl+D o escribe 'exit' para salir
 ```
 
-Luego vuelve a entrar normalmente:
+Luego vuelve a entrar normalmente con shell login para cargar funciones y aliases:
 
 ```bash
-docker compose exec lab_fundamentos_cyber bash
+docker compose exec lab_fundamentos_cyber bash -l
 ```
 
 #### Opción B — Usar el script `reset.sh`
@@ -66,7 +66,7 @@ bash reset.sh --progreso     # Limpieza completa (también reinicia progreso)
 
 | Comando | Qué hace | Nota |
 |---------|----------|------|
-| `menu` | Muestra el menú principal de 26 unidades | Es una **función**, no un binario. No uses `sudo menu`. |
+| `menu` | Muestra el menú principal de 26 unidades | Es una **función** cargada por el perfil interactivo. Entrá con `bash -l` y no uses `sudo menu`. |
 | `jugar` | Inicia el modo interactivo de retos | |
 | `unidad N` | Selecciona la unidad N (1-18) | Ejemplo: `unidad 4` |
 | `retos` | Lista los retos de la unidad actual | |
@@ -79,7 +79,7 @@ bash reset.sh --progreso     # Limpieza completa (también reinicia progreso)
 > **¿Por qué no funciona `sudo menu`?**  
 > `menu` es una función bash definida en `~/.bash_aliases` (generada dinámicamente por `entrypoint.sh`). El comando `sudo` solo ejecuta binarios en el disco, **nunca funciones shell**. Si ejecutas `sudo menu`, obtendrás:  
 > `sudo: menu: command not found`  
-> La corrección es sencilla: escribe `menu` sin `sudo`.
+> La corrección es sencilla: entrá con `docker compose exec lab_fundamentos_cyber bash -l` (o `docker exec -it lab_ciberseguridad bash -l`) y escribí `menu` sin `sudo`. Si ya estás dentro y no cargó el perfil, ejecutá `source ~/.bashrc || source ~/.bash_aliases` y luego `menu`.
 
 ### 1.4 Solución de problemas comunes
 

@@ -4,9 +4,9 @@
 # Levanta el contenedor interactivo del laboratorio.
 #
 # Uso:
-#   docker compose up -d          # Levantar en segundo plano
-#   docker compose exec lab_fundamentos_cyber bash  # Entrar al contenedor
-#   docker compose down           # Detener y eliminar
+#   docker compose up -d             # Levantar en segundo plano
+#   docker compose exec lab_fundamentos_cyber bash -l  # Entrar con shell login
+#   docker compose down              # Detener y eliminar
 # =============================================================================
 
 services:
@@ -17,7 +17,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: lab-ciberseguridad
+    container_name: lab_ciberseguridad
     stdin_open: true
     tty: true
     read_only: true

@@ -129,6 +129,18 @@ alias logging='unidad 5'
 alias amenazas='unidad 4'
 ALIASES
 
+# ─── Perfil de login para docker exec ... bash -l ────────────────────────────
+# Las sesiones login leen ~/.bash_profile, no ~/.bashrc. Sin este puente,
+# ~/.bash_aliases no se carga y comandos como `menu` no existen.
+cat > ~/.bash_profile <<'PROFILE'
+# ~/.bash_profile: executed by bash(1) for login shells.
+# Keep login shells aligned with the lab interactive environment.
+
+if [ -f "$HOME/.bashrc" ]; then
+    . "$HOME/.bashrc"
+fi
+PROFILE
+
 # ─── Script ~/bin/lab ────────────────────────────────────────────────────────
 mkdir -p ~/bin
 cat > ~/bin/lab <<'SCRIPT'

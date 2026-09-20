@@ -81,7 +81,7 @@
 | 4 | Harden Dockerfile | Non-root user + capability dropping | `USER estudiante`, `LABEL` security tags |
 | 5 | Capabilities vs CIS | SETUID/SETGID vs SYS_ADMIN | `docker inspect --format='{{.HostConfig.CapAdd}}'` |
 | 6 | CIS Docker Benchmark | Verificar configuraciones | `docker-bench-security` (referencia) |
-| 7 | Entrar al contenedor | Acceder con permisos limitados | `docker exec -it <container> bash` |
+| 7 | Entrar al contenedor | Acceder con permisos limitados y perfil interactivo cargado | `docker exec -it <container> bash -l` |
 | 8 | Imágenes base seguras | distroless o alpine | `FROM gcr.io/distroless/static` |
 | 9 | Escaneo de vulnerabilidades | Trivy para imágenes | `trivy image <image>` |
 | 10 | Secrets management | No hardcodear credenciales | Docker secrets, env files |

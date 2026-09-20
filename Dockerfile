@@ -108,8 +108,9 @@ COPY reset.sh /reset.sh
 # Copiar plantilla de respuestas
 COPY plantilla.md /home/estudiante/laboratorio/plantilla.md
 
-# Copiar .bashrc personalizado para el estudiante
+# Copiar perfiles de shell personalizados para el estudiante
 COPY bashrc /home/estudiante/.bashrc
+COPY bash_profile /home/estudiante/.bash_profile
 
 # Establecer permisos de ejecución y dueño
 RUN chmod +x /entrypoint.sh && \

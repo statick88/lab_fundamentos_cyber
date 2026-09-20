@@ -11,12 +11,18 @@ git clone https://github.com/statick88/lab_fundamentos_cyber.git
 cd lab_fundamentos_cyber
 docker compose build
 docker compose up -d
-docker compose exec lab_fundamentos_cyber bash
+docker compose exec lab_fundamentos_cyber bash -l
+```
+
+Entrada directa equivalente, si no usás Compose:
+
+```bash
+docker exec -it lab_ciberseguridad bash -l
 ```
 
 Usuario: `estudiante` / Contraseña: `lab123`
 
-Dentro del contenedor: `menu` · `jugar` · `retos` · `evaluar` · `progreso`
+Dentro del contenedor: ejecutá `menu` sin `sudo`. También están disponibles `jugar` · `retos` · `evaluar` · `progreso`.
 
 ## Alineación Curricular ABC-CYB-101
 
@@ -117,7 +123,7 @@ brew install --cask docker
 git clone https://github.com/statick88/lab_fundamentos_cyber.git
 cd lab_fundamentos_cyber
 docker compose build && docker compose up -d
-docker compose exec lab_fundamentos_cyber bash
+docker compose exec lab_fundamentos_cyber bash -l
 ```
 </details>
 
@@ -130,7 +136,7 @@ sudo usermod -aG docker $USER
 git clone https://github.com/statick88/lab_fundamentos_cyber.git
 cd lab_fundamentos_cyber
 docker compose build && docker compose up -d
-docker compose exec lab_fundamentos_cyber bash
+docker compose exec lab_fundamentos_cyber bash -l
 ```
 </details>
 
@@ -145,7 +151,7 @@ sudo systemctl start docker && sudo usermod -aG docker $USER
 git clone https://github.com/statick88/lab_fundamentos_cyber.git
 cd lab_fundamentos_cyber
 docker compose build && docker compose up -d
-docker compose exec lab_fundamentos_cyber bash
+docker compose exec lab_fundamentos_cyber bash -l
 ```
 </details>
 
@@ -163,7 +169,7 @@ sudo usermod -aG docker $USER
 git clone https://github.com/statick88/lab_fundamentos_cyber.git
 cd lab_fundamentos_cyber
 docker compose build && docker compose up -d
-docker compose exec lab_fundamentos_cyber bash
+docker compose exec lab_fundamentos_cyber bash -l
 ```
 </details>
 
@@ -172,7 +178,7 @@ docker compose exec lab_fundamentos_cyber bash
 | Problema | Solución |
 |----------|----------|
 | Contenedor no inicia | `docker compose logs lab_fundamentos_cyber` → `docker compose build --no-cache` |
-| Comandos no funcionan | Verificar que estás dentro: `docker compose exec lab_fundamentos_cyber bash` |
+| Comandos no funcionan | Entrá con shell login: `docker compose exec lab_fundamentos_cyber bash -l`, o cargá perfiles con `source ~/.bashrc || source ~/.bash_aliases`; luego ejecutá `menu` sin `sudo`. |
 | Pruebas fallan | directorio debe ser `~/laboratorio`, nombres exactos |
 | Reglas UFW persisten | Ejecuta `bash reset.sh` para limpiar |
 
