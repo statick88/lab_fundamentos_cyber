@@ -1,105 +1,295 @@
-# RDD Dual — Fundamentos de Ciberseguridad ABC-CYB-101
+# Laboratorio Interactivo: Fundamentos de Ciberseguridad (ABC-CYB-101)
 
-**Rama**: `tareas` · **Cambio**: `tarea-5` · **Fase**: 5 (Documentación/Limpieza)
-**Rol dual**: Profesor (didáctica) + Estudiante (aprendizaje) en paralelo
+26 unidades progresivas · 243 retos (60 CORE + 183 OPT) · evaluación automática · frase secreta oculta. Todo corre en Docker.
 
----
+## Ebook interactivo: 11 módulos teóricos alineados con las 26 unidades del contenedor.
 
-## Las 5 tareas
+## Quick path
 
-| # | Tarea | Estado | Artefacto |
-|---|-------|--------|-----------|
-| 1 | Commit RDD framework artifacts | ✅ | `docs/rdd-framework.md`, `docs/rdd/professor/`, `docs/rdd/student/`, `docs/rdd/dashboard.md` |
-| 2 | Student review receipt — Reto 6 (SIEM correlation) | ✅ | `docs/rdd/student/2026-09-16-retro6-review.md` |
-| 3 | Dashboard update | ✅ | `docs/rdd/dashboard.md` |
-| 4 | Lineage chain verification | ✅ | Todos los receipts referencian predecessor/current/next |
-| 5 | Next-step scheduling | ✅ | Reto 6 re-attempt → M7 (pendiente asignación) |
-
----
-
-## ¿Qué es el RDD dual?
-
-RDD (Receipt-Driven Development) aplicado al curso en dos roles simultáneos que se alimentan mutuamente:
-
-| Rol | Ciclo | Frecuencia |
-|-----|-------|------------|
-| **Profesor** | Receipt → Evidence → Decision (ajuste didáctico) | Por sesión/unidad |
-| **Estudiante** | Receipt → Evidence → Decision (prioridad de estudio) | Por reto/sesión |
-
-Los receipts del estudiante se agregan para informar los del profesor. Las decisiones del profesor generan mejores rutas para el estudiante. Ciclo continuo.
-
----
-
-## Artefactos RDD
-
-```
-docs/rdd/
-├── framework.md                          # Diseño del marco dual (templates, reglas, mapping)
-├── dashboard.md                          # Métricas agregadas, decisiones log, integridad checks
-├── professor/
-│   └── 2026-09-16-M6-logging-siem-bcp.md # Receipt didáctico M6
-└── student/
-    ├── 2026-09-16-M6-logging-siem-bcp.md # Receipt de aprendizaje M6
-    └── 2026-09-16-retro6-review.md       # Receipt de revisión Reto 6 (debilidad identificada)
+```bash
+git clone https://github.com/statick88/lab_fundamentos_cyber.git
+cd lab_fundamentos_cyber
+docker compose build
+docker compose up -d
+docker compose exec lab_fundamentos_cyber bash
 ```
 
----
+Usuario: `estudiante` / Contraseña: `lab123`
 
-## Receipt M6 — Resumen
+Dentro del contenedor: `menu` · `jugar` · `retos` · `evaluar` · `progreso`
 
-### Profesor
-| Métrica | Valor |
-|---------|-------|
-| Retos enseñados | 10 CORE (v-logging-siem-bcp) |
-| Duración | ~250 min |
-| Tasa aprobación | 10/10 (100%) |
-| Decisión pendiente | Refactorizar test.sh para usar /shared/validators.sh (W4) |
+## Alineación Curricular ABC-CYB-101
 
-### Estudiante
-| Métrica | Valor |
-|---------|-------|
-| Retos completados | 10/10 CORE |
-| Dominio SIEM (Reto 6) | **3.5/5.0** — revisión activa |
-| Dominio BCP/IR (Retos 9-10) | 3.0/5.0 — evaluación humana pendiente |
-| Bloqueo | NO avanzar a Reto 7 hasta dominar Reto 6 |
+| Módulo | Tema | Unidad | Retos |
+|--------|------|:------:|:-----:|
+| I | Linux para Ciberseguridad: Consola, Permisos y Errores | 1 (unit-I) | 10 |
+| I | Redes y Protocolos (legacy) | 4 (unit-ii) | 10 |
+| I | Almacenamiento y LVM | 11 (unit-VI) | 10 |
+| I | Evaluación de Riesgos (ISO 31000) | 20 (unit-I-risk) | 10 |
+| I | Clasificación de Activos / CSF 2.0 | 21 (unit-I-asset) | 10 |
+| II | Filtrado de Red y Firewalls | 2 (unit-II) | 10 |
+| II | Detección de Intrusos con Suricata | 3 (unit-II-ids) | 3 |
+| II | IAM, MFA y Control de Acceso | 5 (unit-III / iii-iam-mfa) | 5 |
+| II | Scripting Bash (legacy) | 6 (unit-iii) | 15 |
+| II | Checkpoint Módulo II | 17 (checkpoint-ii) | 5 |
+| II | Arquitectura Perimetral y DMZ | 23 (unit-II-arp) | 10 |
+| III | Criptografía y CVSS | 7 (unit-IV) | 10 |
+| III | Criptografía Aplicada (legacy) | 8 (unit-iv) | 10 |
+| III | Hardening y CIS Benchmarks | 12 (unit-VII) | 15 |
+| III | Docker (contenedores) | 13 (unit-VIII) | 10 |
+| III | Cumplimiento ISO 27001 / NIST CSF 2.0 | 22 (unit-III-compliance) | 5 |
+| IV | Logging, SIEM y BCP | 9 (unit-V) | 10 |
+| IV | Procesos y Servicios (legacy) | 10 (unit-v) | 10 |
+| IV | Nginx: Hardening de Servidores Web | 14 (unit-IX) | 10 |
+| IV | SSL/TLS y Criptografía Aplicada | 15 (unit-X) | 15 |
+| IV | Backup y Recuperación ante Incidentes | 16 (unit-XI) | 10 |
+| IV | Checkpoint Módulo IV | 18 (checkpoint-iv) | 5 |
+| IV | Análisis de Malware en Sandbox | 24 (unit-IV-malware) | 10 |
+| IV | Laboratorio Integrador Módulo IV | 25 (unit-IV-integrador) | 10 |
+| IV | Burp Suite Intercepción HTTP | 26 (unit-IV-burp) | 10 |
+| V | Checkpoint Módulo V | 19 (checkpoint-V) | 5 |
 
----
+**Total: 26 unidades · 243 retos (60 CORE + 183 OPT).**
 
-## Fase 5 — Documentación y Limpieza
+## Comandos del contenedor
 
-### 5.1 Links de documentación ✅
-30 archivos actualizados con enlaces a CI, quickstart, API y troubleshooting:
-- `docs/troubleshooting.md` — Creado (217 líneas)
-- `docs/validators-standard.md` — Actualizado
-- `units/*/manual.sh` (26 archivos) — Actualizado
-- `CONTRIBUTING.md` — Actualizado
-- `README.md` — Actualizado
+| Comando | Acción | Alcance |
+|---------|--------|---------|
+| `menu` | Menú principal con progreso global | Alias |
+| `jugar` | Modo interactivo: instrucción → comando → verificar | Alias |
+| `unidad <n>` | Seleccionar unidad (ej: `unidad 3`) | Alias |
+| `retos` | Ver retos de la unidad actual | Alias |
+| `evaluar` | Ejecutar validación y mostrar puntaje | Alias |
+| `revelar-frase` | Revelar palabra al completar una unidad | Alias |
+| `progreso` | Ver barra de progreso global | Alias |
+| `ayuda` | Lista de comandos disponibles | Función |
+| `~/bin/lab` | Lanza el menú interactivo desde cualquier ruta | Script |
 
-### 5.2 Verificación de fallbacks ✅
-| Check | Resultado |
-|-------|-----------|
-| Bare sudo | 0 |
-| Código fallback temporal | Ninguno |
-| `bash verify.sh` | 14 PASS / 2 FAIL (esperados: /var/lab-state solo en container) |
-| Inline validadores v-logging-siem-bcp | Intentionales (assertions de desafío) |
-
----
-
-## Línea de receipts
+## Flujo por unidad
 
 ```
-RDD Tarea 4 (M4) → Receipt M6 → Receipt Reto 6 review → Reto 6 re-attempt → Reto 7 → M7
+Seleccionar → Instrucciones → Resolver → Validar → Revelar palabra
+    │              │              │           │            │
+    ▼              ▼              ▼           ▼            ▼
+unidad 2       retos        (terminal)    evaluar    revelar-frase
 ```
 
-## Enlaces clave
+1. **Seleccionar** → `unidad 2` cambia la unidad activa
+2. **Instrucciones** → `retos` muestra pistas progresivas
+3. **Resolver** → ejecuta comandos en la terminal
+4. **Validar** → `evaluar` muestra ✓ PASS / ✗ FAIL por reto
+5. **Frase** → `revelar-frase` revela la palabra oculta
 
-| Recurso | Descripción |
-|---------|-------------|
-| [RDD Framework](docs/rdd-framework.md) | Diseño del marco dual |
-| [Dashboard](docs/rdd/dashboard.md) | Métricas agregadas |
-| [Profesor M6](docs/rdd/professor/2026-09-16-M6-logging-siem-bcp.md) | Receipt didáctico |
-| [Estudiante M6](docs/rdd/student/2026-09-16-M6-logging-siem-bcp.md) | Receipt de aprendizaje |
-| [Revisión Reto 6](docs/rdd/student/2026-09-16-retro6-review.md) | Receipt de revisión |
-| [CI Pipeline](.github/workflows/ci.yml) | 26 unidades · 9 CORE fail-fast |
-| [Validadores](docs/validators-standard.md) | Contrato `assert_*` |
-| [Troubleshooting](docs/troubleshooting.md) | Solución de problemas |
+## Frase secreta
+
+Cada unidad completada revela una palabra. Completa las 26 para descubrir la frase:
+
+```
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+```
+
+## Instrucciones para el docente
+
+1. Usar `reset.sh --progreso` entre clases para limpiar el estado
+2. Los checkpoints (17, 18, 19) son evaluaciones formativas automáticas
+3. Cada reto tiene pistas integradas activadas con `pista` durante el juego
+4. El sistema no modifica archivos del sistema permanentemente
+5. Usar `docker compose logs lab_fundamentos_cyber` para depurar problemas
+
+## Medidas de seguridad del laboratorio
+
+- Contenedor aislado en red bridge 172.20.0.0/24 con driver_opts: sin IP masquerade, bind solo a 127.0.0.1
+- Capabilities limitadas: NET_ADMIN, NET_RAW, SETUID, SETGID (sin SYS_ADMIN, sin privileged)
+- Progreso almacenado canónicamente en `/var/lab-state/progress`; `~/.lab-state/progress` es una ruta de compatibilidad hacia el mismo recibo.
+- Validadores estrictos: CVSS requiere script Python con métricas y operaciones matemáticas; logs verifican archivos reales con antigüedad mínima
+- No se descargan archivos externos durante los retos
+- Todo el malware es simulado (archivos de texto inocuos)
+- No se escanean redes externas
+- Las reglas iptables se limpian al resetear
+
+## Instalación por sistema operativo
+
+<details>
+<summary>macOS</summary>
+
+```bash
+brew install --cask docker
+git clone https://github.com/statick88/lab_fundamentos_cyber.git
+cd lab_fundamentos_cyber
+docker compose build && docker compose up -d
+docker compose exec lab_fundamentos_cyber bash
+```
+</details>
+
+<details>
+<summary>Ubuntu / Debian</summary>
+
+```bash
+sudo apt update && sudo apt install -y docker.io docker-compose-v2
+sudo usermod -aG docker $USER
+git clone https://github.com/statick88/lab_fundamentos_cyber.git
+cd lab_fundamentos_cyber
+docker compose build && docker compose up -d
+docker compose exec lab_fundamentos_cyber bash
+```
+</details>
+
+<details>
+<summary>Fedora</summary>
+
+```bash
+sudo dnf -y install dnf-plugins-core
+sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+sudo systemctl start docker && sudo usermod -aG docker $USER
+git clone https://github.com/statick88/lab_fundamentos_cyber.git
+cd lab_fundamentos_cyber
+docker compose build && docker compose up -d
+docker compose exec lab_fundamentos_cyber bash
+```
+</details>
+
+<details>
+<summary>Windows (WSL2)</summary>
+
+```bash
+# PowerShell como Administrador:
+wsl --install
+# Reiniciar el equipo
+
+# Dentro de WSL:
+sudo apt update && sudo apt install -y docker.io docker-compose-v2
+sudo usermod -aG docker $USER
+git clone https://github.com/statick88/lab_fundamentos_cyber.git
+cd lab_fundamentos_cyber
+docker compose build && docker compose up -d
+docker compose exec lab_fundamentos_cyber bash
+```
+</details>
+
+## Solución de problemas
+
+| Problema | Solución |
+|----------|----------|
+| Contenedor no inicia | `docker compose logs lab_fundamentos_cyber` → `docker compose build --no-cache` |
+| Comandos no funcionan | Verificar que estás dentro: `docker compose exec lab_fundamentos_cyber bash` |
+| Pruebas fallan | directorio debe ser `~/laboratorio`, nombres exactos |
+| Reglas UFW persisten | Ejecuta `bash reset.sh` para limpiar |
+
+## Arquitectura
+
+```
+lab_fundamentos_cyber/
+├── Dockerfile              # Ubuntu 24.04 + herramientas ciberseguridad
+├── docker-compose.yml      # Red aislada 172.20.0.0/24 + capabilities mínimas
+├── entrypoint.sh           # Sourcing, aliases y banner ABC-CYB-101
+├── reset.sh                # Limpia configuraciones y archivos de prueba
+├── shared/                 # Librería compartida
+│   ├── common.sh           # Funciones base, 26 unidades
+│   ├── units_manifest.sh   # Manifiesto centralizado CORE/OPT
+│   ├── menu.sh             # Menú principal 26 unidades
+│   ├── interactive.sh      # Funciones interactivas (jugar, evaluar, retos)
+│   ├── eval.sh             # Sistema de evaluación + anti-bypass + eval_cvss
+│   ├── cvss_calculator.py  # Calculadora CVSS 3.1 de referencia
+│   ├── colors.sh           # Colores de terminal
+│   ├── banner.sh           # Banners visuales
+│   └── unidad.sh           # Cambiar unidad (1-26)
+├── units/                  # 26 directorios (7 nuevas + 3 legacy + 16 existentes)
+│   ├── i/                  # Principios y Gestión de Riesgo (10 retos, CORE)
+│   ├── ii-firewalls-redes/ # Filtrado de Red y Firewalls (10 retos, CORE)
+│   ├── ii-ids-intrusion-detection/ # Detección de Intrusos con Suricata (3 retos, OPT)
+│   ├── iii-iam-mfa/        # IAM, MFA y Control de Acceso (5 retos, OPT)
+│   ├── iii/                # Scripting Bash (legacy, 15 retos, OPT)
+│   ├── iv-criptografia-cvss/ # Criptografía y CVSS (10 retos, CORE)
+│   ├── v-logging-siem-bcp/ # Logging, SIEM y BCP (10 retos, CORE)
+│   ├── vi/                 # Almacenamiento y LVM (10 retos, OPT)
+│   ├── vii/                # Hardening y CIS Benchmarks (15 retos, OPT)
+│   ├── viii/               # Docker (10 retos, OPT)
+│   ├── ix/                 # Nginx (10 retos, OPT)
+│   ├── x/                  # SSL/TLS y Criptografía Aplicada (15 retos, OPT)
+│   ├── xi/                 # Backup y Recuperación (10 retos, OPT)
+│   ├── ii/                 # Redes y Protocolos (legacy, 10 retos, OPT)
+│   ├── iv/                 # Criptografía Aplicada (legacy, 10 retos, OPT)
+│   ├── v/                  # Procesos y Servicios (legacy, 10 retos, OPT)
+│   ├── checkpoint-ii/      # Checkpoint Módulo II (5 retos, OPT)
+│   ├── checkpoint-iv/      # Checkpoint Módulo IV (5 retos, OPT)
+│   ├── checkpoint-v/       # Checkpoint Módulo V (5 retos, OPT)
+│   ├── i-risk-assessment/      # Evaluación de Riesgos ISO 31000 (10 retos, CORE)
+│   ├── i-asset-classification/ # Clasificación de Activos / CSF 2.0 (10 retos, CORE)
+│   ├── iii-compliance-iso27001/ # Cumplimiento ISO 27001 / NIST CSF 2.0 (5 retos, OPT)
+│   ├── ii-arquitectura-perimetral/ # Arquitectura Perimetral y DMZ (10 retos, OPT)
+│   ├── iv-malware-sandbox/      # Análisis de Malware en Sandbox (10 retos, OPT)
+│   ├── iv-lab-integrador/       # Laboratorio Integrador Módulo IV (10 retos, OPT)
+│   └── iv-burp-intercept/       # Burp Suite Intercepción HTTP (10 retos, OPT)
+├── GUIA_DOCENTE_LAB.md     # Guía para el docente
+├── ESPECIFICACION_CIBERSEGURIDAD.md # Especificación detallada
+├── GUIA_INCIDENCIAS_ESTUDIANTES.md # Guía de gestión de incidencias
+├── content/
+│   └── ebook-guia/         # Ebook interactivo (Quarto)
+│       ├── index.qmd       # Índice principal
+│       ├── modulo-01-*.qmd  # Módulos 1-6
+│       └── ...
+└── README.md               # Este archivo
+```
+
+## Ebook interactivo: Fundamentos de Ciberseguridad
+
+Guía de laboratorio paso a paso en formato Quarto HTML, alineada con las 26 unidades del contenedor.
+
+```bash
+# Renderizar el ebook (requiere Quarto)
+quarto render content/ebook-guia/
+
+# Abrir en navegador
+open content/ebook-guia/index.html
+```
+
+El ebook cubre 11 módulos temáticos:
+
+| Módulo | Contenido | Archivo |
+|--------|-----------|---------|
+| **0** | Guía de Estudio — Diagnóstico y método | `index.qmd` |
+| **1** | Linux para Ciberseguridad: Consola, Permisos y Errores | `modulo-01-linux-consola.qmd` |
+| **2** | Reconocimiento de Red y Superficie de Ataque | `modulo-02-reconocimiento-redes.qmd` |
+| **3** | Scripting y Control de Acceso | `modulo-03-git.qmd` |
+| **4** | Docker y Contenedores | `modulo-04-docker-contenedores.qmd` |
+| **5** | Wargames y Ataques Controlados | `modulo-05-wargames.qmd` |
+| **6** | Logging, SIEM y BCP | `modulo-06-logging-siem-bcp.qmd` |
+| **7** | Almacenamiento Cifrado y Protección de Datos | `modulo-07-almacenamiento-cifrado.qmd` |
+| **8** | Security Hardening y CIS Benchmarks | `modulo-08-security-hardening.qmd` |
+| **9** | Nginx: Hardening de Servidores Web | `modulo-09-nginx.qmd` |
+| **10** | SSL/TLS: Certificados y Cifrado en Tránsito | `modulo-10-ssl-tls.qmd` |
+| **11** | Backup y Recuperación ante Incidentes | `modulo-11-backup-recuperacion.qmd` |
+| **—** | IAM, MFA y Control de Acceso (complementario) | `modulo-iam-mfa-control-acceso.qmd` |
+| **—** | Firewalls y Filtrado de Red (complementario) | `modulo-firewalls-filtrado-red.qmd` |
+| **—** | Criptografía y CVSS (complementario) | `modulo-criptografia-cvss.qmd` |
+| **—** | Procesos y Servicios (complementario) | `modulo-procesos-servicios.qmd` |
+
+Cada módulo incluye ejercicios prácticos con evidencia, advertencias de seguridad, notas del instructor y checklist de autoevaluación.
+
+## Novedades v2.1
+
+- **Alineación curricular ABC-CYB-101**: 26 unidades organizadas en 5 módulos
+- **Ebook interactivo**: 11 módulos core + 4 módulos complementarios en Quarto
+- **Módulos complementarios**: IAM/MFA, Firewalls, Criptografía/CVSS, Procesos y Servicios
+- **Contenido cybersecurity-first**: módulos reenfocados a ciberseguridad, no Linux server admin
+- **Checkpoints**: Evaluaciones formativas automáticas por módulo
+- **Hardening CIS**: Referencias a CIS Benchmarks en unidad VII
+- **Scripting criptográfico**: Hashes SHA-256, SHA-3, firmas digitales
+- **SSL/TLS ampliado**: RSA 4096, ECC secp384r1, verificación de cadena
+- **Reset script**: Limpia configuraciones entre clases
+- **243 retos prácticos** con evaluación automática
+- **Clasificación CORE/OPT**: 60 obligatorios + 183 optativos para sesiones de 24h
+- **Anti-tampering**: Progreso canónico en `/var/lab-state/progress`, persistido por volumen Docker; `~/.lab-state/progress` apunta al mismo recibo.
+- **Validadores estrictos**: CVSS requiere script Python con anti-bypass; logs verifican archivos reales; firewall valida estado ufw/iptables con sudo
+- **Red aislada**: driver_opts sin IP masquerade, bind a 127.0.0.1
+
+## Autor
+
+**Lic. Diego Medardo Saavedra García, Mg. Sc.**
+🌐 https://statick88.github.io
+✉️ dsaavedra88@gmail.com
+
+---
+
+*Curso "Fundamentos de Ciberseguridad" - Abacom ABC-CYB-101*

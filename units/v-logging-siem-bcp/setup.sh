@@ -18,10 +18,11 @@ banner_unidad "$UNIT_NUM" "Logging, SIEM y BCP"
 echo -e "${CYAN}Esta unidad cubre: logging, SIEM, análisis de logs, BCP, IR.${RESET}"
 echo -e "${AMARILLO}Completarás 10 retos.${RESET}\n"
 
-mkdir -p "$HOME/laboratorio/logging"
-cd "$HOME/laboratorio/logging"
+mkdir -p "$HOME/laboratorio/logging/fixtures"
+cd "$HOME/laboratorio/logging/fixtures"
 
-# Crear logs simulados para análisis
+# Input fixtures only. Student deliverables belong in $HOME/laboratorio/logging,
+# and are intentionally not created by setup.
 cat > apache_access.log << 'EOF'
 192.168.1.1 - - [10/Oct/2024:13:55:36 +0000] "GET /index.html HTTP/1.1" 200 1234
 192.168.1.2 - - [10/Oct/2024:13:55:37 +0000] "POST /login HTTP/1.1" 200 512

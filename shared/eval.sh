@@ -1,14 +1,30 @@
 #!/bin/bash
 # Funciones de evaluacion y progreso
+# Fuente canónica RDD: /var/lab-state/progress. ~/.lab-state/progress se mantiene
+# como ruta de compatibilidad mediante symlink para comandos docentes.
 STATE_DIR="${STATE_DIR:=/var/lab-state}"
 PROGRESS_FILE="${PROGRESS_FILE:=${STATE_DIR}/progress}"
+COMPAT_STATE_DIR="${HOME}/.lab-state"
+COMPAT_PROGRESS_FILE="${COMPAT_STATE_DIR}/progress"
 OLD_PROGRESS_FILE="${HOME}/.lab_state/progress"
 
 init_state() {
-    # Student runs read-only; /var/lab-state is root-owned (0750), progress is root:sudo (0640)
-    # Only root (or CI cron) can write. Student reads via esta_completado/mostrar_estado_retos.
-    # This function is a no-op for estudiante; kept for API compatibility.
-    true
+    # Student runs read-only; /var/lab-state is root-owned by container setup.
+    # Only root/CI/admin should create or migrate canonical state; student reads it.
+    mkdir -p "$STATE_DIR" 2>/dev/null || true
+    touch "$PROGRESS_FILE" 2>/dev/null || true
+
+    if [ -f "$OLD_PROGRESS_FILE" ] && [ ! -s "$PROGRESS_FILE" ]; then
+        cp "$OLD_PROGRESS_FILE" "$PROGRESS_FILE" 2>/dev/null || true
+        rm -f "$OLD_PROGRESS_FILE" 2>/dev/null || true
+    fi
+
+    mkdir -p "$COMPAT_STATE_DIR" 2>/dev/null || true
+    if [ -e "$COMPAT_PROGRESS_FILE" ] && [ ! -L "$COMPAT_PROGRESS_FILE" ] && [ ! -s "$PROGRESS_FILE" ]; then
+        cp "$COMPAT_PROGRESS_FILE" "$PROGRESS_FILE" 2>/dev/null || true
+    fi
+    rm -f "$COMPAT_PROGRESS_FILE" 2>/dev/null || true
+    ln -sf "$PROGRESS_FILE" "$COMPAT_PROGRESS_FILE" 2>/dev/null || true
 }
 
 # Carga los datos del estudiante sin ejecutar contenido del archivo

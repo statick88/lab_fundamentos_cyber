@@ -23,11 +23,11 @@ services:
     read_only: true
     volumes:
       - lab-data:/home/estudiante/laboratorio
+      - lab-state:/var/lab-state
       - ./resultados:/home/estudiante/laboratorio/resultados
     tmpfs:
       - /tmp
       - /var/log/nginx
-      - /var/lab-state
     environment:
       - LAB_NAME=Fundamentos de Ciberseguridad ABC-CYB-101
       - COURSE_VERSION=2.0
@@ -35,6 +35,8 @@ services:
       # Contraseña real definida en Dockerfile (linea 68): 'lab123'.
       # STUDENT_PASS permite sobreescribir en .env local; sin el, el Dockerfile aplica 'lab123'.
       - STUDENT_PASS=${STUDENT_PASS:-lab123}
+      - STATE_DIR=/var/lab-state
+      - PROGRESS_FILE=/var/lab-state/progress
       - FRASE_OCULTA=Toda revolution comienza con un pass Los administradores nunca duermen !
     networks:
       lab-cyber:
@@ -66,6 +68,7 @@ services:
     read_only: false
     volumes:
       - lab-data:/home/estudiante/laboratorio
+      - lab-state:/var/lab-state
       - ./resultados:/home/estudiante/laboratorio/resultados
     environment:
       - LAB_NAME=Fundamentos de Ciberseguridad ABC-CYB-101
@@ -74,6 +77,8 @@ services:
       # Contraseña real definida en Dockerfile (linea 68): 'lab123'.
       # STUDENT_PASS permite sobreescribir en .env local; sin el, el Dockerfile aplica 'lab123'.
       - STUDENT_PASS=${STUDENT_PASS:-lab123}
+      - STATE_DIR=/var/lab-state
+      - PROGRESS_FILE=/var/lab-state/progress
       - FRASE_OCULTA=Toda revolution comienza con un pass Los administradores nunca duermen !
     networks:
       lab-cyber:
@@ -89,6 +94,8 @@ services:
 
 volumes:
   lab-data:
+    driver: local
+  lab-state:
     driver: local
 
 networks:

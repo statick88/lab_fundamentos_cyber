@@ -4,8 +4,21 @@
 # Curso: Fundamentos de Ciberseguridad ABC-CYB-101
 # =============================================================================
 
+# Estado RDD canónico: los validadores escriben aquí y ~/.lab-state/progress
+# se mantiene como compatibilidad para docentes/estudiantes.
+export STATE_DIR="${STATE_DIR:-/var/lab-state}"
+export PROGRESS_FILE="${PROGRESS_FILE:-${STATE_DIR}/progress}"
+
 source /shared/common.sh
 source /shared/interactive.sh
+
+# ─── Compatibilidad de progreso ~/.lab-state -> /var/lab-state ───────────────
+mkdir -p "$HOME/.lab-state" 2>/dev/null || true
+if [ -e "$HOME/.lab-state/progress" ] && [ ! -L "$HOME/.lab-state/progress" ] && [ ! -s "$PROGRESS_FILE" ]; then
+    cp "$HOME/.lab-state/progress" "$PROGRESS_FILE" 2>/dev/null || true
+fi
+rm -f "$HOME/.lab-state/progress" 2>/dev/null || true
+ln -sf "$PROGRESS_FILE" "$HOME/.lab-state/progress" 2>/dev/null || true
 
 # ─── Copiar unidades desde /opt si no existen ────────────────────────────────
 UNITS_MARKER="$HOME/.units_copied"
