@@ -1,83 +1,123 @@
 #!/bin/bash
 # Unit IV: Criptografia y CVSS — test.sh
-# Refactorizado (C4): usa /shared/validators.sh + /shared/sudo-wrappers.sh
 
 source /shared/common.sh
 source /shared/validators.sh
-source /shared/sudo-wrappers.sh
 
 UNIT_NAME="unit-IV"
 TOTAL_RETOS=10
 
+STUDENT_DIR="$HOME/laboratorio/ciberseguridad"
+FIXTURES_DIR="$STUDENT_DIR/fixtures"
+
+student_file_contains() {
+    local file="$1"
+    shift
+
+    [ -f "$STUDENT_DIR/$file" ] || return 1
+
+    local pattern
+    for pattern in "$@"; do
+        grep -Eqi "$pattern" "$STUDENT_DIR/$file" 2>/dev/null || return 1
+    done
+}
+
+eval_cvss_deliverable() {
+    local file="$1" vector="$2" score_pattern="$3" severity="$4"
+
+    [ -f "$STUDENT_DIR/$file" ] || return 1
+    grep -Fqi "$vector" "$STUDENT_DIR/$file" 2>/dev/null || return 1
+    grep -Eqi "$score_pattern" "$STUDENT_DIR/$file" 2>/dev/null || return 1
+    grep -Eqi "$severity" "$STUDENT_DIR/$file" 2>/dev/null
+}
+
 reto1() {
-    local student_script="$HOME/laboratorio/cvss_calculator.py"
-    if [ ! -f "$student_script" ]; then
-        student_script="$HOME/laboratorio/ciberseguridad/cvss_calculator.py"
-    fi
-    eval_cvss "9.8" "$student_script" "0.5" "AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    eval_cvss_deliverable \
+        "cvss_rce.txt" \
+        "AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H" \
+        '(^|[^0-9])9[.,]8([^0-9]|$)' \
+        'critical'
 }
 
 reto2() {
-    local student_script="$HOME/laboratorio/cvss_calculator.py"
-    if [ ! -f "$student_script" ]; then
-        student_script="$HOME/laboratorio/ciberseguridad/cvss_calculator.py"
-    fi
-    eval_cvss "5.4" "$student_script" "0.5" "AV:N/AC:L/PR:L/UI:R/S:C/C:L/I:L/A:N"
+    eval_cvss_deliverable \
+        "cvss_xss.txt" \
+        "AV:N/AC:L/PR:L/UI:R/S:C/C:L/I:L/A:N" \
+        '(^|[^0-9])5[.,]4([^0-9]|$)' \
+        'medium'
 }
 
 reto3() {
-    local student_script="$HOME/laboratorio/cvss_calculator.py"
-    if [ ! -f "$student_script" ]; then
-        student_script="$HOME/laboratorio/ciberseguridad/cvss_calculator.py"
-    fi
-    eval_cvss "7.8" "$student_script" "0.5" "AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    eval_cvss_deliverable \
+        "cvss_local_overflow.txt" \
+        "AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H" \
+        '(^|[^0-9])7[.,]8([^0-9]|$)' \
+        'high'
 }
 
 reto4() {
-    local score_file="$HOME/laboratorio/ciberseguridad/cvss_score.txt"
-    local score="7.5"
-    if [ -f "$score_file" ]; then
-        score=$(cat "$score_file" 2>/dev/null || echo "7.5")
-    fi
-    python3 -c "exit(0 if 7.0 <= $score <= 8.9 else 1)" 2>/dev/null || \
-    awk -v s="$score" 'BEGIN { exit (s >= 7.0 && s <= 8.9) ? 0 : 1 }'
+    student_file_contains \
+        "severity_rating.txt" \
+        '(^|[^0-9])7[.,][0-9]([^0-9]|$)|(^|[^0-9])8[.,][0-9]([^0-9]|$)' \
+        'high'
 }
 
 reto5() {
-    eval_log_analysis "$HOME/laboratorio/ciberseguridad/auth.log" "Failed password" 1 student
+    student_file_contains \
+        "auth_attack_analysis.txt" \
+        'failed[[:space:]]+password' \
+        'brute[[:space:]-]*force|fuerza[[:space:]-]*bruta' \
+        'ssh'
 }
 
 reto6() {
-    eval_log_analysis "$HOME/laboratorio/ciberseguridad/access.log" "union.*select" 1 student
+    student_file_contains \
+        "sqli_analysis.txt" \
+        'union[[:space:]]+select' \
+        'sql[[:space:]-]*injection|inyecci.n[[:space:]-]*sql'
 }
 
 reto7() {
-    eval_log_analysis "$HOME/laboratorio/ciberseguridad/access.log" "\.\./|etc/passwd" 1 student
+    student_file_contains \
+        "traversal_analysis.txt" \
+        '\.\./|/etc/passwd' \
+        'path[[:space:]-]*traversal|directory[[:space:]-]*traversal|traversal[[:space:]-]*de[[:space:]-]*ruta'
 }
 
 reto8() {
-    eval_log_analysis "$HOME/laboratorio/ciberseguridad/access.log" "X-Priority|Reply-To|suspicious|link" 1 student
+    student_file_contains \
+        "phishing_headers_analysis.txt" \
+        'reply-to' \
+        'x-priority' \
+        'https?://' \
+        'suspicious|sospechos'
 }
 
 reto9() {
-    if [ -f "$HOME/laboratorio/ciberseguridad/malware_simulado.bin" ]; then
-        local hash
-        hash=$(sha256sum "$HOME/laboratorio/ciberseguridad/malware_simulado.bin" 2>/dev/null | awk '{print $1}')
-        [ -n "$hash" ] && [ ${#hash} -eq 64 ]
-    else
-        return 1
-    fi
+    local fixture="$FIXTURES_DIR/malware_simulado.bin"
+    local expected_hash
+
+    [ -f "$fixture" ] || return 1
+    expected_hash=$(sha256sum "$fixture" 2>/dev/null | awk '{print $1}')
+    [ -n "$expected_hash" ] || return 1
+    student_file_contains "malware_sha256.txt" "$expected_hash"
 }
 
 reto10() {
-    local actual="$HOME/laboratorio/ciberseguridad/malware_simulado.bin"
-    local baseline="$HOME/laboratorio/ciberseguridad/baseline_hashes.txt"
-    if [ -f "$actual" ] && [ -f "$baseline" ]; then
-        sha256sum "$actual" 2>/dev/null > /tmp/actual_hash.txt
-        [ -f /tmp/actual_hash.txt ]
-    else
-        return 1
-    fi
+    local fixture="$FIXTURES_DIR/malware_simulado.bin"
+    local baseline="$FIXTURES_DIR/baseline_hashes.txt"
+    local expected_hash baseline_hash
+
+    [ -f "$fixture" ] && [ -f "$baseline" ] || return 1
+    expected_hash=$(sha256sum "$fixture" 2>/dev/null | awk '{print $1}')
+    baseline_hash=$(awk 'NF {print $1; exit}' "$baseline" 2>/dev/null)
+    [ -n "$expected_hash" ] && [ -n "$baseline_hash" ] || return 1
+
+    student_file_contains \
+        "hash_baseline_comparison.txt" \
+        "$expected_hash" \
+        "$baseline_hash" \
+        'match|mismatch|coincid|difer'
 }
 
 validators=(reto1 reto2 reto3 reto4 reto5 reto6 reto7 reto8 reto9 reto10)
@@ -99,124 +139,77 @@ ICONOS=("📐" "📊" "💣" "🏷️" "🔍" "💉" "📁" "📧" "🔒" "🔎"
 reto1_info() {
     separador
     echo -e "${CYAN}Reto 1: CVSS - RCE en HTTP${NC}"
-    echo ""
-    echo "Calcula el score CVSS 3.1 base para un RCE (Remote Code Execution)"
-    echo "en un servicio HTTP accesible desde la red."
-    echo ""
+    echo "Escribí el vector, score 9.8 y Critical en $STUDENT_DIR/cvss_rce.txt."
     echo "Vector: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
-    echo ""
-    echo "Crea un script Python que calcule el score y ejecútalo."
-    echo "Usa: python3 cvss_calculator.py 'AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H'"
     separador
 }
 
 reto2_info() {
     separador
     echo -e "${CYAN}Reto 2: CVSS - XSS Reflejado${NC}"
-    echo ""
-    echo "Calcula el score CVSS para un XSS (Cross-Site Scripting) reflejado."
-    echo "Vector: AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N"
-    echo ""
-    echo "Crea un script Python que calcule el score y ejecútalo."
+    echo "Escribí el vector, score 5.4 y Medium en $STUDENT_DIR/cvss_xss.txt."
+    echo "Vector: AV:N/AC:L/PR:L/UI:R/S:C/C:L/I:L/A:N"
     separador
 }
 
 reto3_info() {
     separador
     echo -e "${CYAN}Reto 3: CVSS - Buffer Overflow Local${NC}"
-    echo ""
-    echo "Calcula el score CVSS para un buffer overflow local."
+    echo "Escribí el vector, score 7.8 y High en $STUDENT_DIR/cvss_local_overflow.txt."
     echo "Vector: AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
-    echo ""
-    echo "Crea un script Python que calcule el score y ejecútalo."
     separador
 }
 
 reto4_info() {
     separador
     echo -e "${CYAN}Reto 4: Severity Rating${NC}"
-    echo ""
-    echo "Dado un CVSS score, determina el severity rating:"
-    echo "  0.0-3.9 = Low"
-    echo "  4.0-6.9 = Medium"
-    echo "  7.0-8.9 = High"
-    echo "  9.0-10.0 = Critical"
-    echo ""
-    echo "Comandos utiles: awk 'BEGIN {if (score >= 7.0 && score <= 8.9) print \"High\"}'"
+    echo "Explicá en $STUDENT_DIR/severity_rating.txt que un score entre 7.0 y 8.9 es High."
     separador
 }
 
 reto5_info() {
     separador
     echo -e "${CYAN}Reto 5: Vector de ataque en log${NC}"
-    echo ""
-    echo "Analiza auth.log para identificar el vector de ataque."
-    echo "Busca 'Failed password' y determina si es fuerza bruta SSH."
-    echo ""
-    echo "Comandos utiles:"
-    echo "  grep 'Failed password' /var/log/auth.log"
-    echo "  grep -c 'Failed password' /var/log/auth.log"
+    echo "Analizá $FIXTURES_DIR/auth.log y escribí hallazgos en $STUDENT_DIR/auth_attack_analysis.txt."
+    echo "Identificá Failed password, fuerza bruta y SSH."
     separador
 }
 
 reto6_info() {
     separador
     echo -e "${CYAN}Reto 6: SQL Injection en log${NC}"
-    echo ""
-    echo "Identifica intentos de SQL injection en access.log."
-    echo "Busca patrones: union, select, insert, drop, --"
-    echo ""
-    echo "Comandos utiles:"
-    echo "  grep -i 'union.*select' /var/log/apache2/access.log"
-    echo "  grep -iE 'union|select|insert|drop' /var/log/apache2/access.log"
+    echo "Analizá $FIXTURES_DIR/access.log y escribí hallazgos en $STUDENT_DIR/sqli_analysis.txt."
+    echo "Identificá UNION SELECT y SQL injection."
     separador
 }
 
 reto7_info() {
     separador
     echo -e "${CYAN}Reto 7: Path Traversal en log${NC}"
-    echo ""
-    echo "Identifica intentos de path traversal en access.log."
-    echo "Busca patrones: ../, /etc/passwd, /etc/shadow, cgi-bin"
-    echo ""
-    echo "Comandos utiles:"
-    echo "  grep -i '\.\./' /var/log/apache2/access.log"
-    echo "  grep -i 'etc/passwd' /var/log/apache2/access.log"
+    echo "Analizá $FIXTURES_DIR/access.log y escribí hallazgos en $STUDENT_DIR/traversal_analysis.txt."
+    echo "Identificá ../ o /etc/passwd y path traversal."
     separador
 }
 
 reto8_info() {
     separador
     echo -e "${CYAN}Reto 8: Analizar headers de phishing${NC}"
-    echo ""
-    echo "Analiza un correo de phishing simulado."
-    echo "Busca: X-Priority alto, Reply-To sospechoso, links acortados."
-    echo ""
-    echo "Comandos utiles: grep, awk para extraer headers"
+    echo "Analizá $FIXTURES_DIR/phishing_headers.eml y escribí hallazgos en $STUDENT_DIR/phishing_headers_analysis.txt."
+    echo "Identificá Reply-To, X-Priority, un link y por qué son sospechosos."
     separador
 }
 
 reto9_info() {
     separador
     echo -e "${CYAN}Reto 9: Hashes SHA-256${NC}"
-    echo ""
-    echo "Genera hashes SHA-256 de archivos 'maliciosos' simulados."
-    echo "Usa sha256sum sobre malware_simulado.bin."
-    echo ""
-    echo "Comandos utiles:"
-    echo "  sha256sum malware_simulado.bin"
+    echo "Calculá sha256sum de $FIXTURES_DIR/malware_simulado.bin y guardá la línea en $STUDENT_DIR/malware_sha256.txt."
     separador
 }
 
 reto10_info() {
     separador
     echo -e "${CYAN}Reto 10: Comparar hashes contra baseline${NC}"
-    echo ""
-    echo "Compara los hashes calculados contra baseline_hashes.txt."
-    echo "Usa diff o cmp para verificar diferencias."
-    echo ""
-    echo "Comandos utiles:"
-    echo "  sha256sum malware_simulado.bin > actual.txt"
-    echo "  diff baseline_hashes.txt actual.txt"
+    echo "Compará el hash calculado con $FIXTURES_DIR/baseline_hashes.txt."
+    echo "Guardá ambos hashes y la explicación de match o mismatch en $STUDENT_DIR/hash_baseline_comparison.txt."
     separador
 }
